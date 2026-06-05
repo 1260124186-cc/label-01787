@@ -1,13 +1,14 @@
 package com.xiaoan.bookstore.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xiaoan.bookstore.common.Constants;
 import com.xiaoan.bookstore.common.Result;
 import com.xiaoan.bookstore.common.TenantContext;
+import com.xiaoan.bookstore.entity.Book;
 import com.xiaoan.bookstore.entity.FileDownloadLog;
 import com.xiaoan.bookstore.exception.BusinessException;
+import com.xiaoan.bookstore.mapper.BookMapper;
 import com.xiaoan.bookstore.service.FileDownloadLogService;
-import com.xiaoan.bookstore.util.JwtUtil;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,7 +36,7 @@ import java.util.Map;
 public class FileTokenController {
 
     private final FileDownloadLogService downloadLogService;
-    private final JwtUtil jwtUtil;
+    private final BookMapper bookMapper;
 
     @Value("${app.jwt.mp.secret}")
     private String signingSecret;
@@ -45,20 +47,16 @@ public class FileTokenController {
     @Value("${app.file.signed-url-expiration:300}")
     private int signedUrlExpiration;
 
-    @Value("${app.file.max-downloads-per-hour:10}")
-    private int maxDownloadsPerHour;
-
-    @Value("${app.file.max-downloads-per-day:100}")
-    private int maxDownloadsPerDay;
-
     private static final String HMAC_ALGO = "HmacSHA256";
 
     @PostMapping("/signed-url")
-    public Result<Map<String, Object>> generateSignedUrl(
-            @RequestBody Map<String, String> body) {
-
+    public Result<Map<String, Object>> generateSignedUrl(@RequestBody Map<String, String> body) {
         Long userId = TenantContext.getTenantId();
         Integer userType = TenantContext.getUserType();
+
+        if (userId == null) {
+            throw new BusinessException(401, "未登录");
+        }
 
         String filePath = body.get("path");
         if (filePath == null || filePath.isEmpty()) {
@@ -68,6 +66,8 @@ public class FileTokenController {
         if (filePath.contains("..") || filePath.startsWith("/")) {
             throw new BusinessException("非法文件路径");
         }
+
+        validateFilePathOwnership(filePath, userId);
 
         if (downloadLogService.isUserLimitExceeded(userId, userType)) {
             throw new BusinessException("今日下载次数已达上限");
@@ -110,6 +110,17 @@ public class FileTokenController {
             throw new BusinessException("非法文件路径");
         }
 
+        Long currentUserId = TenantContext.getTenantId();
+        if (currentUserId == null) {
+            throw new BusinessException(401, "未登录");
+        }
+
+        if (!uid.equals(currentUserId)) {
+            throw new BusinessException(403, "无权下载该文件");
+        }
+
+        validateFilePathOwnership(path, currentUserId);
+
         String referer = request.getHeader("Referer");
         if (referer != null && !isRefererAllowed(referer)) {
             throw new BusinessException(403, "防盗链: 来源不受信任");
@@ -138,6 +149,22 @@ public class FileTokenController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + realPath.getFileName() + "\"")
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .body(resource);
+    }
+
+    private void validateFilePathOwnership(String filePath, Long userId) {
+        String prefix = userId + "/";
+        if (!filePath.startsWith(prefix)) {
+            throw new BusinessException(403, "无权访问该文件");
+        }
+        Long count = bookMapper.selectCount(
+                new LambdaQueryWrapper<Book>()
+                        .eq(Book::getUserId, userId)
+                        .eq(Book::getFilePath, filePath)
+                        .eq(Book::getStatus, Constants.STATUS_ENABLED)
+        );
+        if (count == null || count == 0) {
+            throw new BusinessException(403, "文件不属于当前用户或不存在");
+        }
     }
 
     private void logDownload(Long userId, Integer userType, String fileToken, String filePath, HttpServletRequest request) {

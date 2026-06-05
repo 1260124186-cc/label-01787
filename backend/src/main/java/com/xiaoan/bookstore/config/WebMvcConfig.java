@@ -47,7 +47,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 );
 
         registry.addInterceptor(mpJwtInterceptor)
-                .addPathPatterns("/api/file/download");
+                .addPathPatterns("/api/file/signed-url", "/api/file/download");
     }
 
     @Override
