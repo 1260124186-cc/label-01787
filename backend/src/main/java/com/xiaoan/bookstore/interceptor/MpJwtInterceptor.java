@@ -1,6 +1,7 @@
 package com.xiaoan.bookstore.interceptor;
 
 import com.xiaoan.bookstore.common.Constants;
+import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.exception.BusinessException;
 import com.xiaoan.bookstore.util.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -38,7 +39,14 @@ public class MpJwtInterceptor implements HandlerInterceptor {
 
         request.setAttribute(Constants.CONTEXT_USER_ID, userId);
         request.setAttribute(Constants.CONTEXT_USER_TYPE, userType);
+
+        TenantContext.set(userId, userType, null);
         return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        TenantContext.clear();
     }
 
     private String resolveToken(HttpServletRequest request) {

@@ -1,13 +1,12 @@
 package com.xiaoan.bookstore.controller;
 
 import com.xiaoan.bookstore.annotation.Log;
-import com.xiaoan.bookstore.common.Constants;
 import com.xiaoan.bookstore.common.Result;
+import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.dto.ReadingDTO;
 import com.xiaoan.bookstore.dto.ReadingSummaryVO;
 import com.xiaoan.bookstore.entity.ReadingRecord;
 import com.xiaoan.bookstore.service.ReadingService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -21,23 +20,22 @@ public class MpReadingController {
 
     @PostMapping("/start")
     @Log("开始阅读")
-    public Result<ReadingRecord> start(HttpServletRequest request, @Valid @RequestBody ReadingDTO dto) {
-        Long userId = (Long) request.getAttribute(Constants.CONTEXT_USER_ID);
+    public Result<ReadingRecord> start(@Valid @RequestBody ReadingDTO dto) {
+        Long userId = TenantContext.getTenantId();
         return Result.success(readingService.startReading(userId, dto.getBookId()));
     }
 
     @PostMapping("/end")
     @Log("结束阅读")
-    public Result<Void> end(HttpServletRequest request, @Valid @RequestBody ReadingDTO dto) {
-        Long userId = (Long) request.getAttribute(Constants.CONTEXT_USER_ID);
+    public Result<Void> end(@Valid @RequestBody ReadingDTO dto) {
+        Long userId = TenantContext.getTenantId();
         readingService.endReading(userId, dto.getRecordId(), dto.getLastPage());
         return Result.success();
     }
 
     @GetMapping("/summary")
-    public Result<ReadingSummaryVO> summary(HttpServletRequest request,
-                                             @RequestParam(defaultValue = "week") String period) {
-        Long userId = (Long) request.getAttribute(Constants.CONTEXT_USER_ID);
+    public Result<ReadingSummaryVO> summary(@RequestParam(defaultValue = "week") String period) {
+        Long userId = TenantContext.getTenantId();
         return Result.success(readingService.summary(userId, period));
     }
 }

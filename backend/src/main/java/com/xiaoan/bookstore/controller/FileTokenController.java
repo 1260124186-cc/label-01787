@@ -2,6 +2,7 @@ package com.xiaoan.bookstore.controller;
 
 import com.xiaoan.bookstore.common.Constants;
 import com.xiaoan.bookstore.common.Result;
+import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.entity.FileDownloadLog;
 import com.xiaoan.bookstore.exception.BusinessException;
 import com.xiaoan.bookstore.service.FileDownloadLogService;
@@ -54,11 +55,10 @@ public class FileTokenController {
 
     @PostMapping("/signed-url")
     public Result<Map<String, Object>> generateSignedUrl(
-            HttpServletRequest request,
             @RequestBody Map<String, String> body) {
 
-        Long userId = (Long) request.getAttribute(Constants.CONTEXT_USER_ID);
-        Integer userType = (Integer) request.getAttribute(Constants.CONTEXT_USER_TYPE);
+        Long userId = TenantContext.getTenantId();
+        Integer userType = TenantContext.getUserType();
 
         String filePath = body.get("path");
         if (filePath == null || filePath.isEmpty()) {

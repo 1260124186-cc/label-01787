@@ -1,6 +1,7 @@
 package com.xiaoan.bookstore.interceptor;
 
 import com.xiaoan.bookstore.common.Constants;
+import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.entity.AdminUser;
 import com.xiaoan.bookstore.exception.BusinessException;
 import com.xiaoan.bookstore.mapper.AdminUserMapper;
@@ -51,7 +52,14 @@ public class AdminJwtInterceptor implements HandlerInterceptor {
         request.setAttribute(Constants.CONTEXT_USER_TYPE, userType);
         request.setAttribute(Constants.CONTEXT_ROLE_ID, roleId);
         request.setAttribute(Constants.CONTEXT_ROLE_CODE, getRoleCode(roleId));
+
+        TenantContext.set(userId, userType, roleId);
         return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        TenantContext.clear();
     }
 
     private String getRoleCode(Long roleId) {

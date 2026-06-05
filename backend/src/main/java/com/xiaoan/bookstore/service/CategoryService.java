@@ -1,6 +1,8 @@
 package com.xiaoan.bookstore.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.xiaoan.bookstore.common.TenantContext;
+import com.xiaoan.bookstore.common.TenantValidator;
 import com.xiaoan.bookstore.dto.CategoryDTO;
 import com.xiaoan.bookstore.entity.Category;
 import com.xiaoan.bookstore.exception.BusinessException;
@@ -32,7 +34,6 @@ public class CategoryService {
     public List<Category> list(Long userId) {
         return categoryMapper.selectList(
                 new LambdaQueryWrapper<Category>()
-                        .eq(Category::getUserId, userId)
                         .orderByAsc(Category::getSortOrder)
                         .orderByDesc(Category::getCreatedAt)
         );
@@ -40,9 +41,10 @@ public class CategoryService {
 
     public void update(Long userId, Long id, CategoryDTO dto) {
         Category category = categoryMapper.selectById(id);
-        if (category == null || !category.getUserId().equals(userId)) {
+        if (category == null) {
             throw new BusinessException("分类不存在");
         }
+        TenantValidator.validateCrossTenant(category.getUserId(), TenantContext.getTenantId());
         category.setName(dto.getName());
         if (dto.getSortOrder() != null) {
             category.setSortOrder(dto.getSortOrder());
@@ -53,9 +55,10 @@ public class CategoryService {
 
     public void delete(Long userId, Long id) {
         Category category = categoryMapper.selectById(id);
-        if (category == null || !category.getUserId().equals(userId)) {
+        if (category == null) {
             throw new BusinessException("分类不存在");
         }
+        TenantValidator.validateCrossTenant(category.getUserId(), TenantContext.getTenantId());
         categoryMapper.deleteById(id);
         log.info("删除分类: id={}", id);
     }

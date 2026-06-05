@@ -3,6 +3,8 @@ package com.xiaoan.bookstore.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xiaoan.bookstore.common.Constants;
+import com.xiaoan.bookstore.common.TenantContext;
+import com.xiaoan.bookstore.common.TenantValidator;
 import com.xiaoan.bookstore.entity.Book;
 import com.xiaoan.bookstore.exception.BusinessException;
 import com.xiaoan.bookstore.mapper.BookMapper;
@@ -42,7 +44,7 @@ public class BookService {
     @Value("${app.upload.max-size}")
     private long maxFileSize;
 
-    private static final long MIN_FILE_SIZE = 1024 * 1024; // 1MB 最小
+    private static final long MIN_FILE_SIZE = 1024 * 1024;
 
     public Book upload(Long userId, MultipartFile file, String title, String author, Long categoryId) {
         if (file.isEmpty()) {
@@ -59,17 +61,14 @@ public class BookService {
             throw new BusinessException("仅支持PDF文件");
         }
 
-        // 保存文件
         String fileName = UUID.randomUUID() + ".pdf";
         String userDir = uploadPath + File.separator + userId;
         Path dirPath = Paths.get(userDir).toAbsolutePath().normalize();
         try {
             Files.createDirectories(dirPath);
             Path filePath = dirPath.resolve(fileName);
-            // 使用 Files.copy 代替 transferTo，避免 Tomcat 临时目录路径解析不一致
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            // 解析PDF页数
             int pageCount = 0;
             try (PDDocument doc = Loader.loadPDF(filePath.toFile())) {
                 pageCount = doc.getNumberOfPages();
@@ -99,8 +98,7 @@ public class BookService {
 
     public Page<Book> myBooks(Long userId, Long categoryId, int page, int size) {
         LambdaQueryWrapper<Book> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Book::getUserId, userId)
-               .eq(Book::getStatus, Constants.STATUS_ENABLED);
+        wrapper.eq(Book::getStatus, Constants.STATUS_ENABLED);
         if (categoryId != null) {
             wrapper.eq(Book::getCategoryId, categoryId);
         }
@@ -110,9 +108,10 @@ public class BookService {
 
     public Book detail(Long userId, Long bookId) {
         Book book = bookMapper.selectById(bookId);
-        if (book == null || !book.getUserId().equals(userId) || book.getStatus() != Constants.STATUS_ENABLED) {
+        if (book == null || book.getStatus() != Constants.STATUS_ENABLED) {
             throw new BusinessException("书籍不存在");
         }
+        TenantValidator.validateCrossTenant(book.getUserId(), TenantContext.getTenantId());
         return book;
     }
 
@@ -157,7 +156,6 @@ public class BookService {
                     entry.put("title", item.getTitle());
                     int pageIndex = getPageNumber(doc, item);
                     entry.put("page", pageIndex + 1);
-                    // 子目录
                     List<Map<String, Object>> children = new ArrayList<>();
                     for (PDOutlineItem child : item.children()) {
                         Map<String, Object> childEntry = new HashMap<>();

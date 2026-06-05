@@ -2,6 +2,8 @@ package com.xiaoan.bookstore.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xiaoan.bookstore.common.TenantContext;
+import com.xiaoan.bookstore.common.TenantValidator;
 import com.xiaoan.bookstore.dto.AnnotationDTO;
 import com.xiaoan.bookstore.entity.Annotation;
 import com.xiaoan.bookstore.exception.BusinessException;
@@ -33,7 +35,6 @@ public class AnnotationService {
 
     public Page<Annotation> list(Long userId, Long bookId, Integer type, int page, int size) {
         LambdaQueryWrapper<Annotation> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Annotation::getUserId, userId);
         if (bookId != null) {
             wrapper.eq(Annotation::getBookId, bookId);
         }
@@ -46,9 +47,10 @@ public class AnnotationService {
 
     public void update(Long userId, Long id, AnnotationDTO dto) {
         Annotation ann = annotationMapper.selectById(id);
-        if (ann == null || !ann.getUserId().equals(userId)) {
+        if (ann == null) {
             throw new BusinessException("批注不存在");
         }
+        TenantValidator.validateCrossTenant(ann.getUserId(), TenantContext.getTenantId());
         ann.setContent(dto.getContent());
         if (dto.getSelectedText() != null) {
             ann.setSelectedText(dto.getSelectedText());
@@ -59,9 +61,10 @@ public class AnnotationService {
 
     public void delete(Long userId, Long id) {
         Annotation ann = annotationMapper.selectById(id);
-        if (ann == null || !ann.getUserId().equals(userId)) {
+        if (ann == null) {
             throw new BusinessException("批注不存在");
         }
+        TenantValidator.validateCrossTenant(ann.getUserId(), TenantContext.getTenantId());
         annotationMapper.deleteById(id);
         log.info("删除批注: id={}", id);
     }

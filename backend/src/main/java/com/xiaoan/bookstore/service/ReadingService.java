@@ -1,5 +1,7 @@
 package com.xiaoan.bookstore.service;
 
+import com.xiaoan.bookstore.common.TenantContext;
+import com.xiaoan.bookstore.common.TenantValidator;
 import com.xiaoan.bookstore.dto.ReadingSummaryVO;
 import com.xiaoan.bookstore.entity.ReadingRecord;
 import com.xiaoan.bookstore.exception.BusinessException;
@@ -35,9 +37,10 @@ public class ReadingService {
 
     public void endReading(Long userId, Long recordId, Integer lastPage) {
         ReadingRecord record = readingRecordMapper.selectById(recordId);
-        if (record == null || !record.getUserId().equals(userId)) {
+        if (record == null) {
             throw new BusinessException("阅读记录不存在");
         }
+        TenantValidator.validateCrossTenant(record.getUserId(), TenantContext.getTenantId());
         record.setEndTime(LocalDateTime.now());
         long seconds = java.time.Duration.between(record.getStartTime(), record.getEndTime()).getSeconds();
         record.setDuration((int) seconds);
@@ -83,10 +86,11 @@ public class ReadingService {
                 throw new BusinessException("无效的统计周期，支持 week/month/year");
         }
 
+        Long tenantId = TenantContext.getTenantId();
         ReadingSummaryVO vo = new ReadingSummaryVO();
-        vo.setTotalDuration(readingRecordMapper.sumDuration(userId, start, end));
-        vo.setBookCount(readingRecordMapper.countBooks(userId, start, end));
-        vo.setDailyData(readingRecordMapper.dailyDuration(userId, start, end));
+        vo.setTotalDuration(readingRecordMapper.sumDuration(tenantId, start, end));
+        vo.setBookCount(readingRecordMapper.countBooks(tenantId, start, end));
+        vo.setDailyData(readingRecordMapper.dailyDuration(tenantId, start, end));
         vo.setPeriod(period);
         vo.setPeriodStart(periodStart);
         vo.setPeriodEnd(periodEnd);

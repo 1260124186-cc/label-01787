@@ -1,6 +1,7 @@
 package com.xiaoan.bookstore.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.xiaoan.bookstore.annotation.TenantIgnore;
 import com.xiaoan.bookstore.entity.Permission;
 import com.xiaoan.bookstore.entity.Role;
 import com.xiaoan.bookstore.entity.RolePermission;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@TenantIgnore
 public class RbacService {
 
     private final RoleMapper roleMapper;

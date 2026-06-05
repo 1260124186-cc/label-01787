@@ -5,6 +5,7 @@ import com.xiaoan.bookstore.annotation.RequirePermission;
 import com.xiaoan.bookstore.annotation.SensitiveOperation;
 import com.xiaoan.bookstore.common.Constants;
 import com.xiaoan.bookstore.common.Result;
+import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.dto.AdminLoginDTO;
 import com.xiaoan.bookstore.entity.Permission;
 import com.xiaoan.bookstore.entity.Role;
@@ -143,16 +144,14 @@ public class AdminController {
     }
 
     @GetMapping("/permissions/mine")
-    public Result<List<String>> myPermissions(HttpServletRequest request) {
-        Long roleId = (Long) request.getAttribute(Constants.CONTEXT_ROLE_ID);
+    public Result<List<String>> myPermissions() {
+        Long roleId = TenantContext.getRoleId();
         return Result.success(rbacService.getPermissionCodesByRoleId(roleId));
     }
 
     @PostMapping("/sensitive/confirm-token")
-    public Result<Map<String, String>> requestConfirmToken(
-            HttpServletRequest request,
-            @RequestBody Map<String, String> body) {
-        Long adminId = (Long) request.getAttribute(Constants.CONTEXT_USER_ID);
+    public Result<Map<String, String>> requestConfirmToken(@RequestBody Map<String, String> body) {
+        Long adminId = TenantContext.getTenantId();
         String operation = body.get("operation");
         if (operation == null || operation.isEmpty()) {
             return Result.error(400, "操作标识不能为空");

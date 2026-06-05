@@ -2,7 +2,9 @@ package com.xiaoan.bookstore.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xiaoan.bookstore.annotation.TenantIgnore;
 import com.xiaoan.bookstore.common.Constants;
+import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.dto.AdminLoginDTO;
 import com.xiaoan.bookstore.entity.*;
 import com.xiaoan.bookstore.exception.BusinessException;
@@ -21,6 +23,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@TenantIgnore
 public class AdminService {
 
     private static final Logger log = LoggerFactory.getLogger(AdminService.class);
@@ -33,15 +36,11 @@ public class AdminService {
     private final JwtUtil jwtUtil;
     private final RbacService rbacService;
 
-    /**
-     * 解码前端 Base64 编码的密码
-     */
     private String decodePassword(String encoded) {
         try {
             byte[] decoded = Base64.getDecoder().decode(encoded);
             return new String(decoded, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            // 如果解码失败，则视为明文密码
             return encoded;
         }
     }
@@ -53,7 +52,6 @@ public class AdminService {
         if (admin == null) {
             throw new BusinessException("用户名或密码错误");
         }
-        // 解码前端传来的 Base64 密码后校验
         String rawPassword = decodePassword(dto.getPassword());
         if (!verifyPassword(rawPassword, admin.getPassword())) {
             throw new BusinessException("用户名或密码错误");
@@ -98,7 +96,6 @@ public class AdminService {
         data.put("bookCount", bookMapper.selectCount(
                 new LambdaQueryWrapper<Book>().eq(Book::getStatus, Constants.STATUS_ENABLED)
         ));
-        // 全平台总阅读时长（秒）
         Long totalDuration = readingRecordMapper.sumDuration(null,
                 java.time.LocalDate.of(2020, 1, 1).atStartOfDay(),
                 java.time.LocalDateTime.now());
@@ -145,6 +142,7 @@ public class AdminService {
     }
 
     public void updateAdminNickname(Long adminId, String nickname) {
+        requireNotAuditor();
         if (nickname == null || nickname.trim().isEmpty()) {
             throw new BusinessException("昵称不能为空");
         }
@@ -158,6 +156,7 @@ public class AdminService {
     }
 
     public void disableUser(Long userId) {
+        requireNotAuditor();
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
@@ -168,6 +167,7 @@ public class AdminService {
     }
 
     public void deleteBook(Long bookId) {
+        requireNotAuditor();
         Book book = bookMapper.selectById(bookId);
         if (book == null) {
             throw new BusinessException("书籍不存在");
@@ -178,6 +178,7 @@ public class AdminService {
     }
 
     public void deleteAdmin(Long adminId) {
+        requireSuperAdmin();
         AdminUser admin = adminUserMapper.selectById(adminId);
         if (admin == null) {
             throw new BusinessException("管理员不存在");
@@ -201,5 +202,22 @@ public class AdminService {
         if (roleId == null) return null;
         Role role = rbacService.getRoleWithPermissions(roleId);
         return role != null ? role.getCode() : null;
+    }
+
+    private String getCurrentRoleCode() {
+        Long roleId = TenantContext.getRoleId();
+        return getRoleCode(roleId);
+    }
+
+    private void requireNotAuditor() {
+        if (Constants.ROLE_AUDITOR.equals(getCurrentRoleCode())) {
+            throw new BusinessException(403, "审计角色无权执行此操作");
+        }
+    }
+
+    private void requireSuperAdmin() {
+        if (!Constants.ROLE_SUPER_ADMIN.equals(getCurrentRoleCode())) {
+            throw new BusinessException(403, "仅超级管理员可执行此操作");
+        }
     }
 }

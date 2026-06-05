@@ -2,6 +2,7 @@ package com.xiaoan.bookstore.aspect;
 
 import com.xiaoan.bookstore.annotation.Log;
 import com.xiaoan.bookstore.common.Constants;
+import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.entity.OperationLog;
 import com.xiaoan.bookstore.mapper.OperationLogMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,11 +45,10 @@ public class OperationLogAspect {
         HttpServletRequest request = attrs.getRequest();
         OperationLog opLog = new OperationLog();
 
-        Object userId = request.getAttribute(Constants.CONTEXT_USER_ID);
-        Object userType = request.getAttribute(Constants.CONTEXT_USER_TYPE);
-        Object roleId = request.getAttribute(Constants.CONTEXT_ROLE_ID);
-        if (userId != null) opLog.setUserId((Long) userId);
-        if (userType != null) opLog.setUserType((Integer) userType);
+        Long tenantId = TenantContext.getTenantId();
+        Long roleId = TenantContext.getRoleId();
+        if (tenantId != null) opLog.setUserId(tenantId);
+        if (TenantContext.getUserType() != null) opLog.setUserType(TenantContext.getUserType());
 
         opLog.setAction(logAnno.value());
         MethodSignature signature = (MethodSignature) point.getSignature();
