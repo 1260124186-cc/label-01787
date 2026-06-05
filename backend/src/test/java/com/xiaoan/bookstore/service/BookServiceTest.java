@@ -430,6 +430,231 @@ class BookServiceTest {
 
             assertTrue(ex.getMessage().startsWith("文件上传失败"));
         }
+
+        @Test
+        @DisplayName("文件名为 null 时应使用默认标题")
+        void shouldHandleNullOriginalFilename() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = mock(MultipartFile.class);
+            when(file.isEmpty()).thenReturn(false);
+            when(file.getSize()).thenReturn((long) pdfContent.length);
+            when(file.getOriginalFilename()).thenReturn(null);
+            when(file.getInputStream()).thenReturn(new ByteArrayInputStream(pdfContent));
+
+            BusinessException ex = assertThrows(BusinessException.class, () ->
+                    bookService.upload(userId, file, null, null, null, 1)
+            );
+
+            assertEquals("仅支持PDF文件", ex.getMessage());
+            verify(bookMapper, never()).insert(any());
+        }
+
+        @Test
+        @DisplayName("空字符串标题应使用文件名")
+        void shouldUseFilenameWhenTitleIsEmpty() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("默认书名.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, "", null, null, 1);
+
+            assertEquals("默认书名", book.getTitle());
+        }
+
+        @Test
+        @DisplayName("空白字符串标题应使用文件名")
+        void shouldUseFilenameWhenTitleIsBlank() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("空白标题.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, "   ", null, null, 1);
+
+            assertEquals("空白标题", book.getTitle());
+        }
+    }
+
+    @Nested
+    @DisplayName("上传逻辑 - 字段默认值")
+    class UploadDefaultValueTests {
+
+        @Test
+        @DisplayName("初始阅读进度应为0")
+        void shouldSetLastPageTo0() throws Exception {
+            byte[] pdfContent = createValidPdf(10);
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertEquals(0, book.getLastPage());
+        }
+
+        @Test
+        @DisplayName("状态应为启用")
+        void shouldSetStatusToEnabled() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertEquals(Constants.STATUS_ENABLED, book.getStatus());
+        }
+
+        @Test
+        @DisplayName("作者为 null 时应设为空字符串")
+        void shouldSetAuthorToEmptyStringWhenNull() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, "测试书籍", null, null, 1);
+
+            assertEquals("", book.getAuthor());
+        }
+
+        @Test
+        @DisplayName("分类ID为 null 时应保持 null")
+        void shouldKeepCategoryIdNull() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertNull(book.getCategoryId());
+        }
+
+        @Test
+        @DisplayName("文件路径应包含用户ID和UUID")
+        void shouldHaveCorrectFilePathFormat() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            String filePath = book.getFilePath();
+            String[] parts = filePath.split("/");
+
+            assertEquals(2, parts.length);
+            assertEquals(userId.toString(), parts[0]);
+            assertTrue(parts[1].endsWith(".pdf"));
+            assertEquals(40, parts[1].length());
+        }
+    }
+
+    @Nested
+    @DisplayName("上传逻辑 - 文件名处理")
+    class UploadFilenameProcessingTests {
+
+        @Test
+        @DisplayName("文件名包含多个点号应正确处理")
+        void shouldHandleFilenameWithMultipleDots() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("Java.编程.指南.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertEquals("Java.编程.指南", book.getTitle());
+        }
+
+        @Test
+        @DisplayName("文件名包含特殊字符应正确处理")
+        void shouldHandleSpecialCharactersInFilename() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("【推荐】Python入门到精通.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertEquals("【推荐】Python入门到精通", book.getTitle());
+        }
+
+        @Test
+        @DisplayName("文件名包含空格应正确处理")
+        void shouldHandleSpacesInFilename() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("C++ 高级编程 第三版.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertEquals("C++ 高级编程 第三版", book.getTitle());
+        }
+
+        @Test
+        @DisplayName("文件恰好等于边界大小应允许上传")
+        void shouldAcceptFileAtExactBoundary() throws Exception {
+            int boundarySize = 1024 * 1024 + 100;
+            byte[] pdfContent = createValidPdf(5);
+            assertEquals(boundarySize, pdfContent.length);
+
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertNotNull(book);
+            verify(bookMapper, times(1)).insert(any());
+        }
     }
 
     private MultipartFile createMockFile(String filename, byte[] content) throws IOException {

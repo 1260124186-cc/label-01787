@@ -77,7 +77,7 @@ public class BookService {
 
             Book book = new Book();
             book.setUserId(userId);
-            String bookTitle = title != null && !title.isEmpty() ? title : originalName.replace(".pdf", "");
+            String bookTitle = title != null && !title.isBlank() ? title : originalName.replace(".pdf", "");
             book.setTitle(bookTitle);
             book.setAuthor(author != null ? author : "");
             book.setFilePath(userId + "/" + fileName);

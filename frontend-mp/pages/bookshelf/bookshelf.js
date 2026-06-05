@@ -11,7 +11,8 @@ Page({
     hasMore: true,
     isLogin: false,
     showCopyrightModal: false,
-    pendingFile: null,
+    pendingFilePath: '',
+    pendingFileName: '',
     copyrightDeclared: false
   },
 
@@ -150,40 +151,48 @@ Page({
         }
         this.setData({
           showCopyrightModal: true,
-          pendingFile: file,
+          pendingFilePath: file.path,
+          pendingFileName: file.name,
           copyrightDeclared: false
         })
       }
     })
   },
 
+  noop() {},
+
   toggleCopyright() {
     this.setData({ copyrightDeclared: !this.data.copyrightDeclared })
   },
 
   confirmUpload() {
-    const { pendingFile, copyrightDeclared } = this.data
+    const { pendingFilePath, pendingFileName, copyrightDeclared } = this.data
+    if (!pendingFilePath || !pendingFileName) {
+      wx.showToast({ title: '文件信息已丢失，请重新选择', icon: 'none' })
+      this.setData({ showCopyrightModal: false, copyrightDeclared: false })
+      return
+    }
     if (!copyrightDeclared) {
       wx.showToast({ title: '请先勾选版权声明', icon: 'none' })
       return
     }
     this.setData({ showCopyrightModal: false })
     wx.showLoading({ title: '上传中...' })
-    const title = pendingFile.name.replace('.pdf', '').replace('.PDF', '')
-    uploadFile(pendingFile.path, { title, copyrightDeclared: copyrightDeclared ? '1' : '0' }).then(() => {
+    const title = pendingFileName.replace('.pdf', '').replace('.PDF', '')
+    uploadFile(pendingFilePath, { title, copyrightDeclared: copyrightDeclared ? '1' : '0' }).then(() => {
       wx.hideLoading()
       wx.showToast({ title: '上传成功', icon: 'success' })
-      this.setData({ pendingFile: null, copyrightDeclared: false })
+      this.setData({ pendingFilePath: '', pendingFileName: '', copyrightDeclared: false })
       this.refreshBooks()
     }).catch((err) => {
       console.error('上传失败', err)
       wx.hideLoading()
       wx.showToast({ title: err && err.message ? err.message : '上传失败', icon: 'none' })
-      this.setData({ pendingFile: null, copyrightDeclared: false })
+      this.setData({ pendingFilePath: '', pendingFileName: '', copyrightDeclared: false })
     })
   },
 
   cancelUpload() {
-    this.setData({ showCopyrightModal: false, pendingFile: null, copyrightDeclared: false })
+    this.setData({ showCopyrightModal: false, pendingFilePath: '', pendingFileName: '', copyrightDeclared: false })
   }
 })
