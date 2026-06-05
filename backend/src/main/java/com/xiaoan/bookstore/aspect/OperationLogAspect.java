@@ -46,12 +46,20 @@ public class OperationLogAspect {
 
         Object userId = request.getAttribute(Constants.CONTEXT_USER_ID);
         Object userType = request.getAttribute(Constants.CONTEXT_USER_TYPE);
+        Object roleId = request.getAttribute(Constants.CONTEXT_ROLE_ID);
         if (userId != null) opLog.setUserId((Long) userId);
         if (userType != null) opLog.setUserType((Integer) userType);
 
         opLog.setAction(logAnno.value());
         MethodSignature signature = (MethodSignature) point.getSignature();
         opLog.setTarget(signature.getDeclaringTypeName() + "." + signature.getName());
+
+        StringBuilder detail = new StringBuilder();
+        if (roleId != null) {
+            detail.append("roleId=").append(roleId);
+        }
+        opLog.setDetail(detail.length() > 0 ? detail.toString() : null);
+
         opLog.setIp(getClientIp(request));
         opLog.setCreatedAt(LocalDateTime.now());
 

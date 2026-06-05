@@ -23,8 +23,13 @@ public class Constants {
 
     /** 上下文中的用户ID */
     public static final String CONTEXT_USER_ID = "userId";
-    /** 上下文中的用户类型 */
     public static final String CONTEXT_USER_TYPE = "userType";
+    public static final String CONTEXT_ROLE_ID = "roleId";
+    public static final String CONTEXT_ROLE_CODE = "roleCode";
+
+    public static final String ROLE_SUPER_ADMIN = "SUPER_ADMIN";
+    public static final String ROLE_OPERATOR = "OPERATOR";
+    public static final String ROLE_AUDITOR = "AUDITOR";
 
     private Constants() {}
 }

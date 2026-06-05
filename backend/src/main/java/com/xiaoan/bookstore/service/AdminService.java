@@ -31,6 +31,7 @@ public class AdminService {
     private final ReadingRecordMapper readingRecordMapper;
     private final OperationLogMapper operationLogMapper;
     private final JwtUtil jwtUtil;
+    private final RbacService rbacService;
 
     /**
      * 解码前端 Base64 编码的密码
@@ -61,11 +62,25 @@ public class AdminService {
             throw new BusinessException("账号已被禁用");
         }
 
-        String token = jwtUtil.generateToken(admin.getId(), Constants.USER_TYPE_ADMIN);
+        String token = jwtUtil.generateAdminToken(admin.getId(), admin.getRoleId());
+        String roleCode = null;
+        java.util.List<String> permissions = java.util.Collections.emptyList();
+        if (admin.getRoleId() != null) {
+            Role role = rbacService.getRoleWithPermissions(admin.getRoleId());
+            if (role != null) {
+                roleCode = role.getCode();
+                permissions = role.getPermissions() != null
+                        ? role.getPermissions().stream().map(Permission::getCode).collect(java.util.stream.Collectors.toList())
+                        : java.util.Collections.emptyList();
+            }
+        }
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);
         result.put("nickname", admin.getNickname());
         result.put("username", admin.getUsername());
+        result.put("roleId", admin.getRoleId());
+        result.put("roleCode", roleCode);
+        result.put("permissions", permissions);
         log.info("管理员登录成功: {}", admin.getUsername());
         return result;
     }
@@ -119,8 +134,8 @@ public class AdminService {
 
     public Page<AdminUser> adminList(int page, int size, String keyword) {
         LambdaQueryWrapper<AdminUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(AdminUser::getId, AdminUser::getUsername, AdminUser::getNickname, 
-                       AdminUser::getStatus, AdminUser::getCreatedAt);
+        wrapper.select(AdminUser::getId, AdminUser::getUsername, AdminUser::getNickname,
+                       AdminUser::getRoleId, AdminUser::getStatus, AdminUser::getCreatedAt);
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.and(w -> w.like(AdminUser::getNickname, keyword)
                              .or().like(AdminUser::getUsername, keyword));
@@ -140,5 +155,51 @@ public class AdminService {
         admin.setNickname(nickname.trim());
         adminUserMapper.updateById(admin);
         log.info("更新管理员昵称: adminId={}, nickname={}", adminId, nickname);
+    }
+
+    public void disableUser(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        user.setStatus(Constants.STATUS_DISABLED);
+        userMapper.updateById(user);
+        log.info("禁用用户: userId={}", userId);
+    }
+
+    public void deleteBook(Long bookId) {
+        Book book = bookMapper.selectById(bookId);
+        if (book == null) {
+            throw new BusinessException("书籍不存在");
+        }
+        book.setStatus(Constants.STATUS_DISABLED);
+        bookMapper.updateById(book);
+        log.info("删除书籍: bookId={}", bookId);
+    }
+
+    public void deleteAdmin(Long adminId) {
+        AdminUser admin = adminUserMapper.selectById(adminId);
+        if (admin == null) {
+            throw new BusinessException("管理员不存在");
+        }
+        if (Constants.ROLE_SUPER_ADMIN.equals(getRoleCode(admin.getRoleId()))) {
+            long superAdminCount = adminUserMapper.selectCount(
+                    new LambdaQueryWrapper<AdminUser>()
+                            .eq(AdminUser::getRoleId, admin.getRoleId())
+                            .eq(AdminUser::getStatus, Constants.STATUS_ENABLED)
+            );
+            if (superAdminCount <= 1) {
+                throw new BusinessException("不能删除最后一个超级管理员");
+            }
+        }
+        admin.setStatus(Constants.STATUS_DISABLED);
+        adminUserMapper.updateById(admin);
+        log.info("删除管理员: adminId={}", adminId);
+    }
+
+    private String getRoleCode(Long roleId) {
+        if (roleId == null) return null;
+        Role role = rbacService.getRoleWithPermissions(roleId);
+        return role != null ? role.getCode() : null;
     }
 }

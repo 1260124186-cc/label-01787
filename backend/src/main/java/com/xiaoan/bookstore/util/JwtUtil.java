@@ -15,53 +15,148 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${app.jwt.secret}")
-    private String secret;
+    @Value("${app.jwt.admin.secret}")
+    private String adminSecret;
 
-    @Value("${app.jwt.expiration}")
-    private long expiration;
+    @Value("${app.jwt.admin.expiration}")
+    private long adminExpiration;
 
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    @Value("${app.jwt.admin.issuer}")
+    private String adminIssuer;
+
+    @Value("${app.jwt.admin.audience}")
+    private String adminAudience;
+
+    @Value("${app.jwt.mp.secret}")
+    private String mpSecret;
+
+    @Value("${app.jwt.mp.expiration}")
+    private long mpExpiration;
+
+    @Value("${app.jwt.mp.issuer}")
+    private String mpIssuer;
+
+    @Value("${app.jwt.mp.audience}")
+    private String mpAudience;
+
+    private SecretKey getAdminSigningKey() {
+        return Keys.hmacShaKeyFor(adminSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(Long userId, int userType) {
+    private SecretKey getMpSigningKey() {
+        return Keys.hmacShaKeyFor(mpSecret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public String generateAdminToken(Long userId, Long roleId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        claims.put("userType", userType);
+        claims.put("userType", 1);
+        claims.put("roleId", roleId);
 
         return Jwts.builder()
                 .claims(claims)
+                .issuer(adminIssuer)
+                .audience().add(adminAudience).and()
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey())
+                .expiration(new Date(System.currentTimeMillis() + adminExpiration))
+                .signWith(getAdminSigningKey())
                 .compact();
     }
 
-    public Claims parseToken(String token) {
+    public String generateMpToken(Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("userType", 2);
+
+        return Jwts.builder()
+                .claims(claims)
+                .issuer(mpIssuer)
+                .audience().add(mpAudience).and()
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + mpExpiration))
+                .signWith(getMpSigningKey())
+                .compact();
+    }
+
+    public Claims parseAdminToken(String token) {
         return Jwts.parser()
-                .verifyWith(getSigningKey())
+                .verifyWith(getAdminSigningKey())
+                .requireIssuer(adminIssuer)
+                .requireAudience(adminAudience)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
     }
 
-    public Long getUserId(String token) {
-        Claims claims = parseToken(token);
+    public Claims parseMpToken(String token) {
+        return Jwts.parser()
+                .verifyWith(getMpSigningKey())
+                .requireIssuer(mpIssuer)
+                .requireAudience(mpAudience)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public Long getUserId(Claims claims) {
         return claims.get("userId", Long.class);
     }
 
-    public Integer getUserType(String token) {
-        Claims claims = parseToken(token);
+    public Integer getUserType(Claims claims) {
         return claims.get("userType", Integer.class);
     }
 
-    public boolean isValid(String token) {
+    public Long getRoleId(Claims claims) {
+        return claims.get("roleId", Long.class);
+    }
+
+    public boolean isAdminTokenValid(String token) {
         try {
-            Claims claims = parseToken(token);
+            Claims claims = parseAdminToken(token);
             return !claims.getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public boolean isMpTokenValid(String token) {
+        try {
+            Claims claims = parseMpToken(token);
+            return !claims.getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Deprecated
+    public String generateToken(Long userId, int userType) {
+        if (userType == 1) {
+            return generateAdminToken(userId, null);
+        }
+        return generateMpToken(userId);
+    }
+
+    @Deprecated
+    public Claims parseToken(String token) {
+        try {
+            return parseAdminToken(token);
+        } catch (Exception e) {
+            return parseMpToken(token);
+        }
+    }
+
+    @Deprecated
+    public Long getUserId(String token) {
+        return getUserId(parseToken(token));
+    }
+
+    @Deprecated
+    public Integer getUserType(String token) {
+        return getUserType(parseToken(token));
+    }
+
+    @Deprecated
+    public boolean isValid(String token) {
+        return isAdminTokenValid(token) || isMpTokenValid(token);
     }
 }

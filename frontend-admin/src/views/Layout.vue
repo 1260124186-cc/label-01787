@@ -7,19 +7,27 @@
       </div>
       <el-menu :default-active="activeMenu" router background-color="#6B4226" text-color="#e2c9b0"
         active-text-color="#ffffff" class="sidebar-menu" :collapse="isCollapsed">
-        <el-menu-item index="/dashboard">
+        <el-menu-item v-if="userStore.hasPermission('dashboard:view')" index="/dashboard">
           <el-icon><DataAnalysis /></el-icon>
           <template #title><span>仪表盘</span></template>
         </el-menu-item>
-        <el-menu-item index="/users">
+        <el-menu-item v-if="userStore.hasPermission('user:view')" index="/users">
           <el-icon><User /></el-icon>
           <template #title><span>用户管理</span></template>
         </el-menu-item>
-        <el-menu-item index="/books">
+        <el-menu-item v-if="userStore.hasPermission('book:view')" index="/books">
           <el-icon><Document /></el-icon>
           <template #title><span>书籍管理</span></template>
         </el-menu-item>
-        <el-menu-item index="/logs">
+        <el-menu-item v-if="userStore.hasPermission('admin:view')" index="/admins">
+          <el-icon><UserFilled /></el-icon>
+          <template #title><span>管理员管理</span></template>
+        </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('role:view')" index="/roles">
+          <el-icon><Lock /></el-icon>
+          <template #title><span>角色权限</span></template>
+        </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('log:view')" index="/logs">
           <el-icon><Notebook /></el-icon>
           <template #title><span>操作日志</span></template>
         </el-menu-item>

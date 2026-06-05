@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS admin_user (
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     password VARCHAR(255) NOT NULL COMMENT '密码',
     nickname VARCHAR(50) DEFAULT '' COMMENT '昵称',
+    role_id BIGINT DEFAULT NULL COMMENT '角色ID',
     status TINYINT DEFAULT 1 COMMENT '0-禁用 1-启用',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -96,8 +97,118 @@ CREATE TABLE IF NOT EXISTS operation_log (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB COMMENT='操作日志表';
 
--- 初始化管理员账号 (密码: admin123)
+-- 角色表
+CREATE TABLE IF NOT EXISTS role (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '角色编码',
+    name VARCHAR(50) NOT NULL COMMENT '角色名称',
+    description VARCHAR(200) DEFAULT '' COMMENT '描述',
+    status TINYINT DEFAULT 1 COMMENT '0-禁用 1-启用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB COMMENT='角色表';
+
+-- 权限表（菜单+接口级）
+CREATE TABLE IF NOT EXISTS permission (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(100) NOT NULL UNIQUE COMMENT '权限编码',
+    name VARCHAR(100) NOT NULL COMMENT '权限名称',
+    type TINYINT NOT NULL COMMENT '1-菜单 2-接口',
+    parent_id BIGINT DEFAULT NULL COMMENT '父权限ID',
+    path VARCHAR(200) DEFAULT '' COMMENT '菜单路径或接口路径',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    status TINYINT DEFAULT 1 COMMENT '0-禁用 1-启用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_parent_id (parent_id),
+    INDEX idx_code (code)
+) ENGINE=InnoDB COMMENT='权限表';
+
+-- 角色-权限关联表
+CREATE TABLE IF NOT EXISTS role_permission (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    role_id BIGINT NOT NULL COMMENT '角色ID',
+    permission_id BIGINT NOT NULL COMMENT '权限ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_role_permission (role_id, permission_id),
+    INDEX idx_role_id (role_id)
+) ENGINE=InnoDB COMMENT='角色权限关联表';
+
+-- 文件下载日志表
+CREATE TABLE IF NOT EXISTS file_download_log (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT DEFAULT NULL COMMENT '下载人ID',
+    user_type TINYINT DEFAULT NULL COMMENT '1-管理员 2-小程序用户',
+    file_token VARCHAR(200) NOT NULL COMMENT '签名令牌',
+    file_path VARCHAR(500) NOT NULL COMMENT '文件路径',
+    ip VARCHAR(50) DEFAULT '' COMMENT 'IP地址',
+    referer VARCHAR(500) DEFAULT '' COMMENT '来源页',
+    user_agent VARCHAR(500) DEFAULT '' COMMENT 'UA',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_file_token (file_token),
+    INDEX idx_user (user_id, user_type),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='文件下载日志表';
+
+-- 敏感操作确认令牌表
+CREATE TABLE IF NOT EXISTS sensitive_confirm_token (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    admin_id BIGINT NOT NULL COMMENT '管理员ID',
+    token VARCHAR(200) NOT NULL UNIQUE COMMENT '确认令牌',
+    operation VARCHAR(200) NOT NULL COMMENT '操作标识',
+    expired_at DATETIME NOT NULL COMMENT '过期时间',
+    used TINYINT DEFAULT 0 COMMENT '0-未使用 1-已使用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_token (token),
+    INDEX idx_admin_id (admin_id)
+) ENGINE=InnoDB COMMENT='敏感操作确认令牌表';
+
+-- 初始化角色
+INSERT INTO role (id, code, name, description) VALUES
+(1, 'SUPER_ADMIN', '超级管理员', '拥有全部权限'),
+(2, 'OPERATOR', '运营', '日常运营管理权限'),
+(3, 'AUDITOR', '只读审计', '仅查看和审计权限')
+ON DUPLICATE KEY UPDATE code = VALUES(code);
+
+-- 初始化权限
+INSERT INTO permission (id, code, name, type, parent_id, path, sort_order) VALUES
+(1,  'dashboard', '仪表盘', 1, NULL, '/dashboard', 1),
+(2,  'dashboard:view', '查看仪表盘', 2, 1, '/api/admin/dashboard', 1),
+(10, 'user_mgmt', '用户管理', 1, NULL, '/users', 2),
+(11, 'user:view', '查看用户', 2, 10, '/api/admin/users', 1),
+(12, 'user:disable', '禁用用户', 2, 10, '/api/admin/users/*/disable', 2),
+(20, 'book_mgmt', '书籍管理', 1, NULL, '/books', 3),
+(21, 'book:view', '查看书籍', 2, 20, '/api/admin/books', 1),
+(22, 'book:delete', '删除书籍', 2, 20, '/api/admin/books/*/delete', 2),
+(30, 'admin_mgmt', '管理员管理', 1, NULL, '/admins', 4),
+(31, 'admin:view', '查看管理员', 2, 30, '/api/admin/admins', 1),
+(32, 'admin:create', '创建管理员', 2, 30, '/api/admin/admins/create', 2),
+(33, 'admin:update', '修改管理员', 2, 30, '/api/admin/admins/*/update', 3),
+(34, 'admin:delete', '删除管理员', 2, 30, '/api/admin/admins/*/delete', 4),
+(40, 'log_mgmt', '日志管理', 1, NULL, '/logs', 5),
+(41, 'log:view', '查看日志', 2, 40, '/api/admin/logs', 1),
+(50, 'role_mgmt', '角色权限管理', 1, NULL, '/roles', 6),
+(51, 'role:view', '查看角色', 2, 50, '/api/admin/roles', 1),
+(52, 'role:update', '修改角色权限', 2, 50, '/api/admin/roles/*/update', 2)
+ON DUPLICATE KEY UPDATE code = VALUES(code);
+
+-- 超级管理员：全部权限
+INSERT INTO role_permission (role_id, permission_id)
+SELECT 1, id FROM permission
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 运营：仪表盘+用户查看+书籍管理+日志查看
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(2, 1), (2, 2), (2, 10), (2, 11), (2, 20), (2, 21), (2, 22), (2, 40), (2, 41)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 只读审计：仪表盘+用户查看+书籍查看+日志查看
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(3, 1), (3, 2), (3, 10), (3, 11), (3, 20), (3, 21), (3, 40), (3, 41)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 初始化管理员账号 (密码: admin123)，默认超级管理员角色
 -- verifyPassword 方法兼容明文与 BCrypt，首次启动后可通过接口修改为 BCrypt 密码
-INSERT INTO admin_user (username, password, nickname, status) VALUES
-('admin', 'admin123', '超级管理员', 1)
+INSERT INTO admin_user (username, password, nickname, role_id, status) VALUES
+('admin', 'admin123', '超级管理员', 1, 1)
 ON DUPLICATE KEY UPDATE username = username;

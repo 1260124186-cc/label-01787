@@ -1,6 +1,7 @@
 package com.xiaoan.bookstore.config;
 
-import com.xiaoan.bookstore.interceptor.JwtInterceptor;
+import com.xiaoan.bookstore.interceptor.AdminJwtInterceptor;
+import com.xiaoan.bookstore.interceptor.MpJwtInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -8,7 +9,6 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.charset.StandardCharsets;
@@ -19,7 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    private final JwtInterceptor jwtInterceptor;
+    private final AdminJwtInterceptor adminJwtInterceptor;
+    private final MpJwtInterceptor mpJwtInterceptor;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -33,18 +34,20 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/api/**")
+        registry.addInterceptor(adminJwtInterceptor)
+                .addPathPatterns("/api/admin/**")
                 .excludePathPatterns(
-                        "/api/admin/login",
+                        "/api/admin/login"
+                );
+
+        registry.addInterceptor(mpJwtInterceptor)
+                .addPathPatterns("/api/mp/**")
+                .excludePathPatterns(
                         "/api/mp/login"
                 );
-    }
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:./uploads/");
+        registry.addInterceptor(mpJwtInterceptor)
+                .addPathPatterns("/api/file/download");
     }
 
     @Override

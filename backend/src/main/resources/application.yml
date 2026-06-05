@@ -37,14 +37,26 @@ mybatis-plus:
 # 自定义配置
 app:
   jwt:
-    secret: xiaoan-bookstore-jwt-secret-key-2024-very-long-string
-    expiration: 604800000  # 7天
+    admin:
+      secret: xiaoan-bookstore-admin-jwt-secret-key-2024-very-long-string-for-hmac
+      expiration: 28800000
+      issuer: xiaoan-bookstore-admin
+      audience: xiaoan-bookstore-admin-api
+    mp:
+      secret: xiaoan-bookstore-mp-jwt-secret-key-2024-very-long-string-for-hmac
+      expiration: 604800000
+      issuer: xiaoan-bookstore-mp
+      audience: xiaoan-bookstore-mp-api
   upload:
     path: ${UPLOAD_PATH:./uploads}
-    max-size: 157286400  # 150MB
+    max-size: 157286400
   wx:
     app-id: ${WX_APP_ID:your-app-id}
     app-secret: ${WX_APP_SECRET:your-app-secret}
+  file:
+    signed-url-expiration: 300
+    max-downloads-per-hour: 10
+    max-downloads-per-day: 100
 
 logging:
   level:

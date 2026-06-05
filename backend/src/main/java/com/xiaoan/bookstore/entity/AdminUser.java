@@ -12,9 +12,13 @@ public class AdminUser {
     private String username;
     private String password;
     private String nickname;
+    private Long roleId;
     private Integer status;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
+
+    @TableField(exist = false)
+    private Role role;
 }

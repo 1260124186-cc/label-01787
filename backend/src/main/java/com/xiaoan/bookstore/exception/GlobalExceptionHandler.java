@@ -18,7 +18,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusiness(BusinessException e) {
-        log.warn("业务异常: {}", e.getMessage());
+        if (e.getCode() == 403) {
+            log.warn("权限异常: {}", e.getMessage());
+        } else if (e.getCode() == 401) {
+            log.warn("认证异常: {}", e.getMessage());
+        } else {
+            log.warn("业务异常: {}", e.getMessage());
+        }
         return Result.error(e.getCode(), e.getMessage());
     }
 

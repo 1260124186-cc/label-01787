@@ -56,7 +56,7 @@ public class UserService {
             log.info("新用户注册: openid={}", openid);
         }
 
-        String token = jwtUtil.generateToken(user.getId(), Constants.USER_TYPE_MP);
+        String token = jwtUtil.generateMpToken(user.getId());
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);
         result.put("userId", user.getId());
