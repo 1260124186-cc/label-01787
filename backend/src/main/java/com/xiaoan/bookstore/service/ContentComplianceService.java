@@ -2,6 +2,7 @@ package com.xiaoan.bookstore.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xiaoan.bookstore.annotation.TenantIgnore;
 import com.xiaoan.bookstore.common.Constants;
 import com.xiaoan.bookstore.dto.CopyrightComplaintDTO;
 import com.xiaoan.bookstore.entity.*;
@@ -19,6 +20,7 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
+@TenantIgnore
 public class ContentComplianceService {
 
     private static final Logger log = LoggerFactory.getLogger(ContentComplianceService.class);
@@ -174,9 +176,9 @@ public class ContentComplianceService {
 
         report.put("period", Map.of("start", startTime.toString(), "end", endTime.toString()));
 
-        long auditPass = contentAuditMapper.countByResultAndTimeRange(Constants.AUDIT_RESULT_PASS, startTime, endTime);
-        long auditSuspected = contentAuditMapper.countByResultAndTimeRange(Constants.AUDIT_RESULT_SUSPECTED, startTime, endTime);
-        long auditViolation = contentAuditMapper.countByResultAndTimeRange(Constants.AUDIT_RESULT_VIOLATION, startTime, endTime);
+        long auditPass = nullToZero(contentAuditMapper.countByResultAndTimeRange(Constants.AUDIT_RESULT_PASS, startTime, endTime));
+        long auditSuspected = nullToZero(contentAuditMapper.countByResultAndTimeRange(Constants.AUDIT_RESULT_SUSPECTED, startTime, endTime));
+        long auditViolation = nullToZero(contentAuditMapper.countByResultAndTimeRange(Constants.AUDIT_RESULT_VIOLATION, startTime, endTime));
         long auditTotal = auditPass + auditSuspected + auditViolation;
 
         Map<String, Object> auditStats = new LinkedHashMap<>();
@@ -190,25 +192,25 @@ public class ContentComplianceService {
         LambdaQueryWrapper<CopyrightComplaint> complaintWrapper = new LambdaQueryWrapper<>();
         complaintWrapper.ge(CopyrightComplaint::getCreatedAt, startTime);
         complaintWrapper.le(CopyrightComplaint::getCreatedAt, endTime);
-        long complaintTotal = copyrightComplaintMapper.selectCount(complaintWrapper);
+        long complaintTotal = nullToZero(copyrightComplaintMapper.selectCount(complaintWrapper));
 
         LambdaQueryWrapper<CopyrightComplaint> pendingWrapper = new LambdaQueryWrapper<>();
         pendingWrapper.ge(CopyrightComplaint::getCreatedAt, startTime);
         pendingWrapper.le(CopyrightComplaint::getCreatedAt, endTime);
         pendingWrapper.eq(CopyrightComplaint::getStatus, Constants.COMPLAINT_PENDING);
-        long complaintPending = copyrightComplaintMapper.selectCount(pendingWrapper);
+        long complaintPending = nullToZero(copyrightComplaintMapper.selectCount(pendingWrapper));
 
         LambdaQueryWrapper<CopyrightComplaint> takenDownWrapper = new LambdaQueryWrapper<>();
         takenDownWrapper.ge(CopyrightComplaint::getCreatedAt, startTime);
         takenDownWrapper.le(CopyrightComplaint::getCreatedAt, endTime);
         takenDownWrapper.eq(CopyrightComplaint::getStatus, Constants.COMPLAINT_TAKEN_DOWN);
-        long complaintTakenDown = copyrightComplaintMapper.selectCount(takenDownWrapper);
+        long complaintTakenDown = nullToZero(copyrightComplaintMapper.selectCount(takenDownWrapper));
 
         LambdaQueryWrapper<CopyrightComplaint> rejectedWrapper = new LambdaQueryWrapper<>();
         rejectedWrapper.ge(CopyrightComplaint::getCreatedAt, startTime);
         rejectedWrapper.le(CopyrightComplaint::getCreatedAt, endTime);
         rejectedWrapper.eq(CopyrightComplaint::getStatus, Constants.COMPLAINT_REJECTED);
-        long complaintRejected = copyrightComplaintMapper.selectCount(rejectedWrapper);
+        long complaintRejected = nullToZero(copyrightComplaintMapper.selectCount(rejectedWrapper));
 
         Map<String, Object> complaintStats = new LinkedHashMap<>();
         complaintStats.put("total", complaintTotal);
@@ -217,23 +219,23 @@ public class ContentComplianceService {
         complaintStats.put("rejected", complaintRejected);
         report.put("copyrightComplaint", complaintStats);
 
-        long bookTakenDown = bookMapper.selectCount(
+        long bookTakenDown = nullToZero(bookMapper.selectCount(
                 new LambdaQueryWrapper<Book>()
                         .eq(Book::getStatus, Constants.STATUS_TAKEN_DOWN)
                         .ge(Book::getUpdatedAt, startTime)
                         .le(Book::getUpdatedAt, endTime)
-        );
-        long bookWithCopyright = bookMapper.selectCount(
+        ));
+        long bookWithCopyright = nullToZero(bookMapper.selectCount(
                 new LambdaQueryWrapper<Book>()
                         .eq(Book::getCopyrightDeclared, 1)
                         .ge(Book::getCreatedAt, startTime)
                         .le(Book::getCreatedAt, endTime)
-        );
-        long bookTotal = bookMapper.selectCount(
+        ));
+        long bookTotal = nullToZero(bookMapper.selectCount(
                 new LambdaQueryWrapper<Book>()
                         .ge(Book::getCreatedAt, startTime)
                         .le(Book::getCreatedAt, endTime)
-        );
+        ));
 
         Map<String, Object> bookStats = new LinkedHashMap<>();
         bookStats.put("totalUploaded", bookTotal);
@@ -245,7 +247,7 @@ public class ContentComplianceService {
         LambdaQueryWrapper<OperationLog> logWrapper = new LambdaQueryWrapper<>();
         logWrapper.ge(OperationLog::getCreatedAt, startTime);
         logWrapper.le(OperationLog::getCreatedAt, endTime);
-        long operationCount = operationLogMapper.selectCount(logWrapper);
+        long operationCount = nullToZero(operationLogMapper.selectCount(logWrapper));
 
         Map<String, Object> operationStats = new LinkedHashMap<>();
         operationStats.put("totalOperations", operationCount);
@@ -254,5 +256,9 @@ public class ContentComplianceService {
         report.put("generatedAt", LocalDateTime.now().toString());
 
         return report;
+    }
+
+    private long nullToZero(Long value) {
+        return value != null ? value : 0L;
     }
 }
