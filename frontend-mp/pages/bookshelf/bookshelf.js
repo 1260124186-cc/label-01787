@@ -16,12 +16,19 @@ Page({
     copyrightDeclared: false
   },
 
+  pendingFilePath: '',
+  pendingFileName: '',
+
+  noop() {},
+
   onShow() {
     const app = getApp()
     if (app.globalData.token) {
       this.setData({ isLogin: true })
       this.loadCategories()
-      this.refreshBooks()
+      if (!this.data.showCopyrightModal) {
+        this.refreshBooks()
+      }
     } else {
       this.setData({ isLogin: false, books: [] })
     }
@@ -141,7 +148,7 @@ Page({
       extension: ['pdf'],
       success: (res) => {
         const file = res.tempFiles[0]
-        if (!file || !file.path || !file.name) {
+        if (!file || !file.path) {
           wx.showToast({ title: '文件信息不完整，请重新选择', icon: 'none' })
           return
         }
@@ -153,10 +160,20 @@ Page({
           wx.showToast({ title: '文件不能超过150MB', icon: 'none' })
           return
         }
+
+        let fileName = file.name
+        if (!fileName) {
+          const pathParts = file.path.split('/')
+          fileName = pathParts[pathParts.length - 1] || '未命名文件'
+        }
+
+        this.pendingFilePath = file.path
+        this.pendingFileName = fileName
+
         this.setData({
           showCopyrightModal: true,
           pendingFilePath: file.path,
-          pendingFileName: file.name,
+          pendingFileName: fileName,
           copyrightDeclared: false
         })
       }
@@ -164,43 +181,59 @@ Page({
   },
 
   toggleCopyright() {
-    const { pendingFilePath, pendingFileName } = this.data
-    if (!pendingFilePath || !pendingFileName) {
+    if (!this.pendingFilePath || !this.pendingFileName) {
       wx.showToast({ title: '文件信息已丢失，请重新选择', icon: 'none' })
       this.setData({ showCopyrightModal: false, copyrightDeclared: false })
+      this.pendingFilePath = ''
+      this.pendingFileName = ''
       return
     }
     this.setData({ copyrightDeclared: !this.data.copyrightDeclared })
   },
 
   confirmUpload() {
-    const { pendingFilePath, pendingFileName, copyrightDeclared } = this.data
-    if (!pendingFilePath || !pendingFileName) {
+    const { copyrightDeclared } = this.data
+    if (!this.pendingFilePath || !this.pendingFileName) {
       wx.showToast({ title: '文件信息已丢失，请重新选择', icon: 'none' })
       this.setData({ showCopyrightModal: false, copyrightDeclared: false })
+      this.pendingFilePath = ''
+      this.pendingFileName = ''
       return
     }
     if (!copyrightDeclared) {
       wx.showToast({ title: '请先勾选版权声明', icon: 'none' })
       return
     }
+
+    let fileName = this.pendingFileName
+    if (!fileName) {
+      const pathParts = this.pendingFilePath.split('/')
+      fileName = pathParts[pathParts.length - 1] || '未命名文件'
+    }
+
     this.setData({ showCopyrightModal: false })
     wx.showLoading({ title: '上传中...' })
-    const title = pendingFileName.replace('.pdf', '').replace('.PDF', '')
-    uploadFile(pendingFilePath, { title, copyrightDeclared: copyrightDeclared ? '1' : '0' }).then(() => {
+    const title = fileName.replace('.pdf', '').replace('.PDF', '')
+    uploadFile(this.pendingFilePath, { title, copyrightDeclared: copyrightDeclared ? '1' : '0' }).then(() => {
       wx.hideLoading()
       wx.showToast({ title: '上传成功', icon: 'success' })
+      this.pendingFilePath = ''
+      this.pendingFileName = ''
       this.setData({ pendingFilePath: '', pendingFileName: '', copyrightDeclared: false })
       this.refreshBooks()
     }).catch((err) => {
       console.error('上传失败', err)
       wx.hideLoading()
       wx.showToast({ title: err && err.message ? err.message : '上传失败', icon: 'none' })
+      this.pendingFilePath = ''
+      this.pendingFileName = ''
       this.setData({ pendingFilePath: '', pendingFileName: '', copyrightDeclared: false })
     })
   },
 
   cancelUpload() {
+    this.pendingFilePath = ''
+    this.pendingFileName = ''
     this.setData({ showCopyrightModal: false, pendingFilePath: '', pendingFileName: '', copyrightDeclared: false })
   }
 })
