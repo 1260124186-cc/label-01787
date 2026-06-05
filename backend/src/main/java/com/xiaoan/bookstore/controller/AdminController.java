@@ -10,6 +10,7 @@ import com.xiaoan.bookstore.dto.AdminLoginDTO;
 import com.xiaoan.bookstore.entity.Permission;
 import com.xiaoan.bookstore.entity.Role;
 import com.xiaoan.bookstore.service.AdminService;
+import com.xiaoan.bookstore.service.ContentComplianceService;
 import com.xiaoan.bookstore.service.RbacService;
 import com.xiaoan.bookstore.service.SensitiveOperationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ public class AdminController {
     private final AdminService adminService;
     private final RbacService rbacService;
     private final SensitiveOperationService sensitiveOperationService;
+    private final ContentComplianceService contentComplianceService;
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@Valid @RequestBody AdminLoginDTO dto) {
@@ -159,5 +161,60 @@ public class AdminController {
         String token = sensitiveOperationService.generateConfirmToken(adminId, operation);
         Map<String, String> result = Map.of("confirmToken", token);
         return Result.success(result);
+    }
+
+    @GetMapping("/complaints")
+    @Log("查看版权申诉列表")
+    @RequirePermission("complaint:view")
+    public Result<?> complaintList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer status) {
+        return Result.success(contentComplianceService.complaintList(page, size, status));
+    }
+
+    @PutMapping("/complaints/{id}/handle")
+    @Log("处理版权申诉")
+    @RequirePermission("complaint:handle")
+    @SensitiveOperation("handle_complaint")
+    public Result<Void> handleComplaint(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Object statusObj = body.get("status");
+        Integer status = null;
+        if (statusObj instanceof Number) {
+            status = ((Number) statusObj).intValue();
+        }
+        String handleResult = (String) body.get("handleResult");
+        if (status == null) {
+            return Result.error(400, "处理状态不能为空");
+        }
+        Long handlerId = TenantContext.getTenantId();
+        contentComplianceService.handleComplaint(id, status, handleResult, handlerId);
+        return Result.success();
+    }
+
+    @GetMapping("/audits")
+    @Log("查看内容审核列表")
+    @RequirePermission("audit:view")
+    public Result<?> auditList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Integer result,
+            @RequestParam(required = false) Integer targetType) {
+        return Result.success(contentComplianceService.auditList(page, size, result, targetType));
+    }
+
+    @GetMapping("/compliance/report")
+    @Log("生成合规审计报告")
+    @RequirePermission("audit:report")
+    public Result<Map<String, Object>> complianceReport(
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startTime,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endTime) {
+        if (startTime == null) {
+            startTime = java.time.LocalDateTime.now().minusDays(30);
+        }
+        if (endTime == null) {
+            endTime = java.time.LocalDateTime.now();
+        }
+        return Result.success(contentComplianceService.generateComplianceReport(startTime, endTime));
     }
 }

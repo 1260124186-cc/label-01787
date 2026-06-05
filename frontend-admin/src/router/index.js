@@ -47,6 +47,18 @@ const routes = [
         name: 'Roles',
         component: () => import('@/views/RoleList.vue'),
         meta: { title: '角色权限', permission: 'role:view' }
+      },
+      {
+        path: 'complaints',
+        name: 'Complaints',
+        component: () => import('@/views/ComplaintList.vue'),
+        meta: { title: '版权申诉', permission: 'complaint:view' }
+      },
+      {
+        path: 'compliance',
+        name: 'Compliance',
+        component: () => import('@/views/ComplianceReport.vue'),
+        meta: { title: '合规审计', permission: 'audit:report' }
       }
     ]
   }

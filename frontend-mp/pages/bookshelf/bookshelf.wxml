@@ -44,4 +44,21 @@
   <view class="fab-btn" bindtap="uploadBook">
     <view class="icon icon-plus"></view>
   </view>
+
+  <!-- 版权声明弹窗 -->
+  <view class="copyright-mask" wx:if="{{showCopyrightModal}}" bindtap="cancelUpload"></view>
+  <view class="copyright-modal {{showCopyrightModal ? 'show' : ''}}">
+    <text class="copyright-modal-title">版权声明</text>
+    <text class="copyright-modal-desc">上传书籍前，请确认您拥有该书籍的版权或已获得授权。上传未经授权的内容可能会侵犯他人权益。</text>
+    <view class="copyright-checkbox" bindtap="toggleCopyright">
+      <view class="checkbox-icon {{copyrightDeclared ? 'checked' : ''}}">
+        <view class="icon icon-check" wx:if="{{copyrightDeclared}}"></view>
+      </view>
+      <text class="checkbox-text">本人拥有版权或已获授权</text>
+    </view>
+    <view class="copyright-modal-actions">
+      <view class="copyright-btn cancel" bindtap="cancelUpload">取消</view>
+      <view class="copyright-btn confirm {{copyrightDeclared ? '' : 'disabled'}}" bindtap="confirmUpload">确认上传</view>
+    </view>
+  </view>
 </view>

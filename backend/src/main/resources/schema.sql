@@ -48,7 +48,8 @@ CREATE TABLE IF NOT EXISTS book (
     page_count INT DEFAULT 0 COMMENT '总页数',
     category_id BIGINT DEFAULT NULL COMMENT '分类ID',
     last_page INT DEFAULT 0 COMMENT '上次阅读页码',
-    status TINYINT DEFAULT 1 COMMENT '0-已删除 1-正常',
+    copyright_declared TINYINT DEFAULT 0 COMMENT '0-未声明 1-已声明版权',
+    status TINYINT DEFAULT 1 COMMENT '0-已删除 1-正常 2-已下架',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
@@ -163,6 +164,41 @@ CREATE TABLE IF NOT EXISTS sensitive_confirm_token (
     INDEX idx_admin_id (admin_id)
 ) ENGINE=InnoDB COMMENT='敏感操作确认令牌表';
 
+-- 版权申诉工单表
+CREATE TABLE IF NOT EXISTS copyright_complaint (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    complainant_name VARCHAR(100) NOT NULL COMMENT '申诉人姓名',
+    complainant_contact VARCHAR(200) NOT NULL COMMENT '联系方式',
+    book_id BIGINT DEFAULT NULL COMMENT '关联书籍ID',
+    book_title VARCHAR(200) DEFAULT '' COMMENT '书籍名称',
+    reason TEXT NOT NULL COMMENT '申诉原因',
+    evidence_urls VARCHAR(2000) DEFAULT '' COMMENT '证明材料URL(逗号分隔)',
+    status TINYINT DEFAULT 0 COMMENT '0-待处理 1-处理中 2-已下架 3-已驳回',
+    handler_id BIGINT DEFAULT NULL COMMENT '处理人ID',
+    handle_result TEXT COMMENT '处理结果',
+    handled_at DATETIME DEFAULT NULL COMMENT '处理时间',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_book_id (book_id),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='版权申诉工单表';
+
+-- 内容审核记录表
+CREATE TABLE IF NOT EXISTS content_audit (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    target_type TINYINT NOT NULL COMMENT '1-书名 2-批注 3-书摘',
+    target_id BIGINT NOT NULL COMMENT '目标ID',
+    content TEXT NOT NULL COMMENT '被审核文本',
+    result TINYINT NOT NULL COMMENT '0-通过 1-疑似违规 2-确认违规',
+    keywords VARCHAR(500) DEFAULT '' COMMENT '命中的敏感词(逗号分隔)',
+    auditor_id BIGINT DEFAULT NULL COMMENT '审核人ID(人工审核时)',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_target (target_type, target_id),
+    INDEX idx_result (result),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='内容审核记录表';
+
 -- 初始化角色
 INSERT INTO role (id, code, name, description) VALUES
 (1, 'SUPER_ADMIN', '超级管理员', '拥有全部权限'),
@@ -189,7 +225,12 @@ INSERT INTO permission (id, code, name, type, parent_id, path, sort_order) VALUE
 (41, 'log:view', '查看日志', 2, 40, '/api/admin/logs', 1),
 (50, 'role_mgmt', '角色权限管理', 1, NULL, '/roles', 6),
 (51, 'role:view', '查看角色', 2, 50, '/api/admin/roles', 1),
-(52, 'role:update', '修改角色权限', 2, 50, '/api/admin/roles/*/update', 2)
+(52, 'role:update', '修改角色权限', 2, 50, '/api/admin/roles/*/update', 2),
+(60, 'compliance_mgmt', '合规管理', 1, NULL, '/compliance', 7),
+(61, 'complaint:view', '查看版权申诉', 2, 60, '/api/admin/complaints', 1),
+(62, 'complaint:handle', '处理版权申诉', 2, 60, '/api/admin/complaints/*/handle', 2),
+(63, 'audit:view', '查看内容审核', 2, 60, '/api/admin/audits', 1),
+(64, 'audit:report', '合规审计报告', 2, 60, '/api/admin/compliance/report', 2)
 ON DUPLICATE KEY UPDATE code = VALUES(code);
 
 -- 超级管理员：全部权限
@@ -197,14 +238,16 @@ INSERT INTO role_permission (role_id, permission_id)
 SELECT 1, id FROM permission
 ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
 
--- 运营：仪表盘+用户查看+书籍管理+日志查看
+-- 运营：仪表盘+用户查看+书籍管理+日志查看+合规管理
 INSERT INTO role_permission (role_id, permission_id) VALUES
-(2, 1), (2, 2), (2, 10), (2, 11), (2, 20), (2, 21), (2, 22), (2, 40), (2, 41)
+(2, 1), (2, 2), (2, 10), (2, 11), (2, 20), (2, 21), (2, 22), (2, 40), (2, 41),
+(2, 60), (2, 61), (2, 62), (2, 63), (2, 64)
 ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
 
--- 只读审计：仪表盘+用户查看+书籍查看+日志查看
+-- 只读审计：仪表盘+用户查看+书籍查看+日志查看+合规查看
 INSERT INTO role_permission (role_id, permission_id) VALUES
-(3, 1), (3, 2), (3, 10), (3, 11), (3, 20), (3, 21), (3, 40), (3, 41)
+(3, 1), (3, 2), (3, 10), (3, 11), (3, 20), (3, 21), (3, 40), (3, 41),
+(3, 60), (3, 61), (3, 63), (3, 64)
 ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
 
 -- 初始化管理员账号 (密码: admin123)，默认超级管理员角色

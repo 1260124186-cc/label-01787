@@ -174,3 +174,105 @@
 .empty-icon-wrap .icon {
   transform: scale(2.5);
 }
+
+.copyright-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 500;
+}
+
+.copyright-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 600rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 48rpx 40rpx;
+  z-index: 600;
+}
+
+.copyright-modal-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+.copyright-modal-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 32rpx;
+}
+
+.copyright-checkbox {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.checkbox-icon {
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid #ddd;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.checkbox-icon.checked {
+  background: #6B4226;
+  border-color: #6B4226;
+}
+
+.checkbox-icon .icon {
+  color: #fff;
+  transform: scale(0.8);
+}
+
+.checkbox-text {
+  font-size: 26rpx;
+  color: #333;
+}
+
+.copyright-modal-actions {
+  display: flex;
+  gap: 24rpx;
+}
+
+.copyright-btn {
+  flex: 1;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+.copyright-btn.cancel {
+  background: #F5F0EB;
+  color: #666;
+}
+
+.copyright-btn.confirm {
+  background: #6B4226;
+  color: #fff;
+}
+
+.copyright-btn.confirm.disabled {
+  background: #D4A574;
+  color: rgba(255, 255, 255, 0.6);
+}

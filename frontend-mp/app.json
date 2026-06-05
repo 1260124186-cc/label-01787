@@ -5,7 +5,8 @@
     "pages/notes/notes",
     "pages/summary/summary",
     "pages/profile/profile",
-    "pages/category/category"
+    "pages/category/category",
+    "pages/complaint/complaint"
   ],
   "window": {
     "backgroundTextStyle": "dark",

@@ -2,6 +2,7 @@ package com.xiaoan.bookstore.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xiaoan.bookstore.common.Constants;
 import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.common.TenantValidator;
 import com.xiaoan.bookstore.dto.AnnotationDTO;
@@ -19,6 +20,7 @@ public class AnnotationService {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationService.class);
     private final AnnotationMapper annotationMapper;
+    private final ContentComplianceService contentComplianceService;
 
     public Annotation create(Long userId, AnnotationDTO dto) {
         Annotation ann = new Annotation();
@@ -29,6 +31,17 @@ public class AnnotationService {
         ann.setContent(dto.getContent());
         ann.setType(dto.getType());
         annotationMapper.insert(ann);
+
+        try {
+            String auditContent = (dto.getContent() != null ? dto.getContent() : "");
+            if (dto.getSelectedText() != null && !dto.getSelectedText().isEmpty()) {
+                auditContent = dto.getSelectedText() + " " + auditContent;
+            }
+            contentComplianceService.auditText(Constants.AUDIT_TARGET_ANNOTATION, ann.getId(), auditContent);
+        } catch (Exception e) {
+            log.warn("批注内容审核失败，不影响保存: {}", e.getMessage());
+        }
+
         log.info("添加批注: userId={}, bookId={}, page={}", userId, dto.getBookId(), dto.getPageNum());
         return ann;
     }

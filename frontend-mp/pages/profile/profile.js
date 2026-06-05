@@ -111,6 +111,10 @@ Page({
     wx.navigateTo({ url: '/pages/category/category' })
   },
 
+  goComplaint() {
+    wx.navigateTo({ url: '/pages/complaint/complaint' })
+  },
+
   showThemePicker() {
     this.setData({ showTheme: true })
   },

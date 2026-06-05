@@ -9,7 +9,10 @@ Page({
     loading: false,
     page: 1,
     hasMore: true,
-    isLogin: false
+    isLogin: false,
+    showCopyrightModal: false,
+    pendingFile: null,
+    copyrightDeclared: false
   },
 
   onShow() {
@@ -137,7 +140,6 @@ Page({
       extension: ['pdf'],
       success: (res) => {
         const file = res.tempFiles[0]
-        // 检查文件大小 1MB - 150MB
         if (file.size < 1 * 1024 * 1024) {
           wx.showToast({ title: '文件不能小于1MB', icon: 'none' })
           return
@@ -146,17 +148,40 @@ Page({
           wx.showToast({ title: '文件不能超过150MB', icon: 'none' })
           return
         }
-
-        wx.showLoading({ title: '上传中...' })
-        const title = file.name.replace('.pdf', '').replace('.PDF', '')
-        uploadFile(file.path, { title }).then(() => {
-          wx.hideLoading()
-          wx.showToast({ title: '上传成功', icon: 'success' })
-          this.refreshBooks()
-        }).catch(() => {
-          wx.hideLoading()
+        this.setData({
+          showCopyrightModal: true,
+          pendingFile: file,
+          copyrightDeclared: false
         })
       }
     })
+  },
+
+  toggleCopyright() {
+    this.setData({ copyrightDeclared: !this.data.copyrightDeclared })
+  },
+
+  confirmUpload() {
+    const { pendingFile, copyrightDeclared } = this.data
+    if (!copyrightDeclared) {
+      wx.showToast({ title: '请先勾选版权声明', icon: 'none' })
+      return
+    }
+    this.setData({ showCopyrightModal: false })
+    wx.showLoading({ title: '上传中...' })
+    const title = pendingFile.name.replace('.pdf', '').replace('.PDF', '')
+    uploadFile(pendingFile.path, { title, copyrightDeclared: 'true' }).then(() => {
+      wx.hideLoading()
+      wx.showToast({ title: '上传成功', icon: 'success' })
+      this.setData({ pendingFile: null, copyrightDeclared: false })
+      this.refreshBooks()
+    }).catch(() => {
+      wx.hideLoading()
+      this.setData({ pendingFile: null })
+    })
+  },
+
+  cancelUpload() {
+    this.setData({ showCopyrightModal: false, pendingFile: null, copyrightDeclared: false })
   }
 })

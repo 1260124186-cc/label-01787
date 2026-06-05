@@ -20,6 +20,20 @@
             {{ formatSize(row.fileSize) }}
           </template>
         </el-table-column>
+        <el-table-column label="版权声明" width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.copyrightDeclared === 1 ? 'success' : 'info'" size="small">
+              {{ row.copyrightDeclared === 1 ? '已声明' : '未声明' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
+              {{ row.status === 1 ? '正常' : '已下架' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="createdAt" label="上传时间" min-width="180" />
       </el-table>
 

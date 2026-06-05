@@ -37,6 +37,7 @@ public class BookService {
 
     private static final Logger log = LoggerFactory.getLogger(BookService.class);
     private final BookMapper bookMapper;
+    private final ContentComplianceService contentComplianceService;
 
     @Value("${app.upload.path}")
     private String uploadPath;
@@ -46,7 +47,7 @@ public class BookService {
 
     private static final long MIN_FILE_SIZE = 1024 * 1024;
 
-    public Book upload(Long userId, MultipartFile file, String title, String author, Long categoryId) {
+    public Book upload(Long userId, MultipartFile file, String title, String author, Long categoryId, Boolean copyrightDeclared) {
         if (file.isEmpty()) {
             throw new BusinessException("请选择文件");
         }
@@ -76,17 +77,25 @@ public class BookService {
 
             Book book = new Book();
             book.setUserId(userId);
-            book.setTitle(title != null && !title.isEmpty() ? title : originalName.replace(".pdf", ""));
+            String bookTitle = title != null && !title.isEmpty() ? title : originalName.replace(".pdf", "");
+            book.setTitle(bookTitle);
             book.setAuthor(author != null ? author : "");
             book.setFilePath(userId + "/" + fileName);
             book.setFileSize(file.getSize());
             book.setPageCount(pageCount);
             book.setCategoryId(categoryId);
             book.setLastPage(0);
+            book.setCopyrightDeclared(Boolean.TRUE.equals(copyrightDeclared) ? 1 : 0);
             book.setStatus(Constants.STATUS_ENABLED);
             bookMapper.insert(book);
 
-            log.info("书籍上传成功: userId={}, title={}, pages={}", userId, book.getTitle(), pageCount);
+            try {
+                contentComplianceService.auditText(Constants.AUDIT_TARGET_BOOK_TITLE, book.getId(), bookTitle);
+            } catch (Exception e) {
+                log.warn("书名审核失败，不影响上传: {}", e.getMessage());
+            }
+
+            log.info("书籍上传成功: userId={}, title={}, pages={}, copyrightDeclared={}", userId, bookTitle, pageCount, book.getCopyrightDeclared());
             return book;
         } catch (BusinessException e) {
             throw e;

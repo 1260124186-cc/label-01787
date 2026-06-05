@@ -31,6 +31,14 @@
           <el-icon><Notebook /></el-icon>
           <template #title><span>操作日志</span></template>
         </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('complaint:view')" index="/complaints">
+          <el-icon><Warning /></el-icon>
+          <template #title><span>版权申诉</span></template>
+        </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('audit:report')" index="/compliance">
+          <el-icon><ShieldCheck /></el-icon>
+          <template #title><span>合规审计</span></template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

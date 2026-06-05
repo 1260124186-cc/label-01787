@@ -71,3 +71,21 @@ export function getMyPermissions() {
 export function requestConfirmToken(operation) {
   return request.post('/admin/sensitive/confirm-token', { operation })
 }
+
+export function getComplaintList(params) {
+  return request.get('/admin/complaints', { params })
+}
+
+export function handleComplaint(id, data) {
+  return request.put(`/admin/complaints/${id}/handle`, data, {
+    headers: { 'X-Sensitive-Operation': 'handle_complaint' }
+  })
+}
+
+export function getAuditList(params) {
+  return request.get('/admin/audits', { params })
+}
+
+export function getComplianceReport(params) {
+  return request.get('/admin/compliance/report', { params })
+}

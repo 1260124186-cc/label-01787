@@ -118,7 +118,7 @@ public class AdminService {
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.like(Book::getTitle, keyword);
         }
-        wrapper.eq(Book::getStatus, Constants.STATUS_ENABLED);
+        wrapper.ne(Book::getStatus, Constants.STATUS_DISABLED);
         wrapper.orderByDesc(Book::getCreatedAt);
         return bookMapper.selectPage(new Page<>(page, size), wrapper);
     }

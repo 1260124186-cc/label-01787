@@ -15,6 +15,31 @@ public class Constants {
     public static final int STATUS_DISABLED = 0;
     /** 状态：启用 */
     public static final int STATUS_ENABLED = 1;
+    /** 状态：已下架 */
+    public static final int STATUS_TAKEN_DOWN = 2;
+
+    /** 版权申诉状态：待处理 */
+    public static final int COMPLAINT_PENDING = 0;
+    /** 版权申诉状态：处理中 */
+    public static final int COMPLAINT_PROCESSING = 1;
+    /** 版权申诉状态：已下架 */
+    public static final int COMPLAINT_TAKEN_DOWN = 2;
+    /** 版权申诉状态：已驳回 */
+    public static final int COMPLAINT_REJECTED = 3;
+
+    /** 内容审核目标类型：书名 */
+    public static final int AUDIT_TARGET_BOOK_TITLE = 1;
+    /** 内容审核目标类型：批注 */
+    public static final int AUDIT_TARGET_ANNOTATION = 2;
+    /** 内容审核目标类型：书摘 */
+    public static final int AUDIT_TARGET_EXCERPT = 3;
+
+    /** 内容审核结果：通过 */
+    public static final int AUDIT_RESULT_PASS = 0;
+    /** 内容审核结果：疑似违规 */
+    public static final int AUDIT_RESULT_SUSPECTED = 1;
+    /** 内容审核结果：确认违规 */
+    public static final int AUDIT_RESULT_VIOLATION = 2;
 
     /** JWT请求头 */
     public static final String TOKEN_HEADER = "Authorization";

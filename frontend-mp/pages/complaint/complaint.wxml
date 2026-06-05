@@ -1,0 +1,31 @@
+<view class="page-complaint">
+  <view class="form-card card">
+    <view class="form-item">
+      <text class="form-label">姓名 *</text>
+      <input class="form-input" placeholder="请输入您的姓名" value="{{complainantName}}" bindinput="onNameInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">联系方式 *</text>
+      <input class="form-input" placeholder="手机号或邮箱" value="{{complainantContact}}" bindinput="onContactInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">书籍名称</text>
+      <input class="form-input" placeholder="涉嫌侵权的书籍名称" value="{{bookTitle}}" bindinput="onBookTitleInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">申诉原因 *</text>
+      <textarea class="form-textarea" placeholder="请详细描述您的申诉原因" value="{{reason}}" bindinput="onReasonInput" maxlength="500" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">证明材料</text>
+      <text class="form-hint">可填写证明材料的链接地址（多个用逗号分隔）</text>
+      <textarea class="form-textarea" placeholder="如: 版权登记证书、授权书等链接" value="{{evidenceUrls}}" bindinput="onEvidenceInput" maxlength="1000" />
+    </view>
+  </view>
+
+  <button class="submit-btn" bindtap="submitComplaint" loading="{{submitting}}" disabled="{{submitting}}">提交申诉</button>
+</view>

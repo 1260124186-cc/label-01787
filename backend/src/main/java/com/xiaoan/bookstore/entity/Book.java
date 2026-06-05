@@ -17,6 +17,7 @@ public class Book {
     private Integer pageCount;
     private Long categoryId;
     private Integer lastPage;
+    private Integer copyrightDeclared;
     private Integer status;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
