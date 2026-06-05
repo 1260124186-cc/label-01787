@@ -114,12 +114,13 @@ public class ContentComplianceService {
 
         Long finalBookId = complaint.getBookId();
         if (bookId != null) {
+            Book book = bookMapper.selectById(bookId);
+            if (book == null) {
+                throw new BusinessException("关联的书籍不存在");
+            }
             finalBookId = bookId;
             complaint.setBookId(bookId);
-            Book book = bookMapper.selectById(bookId);
-            if (book != null) {
-                complaint.setBookTitle(book.getTitle());
-            }
+            complaint.setBookTitle(book.getTitle());
         }
 
         if (newStatus == Constants.COMPLAINT_TAKEN_DOWN) {

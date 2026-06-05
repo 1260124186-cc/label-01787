@@ -75,7 +75,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getBooks, getComplaintList, handleComplaint, requestConfirmToken } from '@/api/admin'
+import { getBookList, getComplaintList, handleComplaint, requestConfirmToken } from '@/api/admin'
 import { ElMessageBox, ElMessage } from 'element-plus'
 
 const tableData = ref([])
@@ -124,7 +124,7 @@ const fetchData = async () => {
 const loadBooks = async () => {
   booksLoading.value = true
   try {
-    const res = await getBooks({ page: 1, size: 200, keyword: bookSearchKeyword.value || undefined })
+    const res = await getBookList({ page: 1, size: 200, keyword: bookSearchKeyword.value || undefined })
     allBooks.value = res.data.records || []
   } finally {
     booksLoading.value = false
