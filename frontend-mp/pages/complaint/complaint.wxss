@@ -16,6 +16,26 @@
   margin-bottom: 32rpx;
 }
 
+.book-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80rpx;
+  background: #F5F0EB;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+}
+
+.selected-book {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.placeholder-book {
+  font-size: 28rpx;
+  color: #999;
+}
+
 .form-label {
   display: block;
   font-size: 28rpx;

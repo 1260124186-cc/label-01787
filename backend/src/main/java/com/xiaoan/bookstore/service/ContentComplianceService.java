@@ -103,13 +103,29 @@ public class ContentComplianceService {
     }
 
     @Transactional
-    public void handleComplaint(Long complaintId, Integer newStatus, String handleResult, Long handlerId) {
+    public void handleComplaint(Long complaintId, Integer newStatus, String handleResult, Long handlerId, Long bookId) {
         CopyrightComplaint complaint = copyrightComplaintMapper.selectById(complaintId);
         if (complaint == null) {
             throw new BusinessException("申诉工单不存在");
         }
         if (complaint.getStatus() != Constants.COMPLAINT_PENDING && complaint.getStatus() != Constants.COMPLAINT_PROCESSING) {
             throw new BusinessException("该工单已处理完毕");
+        }
+
+        Long finalBookId = complaint.getBookId();
+        if (bookId != null) {
+            finalBookId = bookId;
+            complaint.setBookId(bookId);
+            Book book = bookMapper.selectById(bookId);
+            if (book != null) {
+                complaint.setBookTitle(book.getTitle());
+            }
+        }
+
+        if (newStatus == Constants.COMPLAINT_TAKEN_DOWN) {
+            if (finalBookId == null) {
+                throw new BusinessException("下架操作必须关联书籍，请先选择要下架的书籍");
+            }
         }
 
         complaint.setStatus(newStatus);
@@ -119,16 +135,16 @@ public class ContentComplianceService {
         complaint.setUpdatedAt(LocalDateTime.now());
         copyrightComplaintMapper.updateById(complaint);
 
-        if (newStatus == Constants.COMPLAINT_TAKEN_DOWN && complaint.getBookId() != null) {
-            Book book = bookMapper.selectById(complaint.getBookId());
+        if (newStatus == Constants.COMPLAINT_TAKEN_DOWN && finalBookId != null) {
+            Book book = bookMapper.selectById(finalBookId);
             if (book != null && book.getStatus() == Constants.STATUS_ENABLED) {
                 book.setStatus(Constants.STATUS_TAKEN_DOWN);
                 bookMapper.updateById(book);
-                log.info("书籍已下架: bookId={}, reason=complaint_{}", book.getId(), complaintId);
+                log.info("书籍已下架: bookId={}, reason=complaint_{}", finalBookId, complaintId);
             }
         }
 
-        log.info("版权申诉处理: complaintId={}, status={}, handlerId={}", complaintId, newStatus, handlerId);
+        log.info("版权申诉处理: complaintId={}, bookId={}, status={}, handlerId={}", complaintId, finalBookId, newStatus, handlerId);
     }
 
     public Page<CopyrightComplaint> complaintList(int page, int size, Integer status) {

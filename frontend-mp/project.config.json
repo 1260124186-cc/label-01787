@@ -32,15 +32,21 @@
             "disablePlugins": [],
             "outputPath": ""
         },
-        "condition": false
+        "condition": false,
+        "compileWorklet": false,
+        "localPlugins": false,
+        "useCompilerPlugins": false,
+        "swc": false,
+        "disableSWC": true
     },
     "compileType": "miniprogram",
     "libVersion": "3.14.2",
-    "appid": "wxc13ad0504d528d16",
+    "appid": "touristappid",
     "projectname": "xiaoan-bookstore",
     "condition": {},
     "editorSetting": {
         "tabIndent": "insertSpaces",
         "tabSize": 4
-    }
+    },
+    "simulatorPluginLibVersion": {}
 }

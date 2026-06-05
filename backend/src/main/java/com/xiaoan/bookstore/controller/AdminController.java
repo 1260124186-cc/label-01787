@@ -184,11 +184,16 @@ public class AdminController {
             status = ((Number) statusObj).intValue();
         }
         String handleResult = (String) body.get("handleResult");
+        Long bookId = null;
+        Object bookIdObj = body.get("bookId");
+        if (bookIdObj instanceof Number) {
+            bookId = ((Number) bookIdObj).longValue();
+        }
         if (status == null) {
             return Result.error(400, "处理状态不能为空");
         }
         Long handlerId = TenantContext.getTenantId();
-        contentComplianceService.handleComplaint(id, status, handleResult, handlerId);
+        contentComplianceService.handleComplaint(id, status, handleResult, handlerId, bookId);
         return Result.success();
     }
 

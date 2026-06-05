@@ -11,8 +11,18 @@
     </view>
 
     <view class="form-item">
+      <text class="form-label">关联书籍</text>
+      <text class="form-hint">选择涉嫌侵权的书籍（可选）</text>
+      <view class="book-selector" bindtap="openBookPicker">
+        <text wx:if="{{selectedBookId}}" class="selected-book">{{selectedBookTitle}}</text>
+        <text wx:else class="placeholder-book">点击选择书籍</text>
+        <view class="icon icon-arrow-right"></view>
+      </view>
+    </view>
+
+    <view class="form-item">
       <text class="form-label">书籍名称</text>
-      <input class="form-input" placeholder="涉嫌侵权的书籍名称" value="{{bookTitle}}" bindinput="onBookTitleInput" />
+      <input class="form-input" placeholder="涉嫌侵权的书籍名称（未选择书籍时可手动填写）" value="{{bookTitle}}" bindinput="onBookTitleInput" />
     </view>
 
     <view class="form-item">
