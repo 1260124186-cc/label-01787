@@ -655,6 +655,193 @@ class BookServiceTest {
             assertNotNull(book);
             verify(bookMapper, times(1)).insert(any());
         }
+
+        @Test
+        @DisplayName(".PDF 大写后缀应正确去除")
+        void shouldRemoveUpperCasePdfExtension() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("TEST.PDF", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertEquals("TEST", book.getTitle());
+        }
+
+        @Test
+        @DisplayName(".Pdf 混合大小写后缀应正确去除")
+        void shouldRemoveMixedCasePdfExtension() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("TestBook.Pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertEquals("TestBook", book.getTitle());
+        }
+
+        @Test
+        @DisplayName("文件名为 .pdf 时应使用默认标题")
+        void shouldHandleFilenameIsOnlyPdf() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile(".pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertEquals("", book.getTitle());
+        }
+    }
+
+    @Nested
+    @DisplayName("上传逻辑 - 多用户隔离")
+    class UploadMultiUserTests {
+
+        @Test
+        @DisplayName("不同用户应保存到不同目录")
+        void shouldSaveToDifferentDirectoriesForDifferentUsers() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file1 = createMockFile("test1.pdf", pdfContent);
+            MultipartFile file2 = createMockFile("test2.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book1 = bookService.upload(100L, file1, null, null, null, 1);
+            Book book2 = bookService.upload(200L, file2, null, null, null, 1);
+
+            assertTrue(book1.getFilePath().startsWith("100/"));
+            assertTrue(book2.getFilePath().startsWith("200/"));
+            assertNotEquals(book1.getFilePath(), book2.getFilePath());
+        }
+
+        @Test
+        @DisplayName("用户ID应正确设置")
+        void shouldSetCorrectUserId() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+            Long testUserId = 999L;
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(testUserId, file, null, null, null, 1);
+
+            assertEquals(testUserId, book.getUserId());
+        }
+    }
+
+    @Nested
+    @DisplayName("上传逻辑 - 边界值测试")
+    class UploadBoundaryTests {
+
+        @Test
+        @DisplayName("文件恰好等于最小大小应允许上传")
+        void shouldAcceptFileAtMinSize() throws Exception {
+            byte[] pdfContent = createValidPdfWithSize(1024 * 1024); // 恰好1MB
+
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertNotNull(book);
+            assertEquals(1024 * 1024, book.getFileSize());
+        }
+
+        @Test
+        @DisplayName("文件比最小大小小1字节应拒绝")
+        void shouldRejectFileOneByteBelowMinSize() throws Exception {
+            byte[] pdfContent = createValidPdfWithSize(1024 * 1024 - 1); // 1MB - 1 byte
+
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            BusinessException ex = assertThrows(BusinessException.class, () ->
+                    bookService.upload(userId, file, null, null, null, 1)
+            );
+
+            assertEquals("文件大小不能小于1MB", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("文件恰好等于最大大小应允许上传")
+        void shouldAcceptFileAtMaxSize() throws Exception {
+            long maxSize = 150 * 1024 * 1024L;
+            byte[] pdfContent = createValidPdfWithSize((int) maxSize);
+
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, null, null, null, 1);
+
+            assertNotNull(book);
+            assertEquals(maxSize, book.getFileSize());
+        }
+
+        @Test
+        @DisplayName("空作者应正确处理")
+        void shouldHandleEmptyAuthor() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, "测试书籍", "", null, 1);
+
+            assertEquals("", book.getAuthor());
+        }
+
+        @Test
+        @DisplayName("空白作者应正确处理")
+        void shouldHandleBlankAuthor() throws Exception {
+            byte[] pdfContent = createValidPdf(5);
+            MultipartFile file = createMockFile("test.pdf", pdfContent);
+
+            when(bookMapper.insert(any(Book.class))).thenAnswer(invocation -> {
+                Book book = invocation.getArgument(0);
+                book.setId(1L);
+                return 1;
+            });
+
+            Book book = bookService.upload(userId, file, "测试书籍", "   ", null, 1);
+
+            assertEquals("   ", book.getAuthor());
+        }
     }
 
     private MultipartFile createMockFile(String filename, byte[] content) throws IOException {
@@ -690,6 +877,31 @@ class BookServiceTest {
                 return padded;
             }
             return pdfBytes;
+        }
+    }
+
+    private byte[] createValidPdfWithSize(int targetSize) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+            try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+                contentStream.beginText();
+                contentStream.setFont(PDType1Font.HELVETICA, 12);
+                contentStream.newLineAtOffset(100, 700);
+                contentStream.showText("Test Page");
+                contentStream.endText();
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+
+            byte[] pdfBytes = baos.toByteArray();
+            if (pdfBytes.length >= targetSize) {
+                return pdfBytes;
+            }
+            byte[] padded = new byte[targetSize];
+            System.arraycopy(pdfBytes, 0, padded, 0, pdfBytes.length);
+            return padded;
         }
     }
 }

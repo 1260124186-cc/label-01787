@@ -47,7 +47,7 @@
 
   <!-- 版权声明弹窗 -->
   <view class="copyright-mask" wx:if="{{showCopyrightModal}}" bindtap="cancelUpload"></view>
-  <view class="copyright-modal {{showCopyrightModal ? 'show' : ''}}" catchtap="noop">
+  <view class="copyright-modal" wx:if="{{showCopyrightModal}}">
     <text class="copyright-modal-title">版权声明</text>
     <text class="copyright-modal-desc">上传书籍前，请确认您拥有该书籍的版权或已获得授权。上传未经授权的内容可能会侵犯他人权益。</text>
     <view class="copyright-checkbox" bindtap="toggleCopyright">

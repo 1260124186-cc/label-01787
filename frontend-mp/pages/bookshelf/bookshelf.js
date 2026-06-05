@@ -141,6 +141,10 @@ Page({
       extension: ['pdf'],
       success: (res) => {
         const file = res.tempFiles[0]
+        if (!file || !file.path || !file.name) {
+          wx.showToast({ title: '文件信息不完整，请重新选择', icon: 'none' })
+          return
+        }
         if (file.size < 1 * 1024 * 1024) {
           wx.showToast({ title: '文件不能小于1MB', icon: 'none' })
           return
@@ -159,9 +163,13 @@ Page({
     })
   },
 
-  noop() {},
-
   toggleCopyright() {
+    const { pendingFilePath, pendingFileName } = this.data
+    if (!pendingFilePath || !pendingFileName) {
+      wx.showToast({ title: '文件信息已丢失，请重新选择', icon: 'none' })
+      this.setData({ showCopyrightModal: false, copyrightDeclared: false })
+      return
+    }
     this.setData({ copyrightDeclared: !this.data.copyrightDeclared })
   },
 
