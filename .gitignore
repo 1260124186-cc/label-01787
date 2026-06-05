@@ -1,0 +1,27 @@
+# Java
+target/
+*.class
+*.jar
+*.war
+*.log
+*.iml
+.idea/
+.mvn/wrapper/maven-wrapper.jar
+
+# Node
+node_modules/
+dist/
+.env
+.env.local
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Upload files
+uploads/
+
+# WeChat Mini Program
+frontend-mp/miniprogram_npm/
+frontend-mp/node_modules/

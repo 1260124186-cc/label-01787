@@ -1,0 +1,369 @@
+/* 全局样式 */
+page {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 28rpx;
+  color: #333;
+  background-color: #F5F0EB;
+  line-height: 1.6;
+}
+
+/* 主题变量 */
+.theme-white {
+  --bg-color: #FFFFFF;
+  --text-color: #333333;
+  --card-bg: #FFFFFF;
+  --border-color: #EEEEEE;
+}
+
+.theme-green {
+  --bg-color: #C7EDCC;
+  --text-color: #2D4A2D;
+  --card-bg: #D8F5DC;
+  --border-color: #B0D8B5;
+}
+
+.theme-dark {
+  --bg-color: #1A1A2E;
+  --text-color: #E0E0E0;
+  --card-bg: #252542;
+  --border-color: #3A3A5C;
+}
+
+/* 通用样式 */
+.container {
+  padding: 24rpx;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.06);
+}
+
+.btn-primary {
+  background: #6B4226;
+  color: #fff;
+  border: none;
+  border-radius: 12rpx;
+  padding: 20rpx 40rpx;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+.btn-primary:active {
+  background: #8b5e3c;
+}
+
+.btn-secondary {
+  background: #F5F0EB;
+  color: #6B4226;
+  border: 2rpx solid #D4A574;
+  border-radius: 12rpx;
+  padding: 18rpx 36rpx;
+  font-size: 28rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+  color: #999;
+}
+
+.empty-state .empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-state .empty-text {
+  font-size: 28rpx;
+}
+
+/* 分割线 */
+.divider {
+  height: 1rpx;
+  background: #eee;
+  margin: 24rpx 0;
+}
+
+/* ========== 现代化 CSS 图标 ========== */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44rpx;
+  height: 44rpx;
+  position: relative;
+}
+
+/* 书籍图标 */
+.icon-books {
+  width: 44rpx;
+  height: 36rpx;
+}
+.icon-books::before,
+.icon-books::after {
+  content: '';
+  position: absolute;
+  width: 18rpx;
+  height: 28rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.icon-books::before { left: 2rpx; }
+.icon-books::after { right: 2rpx; }
+
+/* 文件夹图标 */
+.icon-folder {
+  width: 40rpx;
+  height: 32rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+  position: relative;
+}
+.icon-folder::before {
+  content: '';
+  position: absolute;
+  top: -8rpx;
+  left: 0;
+  width: 16rpx;
+  height: 8rpx;
+  background: currentColor;
+  border-radius: 4rpx 4rpx 0 0;
+}
+
+/* 笔记图标 */
+.icon-note {
+  width: 32rpx;
+  height: 40rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+  position: relative;
+}
+.icon-note::before {
+  content: '';
+  position: absolute;
+  top: 10rpx;
+  left: 6rpx;
+  right: 6rpx;
+  height: 3rpx;
+  background: currentColor;
+  box-shadow: 0 8rpx 0 currentColor, 0 16rpx 0 currentColor;
+}
+
+/* 调色板/主题图标 */
+.icon-palette {
+  width: 40rpx;
+  height: 40rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+  position: relative;
+}
+.icon-palette::before {
+  content: '';
+  position: absolute;
+  width: 8rpx;
+  height: 8rpx;
+  background: currentColor;
+  border-radius: 50%;
+  top: 8rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: -10rpx 10rpx 0 currentColor, 10rpx 10rpx 0 currentColor;
+}
+
+/* 编辑/铅笔图标 */
+.icon-edit {
+  width: 36rpx;
+  height: 36rpx;
+  position: relative;
+}
+.icon-edit::before {
+  content: '';
+  position: absolute;
+  width: 24rpx;
+  height: 8rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 2rpx;
+  transform: rotate(-45deg);
+  top: 8rpx;
+  left: 4rpx;
+}
+.icon-edit::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 5rpx solid transparent;
+  border-right: 5rpx solid transparent;
+  border-top: 10rpx solid currentColor;
+  transform: rotate(-45deg);
+  bottom: 4rpx;
+  left: 2rpx;
+}
+
+/* 用户图标 */
+.icon-user {
+  width: 36rpx;
+  height: 40rpx;
+  position: relative;
+}
+.icon-user::before {
+  content: '';
+  position: absolute;
+  width: 16rpx;
+  height: 16rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.icon-user::after {
+  content: '';
+  position: absolute;
+  width: 28rpx;
+  height: 14rpx;
+  border: 3rpx solid currentColor;
+  border-bottom: none;
+  border-radius: 14rpx 14rpx 0 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 信息图标 */
+.icon-info {
+  width: 36rpx;
+  height: 36rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+  position: relative;
+}
+.icon-info::before {
+  content: 'i';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24rpx;
+  font-weight: 600;
+  font-style: italic;
+  font-family: Georgia, serif;
+}
+
+/* 返回箭头 */
+.icon-back {
+  width: 24rpx;
+  height: 24rpx;
+  border-left: 4rpx solid currentColor;
+  border-bottom: 4rpx solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* 右箭头 */
+.icon-arrow-right {
+  width: 16rpx;
+  height: 16rpx;
+  border-right: 3rpx solid currentColor;
+  border-bottom: 3rpx solid currentColor;
+  transform: rotate(-45deg);
+}
+
+/* 关闭图标 */
+.icon-close {
+  width: 28rpx;
+  height: 28rpx;
+  position: relative;
+}
+.icon-close::before,
+.icon-close::after {
+  content: '';
+  position: absolute;
+  width: 28rpx;
+  height: 3rpx;
+  background: currentColor;
+  top: 50%;
+  left: 0;
+}
+.icon-close::before { transform: rotate(45deg); }
+.icon-close::after { transform: rotate(-45deg); }
+
+/* 加号图标 */
+.icon-plus {
+  width: 28rpx;
+  height: 28rpx;
+  position: relative;
+}
+.icon-plus::before,
+.icon-plus::after {
+  content: '';
+  position: absolute;
+  background: currentColor;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.icon-plus::before {
+  width: 28rpx;
+  height: 4rpx;
+}
+.icon-plus::after {
+  width: 4rpx;
+  height: 28rpx;
+}
+
+/* 滚动模式图标 */
+.icon-scroll {
+  width: 28rpx;
+  height: 36rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 14rpx;
+  position: relative;
+}
+.icon-scroll::before {
+  content: '';
+  position: absolute;
+  width: 4rpx;
+  height: 10rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  top: 6rpx;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 翻页模式图标 */
+.icon-swipe {
+  width: 36rpx;
+  height: 28rpx;
+  position: relative;
+}
+.icon-swipe::before {
+  content: '';
+  position: absolute;
+  width: 20rpx;
+  height: 28rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.icon-swipe::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-top: 8rpx solid transparent;
+  border-bottom: 8rpx solid transparent;
+  border-left: 8rpx solid currentColor;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}

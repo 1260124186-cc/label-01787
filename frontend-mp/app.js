@@ -1,0 +1,81 @@
+App({
+  globalData: {
+    baseUrl: 'http://localhost:8080/api/mp',
+    token: '',
+    userInfo: null,
+    theme: 'white', // white | green | dark
+    loginPromise: null // 登录 Promise，防止重复登录
+  },
+
+  onLaunch() {
+    const token = wx.getStorageSync('token')
+    const userInfo = wx.getStorageSync('userInfo')
+    const theme = wx.getStorageSync('theme') || 'white'
+    if (token) {
+      this.globalData.token = token
+      this.globalData.userInfo = userInfo
+    }
+    this.globalData.theme = theme
+  },
+
+  /** 微信登录 */
+  login() {
+    // 防止重复登录
+    if (this.globalData.loginPromise) {
+      return this.globalData.loginPromise
+    }
+
+    this.globalData.loginPromise = new Promise((resolve, reject) => {
+      wx.login({
+        success: (loginRes) => {
+          wx.request({
+            url: `${this.globalData.baseUrl}/login`,
+            method: 'POST',
+            data: { code: loginRes.code },
+            success: (res) => {
+              if (res.data.code === 200) {
+                const data = res.data.data
+                this.globalData.token = data.token
+                this.globalData.userInfo = data
+                wx.setStorageSync('token', data.token)
+                wx.setStorageSync('userInfo', data)
+                resolve(data)
+              } else {
+                reject(res.data.message)
+              }
+            },
+            fail: reject
+          })
+        },
+        fail: reject
+      })
+    }).finally(() => {
+      this.globalData.loginPromise = null
+    })
+
+    return this.globalData.loginPromise
+  },
+
+  /** 检查登录状态，返回是否已登录 */
+  checkLogin() {
+    return new Promise((resolve, reject) => {
+      if (this.globalData.token) {
+        resolve(this.globalData.userInfo)
+      } else {
+        reject(new Error('未登录'))
+      }
+    })
+  },
+
+  /** 更新用户信息（头像、昵称） */
+  updateUserInfo(userInfo) {
+    this.globalData.userInfo = { ...this.globalData.userInfo, ...userInfo }
+    wx.setStorageSync('userInfo', this.globalData.userInfo)
+  },
+
+  /** 设置主题 */
+  setTheme(theme) {
+    this.globalData.theme = theme
+    wx.setStorageSync('theme', theme)
+  }
+})

@@ -1,0 +1,41 @@
+<view class="page-notes">
+  <!-- 筛选标签 -->
+  <view class="filter-tabs">
+    <view class="tab {{noteType === '' ? 'active' : ''}}" bindtap="setFilter" data-type="">全部</view>
+    <view class="tab {{noteType === 1 ? 'active' : ''}}" bindtap="setFilter" data-type="1">评语</view>
+    <view class="tab {{noteType === 2 ? 'active' : ''}}" bindtap="setFilter" data-type="2">笔记</view>
+  </view>
+
+  <!-- 笔记列表 -->
+  <view class="note-list">
+    <view class="note-card" wx:for="{{notes}}" wx:key="id">
+      <view class="note-header">
+        <view class="note-tag {{item.type === 1 ? 'tag-comment' : 'tag-note'}}">
+          {{item.type === 1 ? '评语' : '笔记'}}
+        </view>
+        <text class="note-page">第{{item.pageNum}}页</text>
+      </view>
+      <view class="note-selected" wx:if="{{item.selectedText}}">
+        <text class="quote-mark">"</text>
+        <text>{{item.selectedText}}</text>
+      </view>
+      <view class="note-content">
+        <text>{{item.content}}</text>
+      </view>
+      <view class="note-footer">
+        <text class="note-time">{{item.createdAt}}</text>
+        <view class="note-actions">
+          <text class="action-btn" bindtap="editNote" data-id="{{item.id}}" data-index="{{index}}">编辑</text>
+          <text class="action-btn danger" bindtap="deleteNote" data-id="{{item.id}}">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{notes.length === 0 && !loading}}">
+    <view class="empty-icon-wrap">
+      <view class="icon icon-note"></view>
+    </view>
+    <text class="empty-text">还没有笔记</text>
+  </view>
+</view>

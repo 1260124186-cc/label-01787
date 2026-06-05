@@ -1,0 +1,47 @@
+<view class="page-bookshelf">
+  <!-- 顶部分类筛选 -->
+  <view class="filter-bar">
+    <scroll-view scroll-x class="category-scroll">
+      <view class="category-item {{!currentCategory ? 'active' : ''}}" bindtap="filterCategory" data-id="">全部</view>
+      <view class="category-item {{currentCategory === item.id ? 'active' : ''}}"
+        wx:for="{{categories}}" wx:key="id" bindtap="filterCategory" data-id="{{item.id}}">
+        {{item.name}}
+      </view>
+      <view class="category-item add-btn" bindtap="goCategory">+ 管理</view>
+    </scroll-view>
+  </view>
+
+  <!-- 书籍列表 -->
+  <view class="book-grid" wx:if="{{books.length > 0}}">
+    <view class="book-card" wx:for="{{books}}" wx:key="id" bindtap="openBook" data-id="{{item.id}}"
+      bindlongpress="showBookAction" data-index="{{index}}">
+      <view class="book-cover">
+        <view class="cover-placeholder">
+          <text class="cover-title">{{item.title}}</text>
+          <text class="cover-author">{{item.author || '未知作者'}}</text>
+        </view>
+        <view class="progress-bar" wx:if="{{item.pageCount > 0}}">
+          <view class="progress-fill" style="width: {{(item.lastPage / item.pageCount * 100)}}%"></view>
+        </view>
+      </view>
+      <view class="book-info">
+        <text class="book-title">{{item.title}}</text>
+        <text class="book-meta">{{item.pageCount}}页 · {{item.fileSizeText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{books.length === 0 && !loading}}">
+    <view class="empty-icon-wrap">
+      <view class="icon icon-books"></view>
+    </view>
+    <text class="empty-text">书架空空如也</text>
+    <text class="empty-sub">点击下方按钮上传你的第一本PDF</text>
+  </view>
+
+  <!-- 上传按钮 -->
+  <view class="fab-btn" bindtap="uploadBook">
+    <view class="icon icon-plus"></view>
+  </view>
+</view>

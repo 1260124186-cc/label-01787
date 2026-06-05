@@ -1,0 +1,128 @@
+<view class="reader-page {{themeClass}}">
+  <!-- 顶部栏 -->
+  <view class="top-bar" wx:if="{{showUI}}">
+    <view class="bar-left" bindtap="goBack">
+      <view class="icon icon-back"></view>
+    </view>
+    <view class="bar-title">{{book.title}}</view>
+    <view class="bar-right" bindtap="toggleToc">
+      <text>目录</text>
+    </view>
+  </view>
+
+  <!-- 滚动模式 -->
+  <scroll-view wx:if="{{readMode === 'scroll'}}" scroll-y class="scroll-reader"
+    style="background-color: {{bgColor}};"
+    bindtap="toggleUI"
+    bindscroll="onScroll"
+    bindscrolltolower="loadMorePages"
+    lower-threshold="300">
+    <view wx:for="{{loadedPages}}" wx:key="index" class="page-image-wrap" id="page-{{index}}">
+      <image src="{{item}}" mode="widthFix" class="page-image" lazy-load />
+      <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
+    </view>
+    <view class="load-more" wx:if="{{currentPage < book.pageCount}}" bindtap="loadMorePages">
+      <text>{{loading ? '加载中...' : '加载更多'}}</text>
+    </view>
+    <view class="load-end" wx:if="{{currentPage >= book.pageCount}}">
+      <text>已加载全部页面</text>
+    </view>
+  </scroll-view>
+
+  <!-- 翻页模式 -->
+  <swiper wx:if="{{readMode === 'swipe'}}" class="swipe-reader" current="{{swiperIndex}}"
+    bindchange="onSwiperChange" bindtap="toggleUI"
+    style="background-color: {{bgColor}};">
+    <swiper-item wx:for="{{loadedPages}}" wx:key="index">
+      <scroll-view scroll-y class="swiper-page-scroll" style="background-color: {{bgColor}};">
+        <view class="page-image-wrap">
+          <image src="{{item}}" mode="widthFix" class="page-image" />
+          <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
+        </view>
+      </scroll-view>
+    </swiper-item>
+  </swiper>
+
+  <!-- 底部工具栏 -->
+  <view class="bottom-bar" wx:if="{{showUI}}">
+    <view class="tool-row">
+      <text class="page-info">{{displayPage}} / {{book.pageCount || '-'}}</text>
+    </view>
+    <view class="tool-row actions">
+      <view class="tool-btn {{readMode === 'scroll' ? 'active' : ''}}" bindtap="switchMode" data-mode="scroll">
+        <view class="icon icon-scroll"></view>
+        <text>滚动</text>
+      </view>
+      <view class="tool-btn {{readMode === 'swipe' ? 'active' : ''}}" bindtap="switchMode" data-mode="swipe">
+        <view class="icon icon-swipe"></view>
+        <text>翻页</text>
+      </view>
+      <view class="tool-btn" bindtap="showThemePicker">
+        <view class="icon icon-palette"></view>
+        <text>主题</text>
+      </view>
+      <view class="tool-btn" bindtap="addNote">
+        <view class="icon icon-note"></view>
+        <text>笔记</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 目录侧栏 -->
+  <view class="toc-mask" wx:if="{{showToc}}" bindtap="toggleToc"></view>
+  <view class="toc-panel {{showToc ? 'show' : ''}}">
+    <view class="toc-header">
+      <text class="toc-title">目录</text>
+      <view class="toc-close" bindtap="toggleToc"><view class="icon icon-close"></view></view>
+    </view>
+    <scroll-view scroll-y class="toc-list">
+      <view class="toc-item" wx:for="{{toc}}" wx:key="index" bindtap="jumpToPage" data-page="{{item.page}}">
+        <text class="toc-text">{{item.title}}</text>
+        <text class="toc-page">{{item.page}}</text>
+      </view>
+      <view class="empty-state" wx:if="{{toc.length === 0}}">
+        <text class="empty-text">暂无目录信息</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 主题选择弹窗 -->
+  <view class="theme-mask" wx:if="{{showTheme}}" bindtap="hideThemePicker"></view>
+  <view class="theme-panel {{showTheme ? 'show' : ''}}">
+    <text class="theme-title">阅读主题</text>
+    <view class="theme-options">
+      <view class="theme-option {{theme === 'white' ? 'selected' : ''}}" bindtap="changeTheme" data-theme="white">
+        <view class="theme-circle" style="background: #FFFFFF; border: 2rpx solid #ddd;"></view>
+        <text>白色</text>
+      </view>
+      <view class="theme-option {{theme === 'green' ? 'selected' : ''}}" bindtap="changeTheme" data-theme="green">
+        <view class="theme-circle" style="background: #EBF9ED;"></view>
+        <text>护眼绿</text>
+      </view>
+      <view class="theme-option {{theme === 'dark' ? 'selected' : ''}}" bindtap="changeTheme" data-theme="dark">
+        <view class="theme-circle" style="background: #1A1A2E;"></view>
+        <text>夜空黑</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 笔记弹窗 -->
+  <view class="note-mask" wx:if="{{showNoteDialog}}" bindtap="hideNoteDialog"></view>
+  <view class="note-dialog {{showNoteDialog ? 'show' : ''}}">
+    <view class="note-header">
+      <text class="note-title">添加笔记</text>
+      <view class="note-close" bindtap="hideNoteDialog"><view class="icon icon-close"></view></view>
+    </view>
+    <view class="note-body">
+      <textarea class="note-input" placeholder="请输入选中的文字（可选）" value="{{noteText}}"
+        bindinput="onNoteTextInput" maxlength="500" />
+      <textarea class="note-input note-content" placeholder="写下你的想法..." value="{{noteContent}}"
+        bindinput="onNoteContentInput" maxlength="2000" />
+      <view class="note-type">
+        <view class="type-btn {{noteType === 1 ? 'active' : ''}}" bindtap="setNoteType" data-type="1">评语</view>
+        <view class="type-btn {{noteType === 2 ? 'active' : ''}}" bindtap="setNoteType" data-type="2">笔记</view>
+      </view>
+    </view>
+    <button class="btn-primary note-submit" bindtap="submitNote">保存</button>
+  </view>
+</view>

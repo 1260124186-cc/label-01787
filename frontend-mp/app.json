@@ -1,0 +1,51 @@
+{
+  "pages": [
+    "pages/bookshelf/bookshelf",
+    "pages/reader/reader",
+    "pages/notes/notes",
+    "pages/summary/summary",
+    "pages/profile/profile",
+    "pages/category/category"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#6B4226",
+    "navigationBarTitleText": "小安的书店",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F0EB"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#6B4226",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/bookshelf/bookshelf",
+        "text": "书架",
+        "iconPath": "assets/icon-book.png",
+        "selectedIconPath": "assets/icon-book-active.png"
+      },
+      {
+        "pagePath": "pages/notes/notes",
+        "text": "笔记",
+        "iconPath": "assets/icon-note.png",
+        "selectedIconPath": "assets/icon-note-active.png"
+      },
+      {
+        "pagePath": "pages/summary/summary",
+        "text": "统计",
+        "iconPath": "assets/icon-chart.png",
+        "selectedIconPath": "assets/icon-chart-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/icon-user.png",
+        "selectedIconPath": "assets/icon-user-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

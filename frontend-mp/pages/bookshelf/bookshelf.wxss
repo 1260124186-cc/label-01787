@@ -1,0 +1,176 @@
+.page-bookshelf {
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+/* 分类筛选 */
+.filter-bar {
+  background: #fff;
+  padding: 20rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.category-scroll {
+  white-space: nowrap;
+}
+
+.category-item {
+  display: inline-block;
+  padding: 12rpx 28rpx;
+  margin-right: 16rpx;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  background: #F5F0EB;
+  color: #666;
+}
+
+.category-item.active {
+  background: #6B4226;
+  color: #fff;
+}
+
+.category-item.add-btn {
+  background: transparent;
+  color: #6B4226;
+  border: 2rpx dashed #D4A574;
+}
+
+/* 书籍网格 */
+.book-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 24rpx;
+  gap: 24rpx;
+}
+
+.book-card {
+  width: calc(33.33% - 16rpx);
+}
+
+.book-cover {
+  position: relative;
+  width: 100%;
+  height: 280rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(107, 66, 38, 0.2);
+}
+
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #6B4226 0%, #8b5e3c 50%, #D4A574 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx;
+}
+
+.cover-title {
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+}
+
+.cover-author {
+  color: rgba(255,255,255,0.7);
+  font-size: 20rpx;
+  margin-top: 8rpx;
+}
+
+.progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: rgba(0,0,0,0.2);
+}
+
+.progress-fill {
+  height: 100%;
+  background: #E8734A;
+  border-radius: 0 3rpx 3rpx 0;
+  transition: width 0.3s;
+}
+
+.book-info {
+  padding: 12rpx 4rpx;
+}
+
+.book-title {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.book-meta {
+  font-size: 20rpx;
+  color: #999;
+  margin-top: 4rpx;
+  display: block;
+}
+
+/* 空状态 */
+.empty-state {
+  padding: 200rpx 0;
+}
+
+.empty-sub {
+  font-size: 24rpx;
+  color: #bbb;
+  margin-top: 12rpx;
+}
+
+/* 悬浮按钮 */
+.fab-btn {
+  position: fixed;
+  right: 40rpx;
+  bottom: 200rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: #6B4226;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(107, 66, 38, 0.4);
+  z-index: 100;
+  color: #fff;
+}
+
+.fab-btn:active {
+  transform: scale(0.92);
+}
+
+.fab-btn .icon {
+  display: flex;
+  transform: scale(1.5);
+}
+
+/* 空状态图标 */
+.empty-icon-wrap {
+  width: 120rpx;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+  color: #ccc;
+}
+
+.empty-icon-wrap .icon {
+  transform: scale(2.5);
+}

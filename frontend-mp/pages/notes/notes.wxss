@@ -1,0 +1,131 @@
+.page-notes {
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+.filter-tabs {
+  display: flex;
+  background: #fff;
+  padding: 16rpx 24rpx;
+  gap: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
+.tab {
+  padding: 12rpx 32rpx;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  color: #666;
+  background: #F5F0EB;
+}
+
+.tab.active {
+  background: #6B4226;
+  color: #fff;
+}
+
+.note-list {
+  padding: 24rpx;
+}
+
+.note-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+}
+
+.note-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.note-tag {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 6rpx;
+  font-weight: 500;
+}
+
+.tag-comment {
+  background: #FFF3E0;
+  color: #E8734A;
+}
+
+.tag-note {
+  background: #E8F5E9;
+  color: #4CAF50;
+}
+
+.note-page {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.note-selected {
+  background: #F5F0EB;
+  padding: 16rpx 20rpx;
+  border-radius: 8rpx;
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  color: #666;
+  border-left: 6rpx solid #D4A574;
+}
+
+.quote-mark {
+  color: #D4A574;
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-right: 4rpx;
+}
+
+.note-content {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.8;
+  margin-bottom: 16rpx;
+}
+
+.note-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.note-time {
+  font-size: 22rpx;
+  color: #bbb;
+}
+
+.note-actions {
+  display: flex;
+  gap: 24rpx;
+}
+
+.action-btn {
+  font-size: 24rpx;
+  color: #6B4226;
+}
+
+.action-btn.danger {
+  color: #F56C6C;
+}
+
+
+/* 空状态图标 */
+.empty-icon-wrap {
+  width: 120rpx;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+  color: #ccc;
+}
+
+.empty-icon-wrap .icon {
+  transform: scale(2.5);
+}

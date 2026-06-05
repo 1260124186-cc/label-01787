@@ -1,0 +1,29 @@
+<view class="page-category">
+  <view class="header-bar">
+    <text class="header-title">我的分类</text>
+    <view class="add-btn" bindtap="addCategory">+ 新建</view>
+  </view>
+
+  <view class="category-list">
+    <view class="category-card" wx:for="{{categories}}" wx:key="id">
+      <view class="category-info">
+        <view class="category-icon">
+          <view class="icon icon-folder"></view>
+        </view>
+        <text class="category-name">{{item.name}}</text>
+      </view>
+      <view class="category-actions">
+        <text class="action-btn" bindtap="editCategory" data-id="{{item.id}}" data-name="{{item.name}}">编辑</text>
+        <text class="action-btn danger" bindtap="deleteCategory" data-id="{{item.id}}" data-name="{{item.name}}">删除</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{categories.length === 0}}">
+    <view class="empty-icon-wrap">
+      <view class="icon icon-folder"></view>
+    </view>
+    <text class="empty-text">暂无分类</text>
+    <text class="empty-sub">点击右上角新建分类</text>
+  </view>
+</view>

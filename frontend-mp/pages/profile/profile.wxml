@@ -1,0 +1,97 @@
+<view class="page-profile">
+  <!-- 用户信息卡片 -->
+  <view class="user-card" bindtap="editNickname">
+    <view class="user-avatar">
+      <view class="avatar-placeholder">
+        <view class="icon icon-user"></view>
+      </view>
+    </view>
+    <view class="user-info">
+      <text class="user-name">{{userInfo.nickname || '书友'}}</text>
+      <text class="user-id" wx:if="{{userInfo.id}}">ID: {{userInfo.id}}</text>
+    </view>
+    <view class="login-btn" wx:if="{{!isLogin}}" catchtap="doLogin">
+      <text>点击登录</text>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-card card">
+    <view class="menu-item" bindtap="goCategory">
+      <view class="menu-icon"><view class="icon icon-folder"></view></view>
+      <text class="menu-text">分类管理</text>
+      <view class="menu-arrow"><view class="icon icon-arrow-right"></view></view>
+    </view>
+    <view class="menu-divider"></view>
+    <view class="menu-item" bindtap="showThemePicker">
+      <view class="menu-icon"><view class="icon icon-palette"></view></view>
+      <text class="menu-text">阅读主题</text>
+      <text class="menu-value">{{themeText}}</text>
+      <view class="menu-arrow"><view class="icon icon-arrow-right"></view></view>
+    </view>
+    <view class="menu-divider"></view>
+    <view class="menu-item" bindtap="editNickname">
+      <view class="menu-icon"><view class="icon icon-edit"></view></view>
+      <text class="menu-text">修改昵称</text>
+      <view class="menu-arrow"><view class="icon icon-arrow-right"></view></view>
+    </view>
+  </view>
+
+  <!-- 关于 -->
+  <view class="menu-card card">
+    <view class="menu-item">
+      <view class="menu-icon"><view class="icon icon-info"></view></view>
+      <text class="menu-text">关于小安的书店</text>
+      <text class="menu-value">v1.0.0</text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="menu-card card" wx:if="{{isLogin}}">
+    <view class="menu-item logout-item" bindtap="doLogout">
+      <view class="menu-icon"><view class="icon icon-logout"></view></view>
+      <text class="menu-text" style="color: #E8734A;">退出登录</text>
+    </view>
+  </view>
+
+  <!-- 主题选择弹窗 -->
+  <view class="theme-mask" wx:if="{{showTheme}}" bindtap="hideThemePicker"></view>
+  <view class="theme-panel {{showTheme ? 'show' : ''}}">
+    <text class="theme-title">选择阅读主题</text>
+    <view class="theme-options">
+      <view class="theme-option {{currentTheme === 'white' ? 'selected' : ''}}" bindtap="changeTheme" data-theme="white">
+        <view class="theme-circle" style="background: #FFFFFF; border: 2rpx solid #ddd;"></view>
+        <text>白色</text>
+      </view>
+      <view class="theme-option {{currentTheme === 'green' ? 'selected' : ''}}" bindtap="changeTheme" data-theme="green">
+        <view class="theme-circle" style="background: #C7EDCC;"></view>
+        <text>护眼绿</text>
+      </view>
+      <view class="theme-option {{currentTheme === 'dark' ? 'selected' : ''}}" bindtap="changeTheme" data-theme="dark">
+        <view class="theme-circle" style="background: #1A1A2E;"></view>
+        <text>夜空黑</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 昵称修改弹窗 -->
+  <view class="theme-mask" wx:if="{{showNicknamePanel}}" bindtap="hideNicknamePanel"></view>
+  <view class="avatar-panel {{showNicknamePanel ? 'show' : ''}}">
+    <text class="panel-title">修改昵称</text>
+
+    <!-- 昵称输入 -->
+    <view class="nickname-section">
+      <text class="nickname-label">昵称</text>
+      <input 
+        type="nickname" 
+        class="nickname-input" 
+        placeholder="请输入昵称"
+        value="{{tempNickname}}"
+        bindinput="onNicknameInput"
+      />
+    </view>
+
+    <!-- 保存按钮 -->
+    <button class="save-btn" bindtap="saveNickname">保存</button>
+  </view>
+</view>

@@ -1,0 +1,40 @@
+<view class="page-summary">
+  <!-- 周期选择 -->
+  <view class="period-tabs">
+    <view class="period-tab {{period === 'week' ? 'active' : ''}}" bindtap="setPeriod" data-period="week">本周</view>
+    <view class="period-tab {{period === 'month' ? 'active' : ''}}" bindtap="setPeriod" data-period="month">本月</view>
+    <view class="period-tab {{period === 'year' ? 'active' : ''}}" bindtap="setPeriod" data-period="year">本年</view>
+  </view>
+
+  <!-- 统计概览 -->
+  <view class="overview-card card">
+    <view class="period-range">{{summary.periodStart}} ~ {{summary.periodEnd}}</view>
+    <view class="stat-row">
+      <view class="stat-item">
+        <text class="stat-number">{{durationText}}</text>
+        <text class="stat-label">阅读时长</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-number">{{summary.bookCount || 0}}</text>
+        <text class="stat-label">阅读书籍</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 每日数据 -->
+  <view class="daily-card card">
+    <text class="section-title">每日阅读</text>
+    <view class="daily-chart">
+      <view class="chart-bar-wrap" wx:for="{{dailyData}}" wx:key="date">
+        <view class="chart-bar" style="height: {{item.height}}rpx;">
+          <text class="bar-value" wx:if="{{item.minutes > 0}}">{{item.minutes}}分</text>
+        </view>
+        <text class="bar-label">{{item.label}}</text>
+      </view>
+    </view>
+    <view class="empty-state" wx:if="{{dailyData.length === 0}}" style="padding: 60rpx 0;">
+      <text class="empty-text">暂无阅读数据</text>
+    </view>
+  </view>
+</view>

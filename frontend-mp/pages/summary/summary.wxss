@@ -1,0 +1,123 @@
+.page-summary {
+  min-height: 100vh;
+  padding: 24rpx;
+  padding-bottom: 120rpx;
+}
+
+.period-tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 8rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+}
+
+.period-tab {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.period-tab.active {
+  background: #6B4226;
+  color: #fff;
+  font-weight: 600;
+}
+
+.overview-card {
+  text-align: center;
+}
+
+.period-range {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 28rpx;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-number {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #6B4226;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.stat-divider {
+  width: 2rpx;
+  height: 60rpx;
+  background: #eee;
+}
+
+.daily-card {
+  margin-top: 0;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 28rpx;
+}
+
+.daily-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 360rpx;
+  padding-top: 40rpx;
+}
+
+.chart-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.chart-bar {
+  width: 40rpx;
+  background: linear-gradient(180deg, #E8734A 0%, #D4A574 100%);
+  border-radius: 8rpx 8rpx 0 0;
+  min-height: 8rpx;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+}
+
+.bar-value {
+  position: absolute;
+  top: -40rpx;
+  font-size: 18rpx;
+  color: #E8734A;
+  white-space: nowrap;
+}
+
+.bar-label {
+  font-size: 20rpx;
+  color: #999;
+  margin-top: 12rpx;
+}

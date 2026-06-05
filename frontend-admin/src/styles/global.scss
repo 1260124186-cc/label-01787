@@ -1,0 +1,230 @@
+@use './variables.scss' as *;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+body {
+  background-color: $bg-color;
+  color: $text-primary;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+// Element Plus 主题覆盖
+:root {
+  --el-color-primary: #{$primary-color};
+  --el-color-primary-light-3: #{lighten($primary-color, 10%)};
+  --el-color-primary-light-5: #e2c9b0;
+  --el-color-primary-light-7: #f0e0d0;
+  --el-color-primary-light-9: #f8f2ec;
+  --el-color-primary-dark-2: #{darken($primary-color, 10%)};
+  --el-border-radius-base: #{$border-radius};
+}
+
+// 修复 Element Plus 按钮 hover 效果：颜色加深而非变透明
+.el-button--primary {
+  &:hover,
+  &:focus {
+    background-color: darken(#6B4226, 8%) !important;
+    border-color: darken(#6B4226, 8%) !important;
+    opacity: 1 !important;
+  }
+
+  &:active {
+    background-color: darken(#6B4226, 15%) !important;
+    border-color: darken(#6B4226, 15%) !important;
+  }
+}
+
+.el-button--default {
+  &:hover,
+  &:focus {
+    color: $primary-color !important;
+    border-color: $primary-color !important;
+    background-color: #f8f2ec !important;
+    opacity: 1 !important;
+  }
+}
+
+.el-button--danger {
+  &:hover,
+  &:focus {
+    background-color: darken(#f56c6c, 8%) !important;
+    border-color: darken(#f56c6c, 8%) !important;
+    opacity: 1 !important;
+  }
+}
+
+.el-button--success {
+  &:hover,
+  &:focus {
+    background-color: darken(#67c23a, 8%) !important;
+    border-color: darken(#67c23a, 8%) !important;
+    opacity: 1 !important;
+  }
+}
+
+// text 类型按钮 hover 颜色加深
+.el-button.is-text {
+  &:hover,
+  &:focus {
+    opacity: 1 !important;
+    background-color: rgba(107, 66, 38, 0.06) !important;
+  }
+}
+
+// 弹框内容与标题间距
+.el-message-box__content {
+  padding-top: 16px !important;
+}
+
+.el-dialog__body {
+  padding-top: 16px !important;
+}
+
+// 弹框打开时防止页面抖动
+.el-popup-parent--hidden {
+  padding-right: 0 !important;
+  overflow: hidden !important;
+}
+
+.el-card {
+  border-radius: $border-radius !important;
+  box-shadow: $card-shadow !important;
+  border: none !important;
+}
+
+// 折叠菜单不显示横向滚动条
+.el-menu--collapse {
+  width: 64px !important;
+
+  .el-menu-item {
+    padding: 0 !important;
+    text-align: center;
+
+    .el-icon {
+      margin: 0 !important;
+    }
+  }
+}
+
+.page-container {
+  padding: $spacing-lg;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: $text-primary;
+  }
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+}
+
+// 表格操作栏按钮在一排，垂直居左
+.el-table .cell {
+  .el-button + .el-button {
+    margin-left: 4px;
+  }
+}
+
+// 统计卡片
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.stat-card {
+  padding: $spacing-lg;
+  background: $card-bg;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .stat-info {
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: $text-primary;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: $text-muted;
+      margin-top: 4px;
+    }
+  }
+}
+
+// 分页组件
+.pagination-wrap {
+  margin-top: $spacing-md;
+  display: flex;
+  justify-content: flex-end;
+}
+
+// 响应式
+@media (max-width: 768px) {
+  .page-container {
+    padding: $spacing-sm;
+  }
+
+  .stat-cards {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: $spacing-sm;
+  }
+
+  .stat-card {
+    padding: $spacing-md;
+
+    .stat-info .stat-value {
+      font-size: 22px;
+    }
+  }
+
+  .search-bar {
+    .el-input {
+      width: 100% !important;
+    }
+  }
+
+  .pagination-wrap {
+    justify-content: center;
+  }
+}

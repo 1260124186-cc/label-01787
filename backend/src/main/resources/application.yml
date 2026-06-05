@@ -1,0 +1,51 @@
+server:
+  port: ${SERVER_PORT:9090}
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+      force-response: true
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:${MYSQL_PORT:3306}/xiaoan_bookstore?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=Asia/Shanghai
+    username: root
+    password: ${MYSQL_PASSWORD:6275yuenlai...}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 160MB
+      max-request-size: 160MB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 自定义配置
+app:
+  jwt:
+    secret: xiaoan-bookstore-jwt-secret-key-2024-very-long-string
+    expiration: 604800000  # 7天
+  upload:
+    path: ${UPLOAD_PATH:./uploads}
+    max-size: 157286400  # 150MB
+  wx:
+    app-id: ${WX_APP_ID:your-app-id}
+    app-secret: ${WX_APP_SECRET:your-app-secret}
+
+logging:
+  level:
+    com.xiaoan.bookstore: debug
