@@ -170,14 +170,16 @@ Page({
     this.setData({ showCopyrightModal: false })
     wx.showLoading({ title: '上传中...' })
     const title = pendingFile.name.replace('.pdf', '').replace('.PDF', '')
-    uploadFile(pendingFile.path, { title, copyrightDeclared: 'true' }).then(() => {
+    uploadFile(pendingFile.path, { title, copyrightDeclared: copyrightDeclared ? '1' : '0' }).then(() => {
       wx.hideLoading()
       wx.showToast({ title: '上传成功', icon: 'success' })
       this.setData({ pendingFile: null, copyrightDeclared: false })
       this.refreshBooks()
-    }).catch(() => {
+    }).catch((err) => {
+      console.error('上传失败', err)
       wx.hideLoading()
-      this.setData({ pendingFile: null })
+      wx.showToast({ title: err && err.message ? err.message : '上传失败', icon: 'none' })
+      this.setData({ pendingFile: null, copyrightDeclared: false })
     })
   },
 

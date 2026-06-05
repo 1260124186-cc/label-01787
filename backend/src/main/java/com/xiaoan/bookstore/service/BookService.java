@@ -47,7 +47,7 @@ public class BookService {
 
     private static final long MIN_FILE_SIZE = 1024 * 1024;
 
-    public Book upload(Long userId, MultipartFile file, String title, String author, Long categoryId, Boolean copyrightDeclared) {
+    public Book upload(Long userId, MultipartFile file, String title, String author, Long categoryId, Integer copyrightDeclared) {
         if (file.isEmpty()) {
             throw new BusinessException("请选择文件");
         }
@@ -85,7 +85,7 @@ public class BookService {
             book.setPageCount(pageCount);
             book.setCategoryId(categoryId);
             book.setLastPage(0);
-            book.setCopyrightDeclared(Boolean.TRUE.equals(copyrightDeclared) ? 1 : 0);
+            book.setCopyrightDeclared(copyrightDeclared != null && copyrightDeclared == 1 ? 1 : 0);
             book.setStatus(Constants.STATUS_ENABLED);
             bookMapper.insert(book);
 

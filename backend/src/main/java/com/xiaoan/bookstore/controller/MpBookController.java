@@ -32,7 +32,7 @@ public class MpBookController {
                                 @RequestParam(required = false) String title,
                                 @RequestParam(required = false) String author,
                                 @RequestParam(required = false) Long categoryId,
-                                @RequestParam(required = false, defaultValue = "false") Boolean copyrightDeclared) {
+                                @RequestParam(required = false, defaultValue = "0") Integer copyrightDeclared) {
         Long userId = TenantContext.getTenantId();
         return Result.success(bookService.upload(userId, file, title, author, categoryId, copyrightDeclared));
     }
