@@ -13,7 +13,9 @@ export function getUserList(params) {
 }
 
 export function disableUser(id) {
-  return request.put(`/admin/users/${id}/disable`)
+  return request.put(`/admin/users/${id}/disable`, null, {
+    headers: { 'X-Sensitive-Operation': 'disable_user' }
+  })
 }
 
 export function getBookList(params) {
@@ -21,7 +23,9 @@ export function getBookList(params) {
 }
 
 export function deleteBook(id) {
-  return request.delete(`/admin/books/${id}`)
+  return request.delete(`/admin/books/${id}`, {
+    headers: { 'X-Sensitive-Operation': 'delete_book' }
+  })
 }
 
 export function getLogList(params) {
@@ -37,7 +41,9 @@ export function updateAdminNickname(id, nickname) {
 }
 
 export function deleteAdmin(id) {
-  return request.delete(`/admin/admins/${id}`)
+  return request.delete(`/admin/admins/${id}`, {
+    headers: { 'X-Sensitive-Operation': 'delete_admin' }
+  })
 }
 
 export function getRoleList() {
@@ -49,7 +55,9 @@ export function getRoleDetail(id) {
 }
 
 export function updateRolePermissions(id, permissionIds) {
-  return request.put(`/admin/roles/${id}/permissions`, { permissionIds })
+  return request.put(`/admin/roles/${id}/permissions`, { permissionIds }, {
+    headers: { 'X-Sensitive-Operation': 'update_role_permissions' }
+  })
 }
 
 export function getPermissionList() {

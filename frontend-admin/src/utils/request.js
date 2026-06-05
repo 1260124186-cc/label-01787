@@ -44,6 +44,8 @@ async function handleSensitiveOperation(error) {
 }
 
 function extractOperation(config) {
+  const op = config.headers?.['X-Sensitive-Operation']
+  if (op) return op
   const method = config.method?.toUpperCase()
   const url = config.url || ''
   return `${method}:${url}`
