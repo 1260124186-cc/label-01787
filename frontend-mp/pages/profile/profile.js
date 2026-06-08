@@ -135,6 +135,10 @@ Page({
     wx.navigateTo({ url: '/pages/complaint/complaint' })
   },
 
+  goBackup() {
+    wx.navigateTo({ url: '/pages/backup/backup' })
+  },
+
   showThemePicker() {
     this.setData({ showTheme: true })
   },

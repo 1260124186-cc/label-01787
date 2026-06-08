@@ -8,7 +8,8 @@
     "pages/profile/profile",
     "pages/category/category",
     "pages/complaint/complaint",
-    "pages/notifications-detail/notifications-detail"
+    "pages/notifications-detail/notifications-detail",
+    "pages/backup/backup"
   ],
   "window": {
     "backgroundTextStyle": "dark",

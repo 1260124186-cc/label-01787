@@ -1,0 +1,230 @@
+<view class="page-backup">
+  <view class="login-tip" wx:if="{{!isLogin}}">
+    <view class="login-card">
+      <view class="login-icon">📚</view>
+      <view class="login-title">登录后可使用数据备份</view>
+      <view class="login-desc">备份您的书籍、批注和阅读记录，换设备也不怕数据丢失</view>
+      <button class="login-btn" bindtap="doLogin">立即登录</button>
+    </view>
+  </view>
+
+  <view wx:else>
+    <view class="tab-bar">
+      <view class="tab-item {{activeTab === 'export' ? 'active' : ''}}" bindtap="switchTab" data-tab="export">
+        <text>导出备份</text>
+      </view>
+      <view class="tab-item {{activeTab === 'import' ? 'active' : ''}}" bindtap="switchTab" data-tab="import">
+        <text>导入数据</text>
+      </view>
+      <view class="tab-item {{activeTab === 'tasks' ? 'active' : ''}}" bindtap="switchTab" data-tab="tasks">
+        <text>任务记录</text>
+      </view>
+    </view>
+
+    <view class="tab-content" wx:if="{{activeTab === 'export'}}">
+      <view class="feature-card">
+        <view class="feature-icon">📦</view>
+        <view class="feature-title">一键导出完整数据</view>
+        <view class="feature-desc">导出的ZIP包包含：</view>
+        <view class="feature-list">
+          <view class="feature-item">
+            <text class="feature-check">✓</text>
+            <text>PDF 原文件</text>
+          </view>
+          <view class="feature-item">
+            <text class="feature-check">✓</text>
+            <text>批注与笔记（JSON格式）</text>
+          </view>
+          <view class="feature-item">
+            <text class="feature-check">✓</text>
+            <text>阅读记录（CSV格式）</text>
+          </view>
+          <view class="feature-item">
+            <text class="feature-check">✓</text>
+            <text>分类结构</text>
+          </view>
+        </view>
+        <view class="feature-tip">💡 备份文件将保留7天，建议定期导出保存</view>
+        <button class="primary-btn" bindtap="doExport">开始导出</button>
+      </view>
+
+      <view class="tip-card">
+        <view class="tip-title">📖 数据迁移指南</view>
+        <view class="tip-content">
+          <view class="tip-step">1. 在旧设备上点击「开始导出」，下载ZIP文件</view>
+          <view class="tip-step">2. 将ZIP文件发送到新设备（微信/QQ/邮箱）</view>
+          <view class="tip-step">3. 在新设备打开本页面，选择「导入数据」</view>
+          <view class="tip-step">4. 选择收到的ZIP文件完成导入</view>
+          <view class="tip-step">5. 手动关联已上传的PDF文件即可</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="tab-content" wx:if="{{activeTab === 'import'}}">
+      <view class="feature-card">
+        <view class="feature-icon">📥</view>
+        <view class="feature-title">从备份文件导入</view>
+        <view class="feature-desc">支持导入本应用导出的备份文件，或其他应用导出的标准JSON格式数据。</view>
+        <view class="import-tips">
+          <view class="import-tip-item">• 支持格式：.zip、.json</view>
+          <view class="import-tip-item">• 导入内容：分类、批注、阅读记录</view>
+          <view class="import-tip-item">• PDF文件需单独上传后手动关联</view>
+        </view>
+        <button class="primary-btn" bindtap="chooseFile">选择备份文件</button>
+      </view>
+
+      <view class="tip-card">
+        <view class="tip-title">⚠️ 导入注意事项</view>
+        <view class="tip-content">
+          <view class="tip-step">1. 已存在的同名分类会被自动跳过</view>
+          <view class="tip-step">2. 批注和记录会根据书名自动匹配已有书籍</view>
+          <view class="tip-step">3. 未匹配到的批注和记录会被跳过</view>
+          <view class="tip-step">4. 导入完成后可在结果中查看详情</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="tab-content" wx:if="{{activeTab === 'tasks'}}">
+      <view class="refresh-tip" bindtap="onRefresh">
+        <text>下拉或点击刷新</text>
+        <text class="refresh-icon {{refreshing ? 'rotating' : ''}}">🔄</text>
+      </view>
+
+      <view class="task-list" wx:if="{{tasks.length > 0}}">
+        <view class="task-card" wx:for="{{tasks}}" wx:key="id">
+          <view class="task-header">
+            <view class="task-info">
+              <view class="task-type">
+                <text class="task-icon">{{item.taskType === 1 ? '📤' : '📥'}}</text>
+                <text class="task-name">{{item.taskTypeText}}</text>
+              </view>
+              <view class="task-status status-{{item.status}}">
+                {{item.statusText}}
+              </view>
+            </view>
+            <view class="task-time">{{item.createdAt}}</view>
+          </view>
+
+          <view class="task-progress" wx:if="{{item.status === 0 || item.status === 1}}">
+            <view class="progress-bar">
+              <view class="progress-fill" style="width: {{item.progress}}%"></view>
+            </view>
+            <view class="progress-text">{{item.progress}}%</view>
+          </view>
+
+          <view class="task-stats" wx:if="{{item.status === 2}}">
+            <view class="stat-item">
+              <text class="stat-value">{{item.bookCount || 0}}</text>
+              <text class="stat-label">书籍</text>
+            </view>
+            <view class="stat-item">
+              <text class="stat-value">{{item.annotationCount || 0}}</text>
+              <text class="stat-label">批注</text>
+            </view>
+            <view class="stat-item">
+              <text class="stat-value">{{item.recordCount || 0}}</text>
+              <text class="stat-label">记录</text>
+            </view>
+            <view class="stat-item">
+              <text class="stat-value">{{item.categoryCount || 0}}</text>
+              <text class="stat-label">分类</text>
+            </view>
+          </view>
+
+          <view class="task-error" wx:if="{{item.status === 3 && item.errorMessage}}">
+            <text>❌ {{item.errorMessage}}</text>
+          </view>
+
+          <view class="task-footer" wx:if="{{item.status === 2}}">
+            <view class="file-info">
+              <text class="file-name">{{item.fileName}}</text>
+              <text class="file-size">{{item.fileSizeText}}</text>
+            </view>
+            <view class="task-actions">
+              <view class="action-btn" bindtap="viewImportResult" data-task="{{item}}" wx:if="{{item.taskType === 2}}">
+                查看结果
+              </view>
+              <view class="action-btn primary" bindtap="downloadTask" data-task="{{item}}" wx:if="{{item.taskType === 1}}">
+                下载
+              </view>
+              <view class="action-btn danger" bindtap="deleteTask" data-task="{{item}}">
+                删除
+              </view>
+            </view>
+          </view>
+
+          <view class="task-footer" wx:elif="{{item.status === 3}}">
+            <view class="task-actions">
+              <view class="action-btn danger" bindtap="deleteTask" data-task="{{item}}">
+                删除
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty-state" wx:else>
+        <view class="empty-icon">📭</view>
+        <view class="empty-text">暂无任务记录</view>
+        <view class="empty-tip">完成导出或导入后，任务会显示在这里</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="result-mask" wx:if="{{showResult}}" bindtap="closeResult"></view>
+  <view class="result-panel {{showResult ? 'show' : ''}}">
+    <view class="result-header">
+      <view class="result-title">导入结果</view>
+      <view class="result-close" bindtap="closeResult">✕</view>
+    </view>
+    <scroll-view class="result-content" scroll-y>
+      <view class="result-summary">
+        <view class="summary-card success">
+          <view class="summary-icon">✅</view>
+          <view class="summary-count">{{importResult.categoryImported}}</view>
+          <view class="summary-label">分类导入</view>
+        </view>
+        <view class="summary-card success">
+          <view class="summary-icon">✅</view>
+          <view class="summary-count">{{importResult.annotationImported}}</view>
+          <view class="summary-label">批注导入</view>
+        </view>
+        <view class="summary-card success">
+          <view class="summary-icon">✅</view>
+          <view class="summary-count">{{importResult.recordImported}}</view>
+          <view class="summary-label">记录导入</view>
+        </view>
+        <view class="summary-card warning">
+          <view class="summary-icon">⚠️</view>
+          <view class="summary-count">{{importResult.categorySkipped + importResult.annotationSkipped + importResult.recordSkipped}}</view>
+          <view class="summary-label">跳过</view>
+        </view>
+      </view>
+
+      <view class="result-section" wx:if="{{importResult.booksToLink && importResult.booksToLink.length > 0}}">
+        <view class="section-title">📚 需要关联PDF的书籍</view>
+        <view class="book-link-item" wx:for="{{importResult.booksToLink}}" wx:key="originalBookId" wx:for-item="book">
+          <view class="book-link-info">
+            <view class="book-link-title">{{book.title}}</view>
+            <view class="book-link-author" wx:if="{{book.author}}">{{book.author}}</view>
+            <view class="book-link-stats">
+              <text>批注 {{book.annotationCount || 0}} 条</text>
+              <text>记录 {{book.recordCount || 0}} 条</text>
+            </view>
+          </view>
+          <view class="book-link-tip">请上传PDF后自动关联</view>
+        </view>
+      </view>
+
+      <view class="result-section" wx:if="{{importResult.warnings && importResult.warnings.length > 0}}">
+        <view class="section-title">⚠️ 提示</view>
+        <view class="warning-item" wx:for="{{importResult.warnings}}" wx:key="*this">
+          {{item}}
+        </view>
+      </view>
+    </scroll-view>
+    <view class="result-footer">
+      <button class="primary-btn" bindtap="closeResult">我知道了</button>
+    </view>
+  </view>
+</view>

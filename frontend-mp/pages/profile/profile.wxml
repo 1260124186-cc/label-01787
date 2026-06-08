@@ -45,6 +45,12 @@
       <view class="menu-arrow"><view class="icon icon-arrow-right"></view></view>
     </view>
     <view class="menu-divider"></view>
+    <view class="menu-item" bindtap="goBackup">
+      <view class="menu-icon"><view class="icon icon-cloud"></view></view>
+      <text class="menu-text">数据备份与恢复</text>
+      <view class="menu-arrow"><view class="icon icon-arrow-right"></view></view>
+    </view>
+    <view class="menu-divider"></view>
     <view class="menu-item" bindtap="goComplaint">
       <view class="menu-icon"><view class="icon icon-shield"></view></view>
       <text class="menu-text">版权申诉</text>
@@ -97,9 +103,9 @@
     <!-- 昵称输入 -->
     <view class="nickname-section">
       <text class="nickname-label">昵称</text>
-      <input 
-        type="nickname" 
-        class="nickname-input" 
+      <input
+        type="nickname"
+        class="nickname-input"
         placeholder="请输入昵称"
         value="{{tempNickname}}"
         bindinput="onNicknameInput"

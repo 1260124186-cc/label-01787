@@ -57,6 +57,9 @@ app:
     signed-url-expiration: 300
     max-downloads-per-hour: 10
     max-downloads-per-day: 100
+  backup:
+    path: ${BACKUP_PATH:./backups}
+    max-zip-size: 524288000
 
 logging:
   level:

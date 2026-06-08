@@ -56,5 +56,25 @@ public class Constants {
     public static final String ROLE_OPERATOR = "OPERATOR";
     public static final String ROLE_AUDITOR = "AUDITOR";
 
+    /** 备份任务类型：导出 */
+    public static final int BACKUP_TYPE_EXPORT = 1;
+    /** 备份任务类型：导入 */
+    public static final int BACKUP_TYPE_IMPORT = 2;
+
+    /** 备份任务状态：待处理 */
+    public static final int BACKUP_STATUS_PENDING = 0;
+    /** 备份任务状态：处理中 */
+    public static final int BACKUP_STATUS_PROCESSING = 1;
+    /** 备份任务状态：已完成 */
+    public static final int BACKUP_STATUS_COMPLETED = 2;
+    /** 备份任务状态：失败 */
+    public static final int BACKUP_STATUS_FAILED = 3;
+
+    /** 备份文件过期天数 */
+    public static final int BACKUP_EXPIRE_DAYS = 7;
+
+    /** 备份格式版本 */
+    public static final String BACKUP_SCHEMA_VERSION = "1.0";
+
     private Constants() {}
 }

@@ -71,6 +71,18 @@ const routes = [
         name: 'NotificationTemplates',
         component: () => import('@/views/NotificationTemplateList.vue'),
         meta: { title: '通知模板', permission: 'template:view' }
+      },
+      {
+        path: 'backups',
+        name: 'Backups',
+        component: () => import('@/views/BackupList.vue'),
+        meta: { title: '备份管理', permission: 'backup:view' }
+      },
+      {
+        path: 'storage',
+        name: 'Storage',
+        component: () => import('@/views/StorageStats.vue'),
+        meta: { title: '存储统计', permission: 'storage:view' }
       }
     ]
   }
