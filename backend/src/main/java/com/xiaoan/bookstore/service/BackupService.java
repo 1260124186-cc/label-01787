@@ -761,10 +761,10 @@ public class BackupService {
             stats.setDate(dateObj != null ? dateObj.toString() : "");
             Long fileSize = getLongValue(row.get("total_size"));
             stats.setFileSize(fileSize != null ? fileSize : 0L);
-            Long bookCount = getLongValue(row.get("book_count"));
-            stats.setBookCount(bookCount != null ? bookCount : 0L);
-            Long userCount = getLongValue(row.get("user_count"));
-            stats.setUserCount(userCount != null ? userCount : 0L);
+            Long dailyBookCount = getLongValue(row.get("book_count"));
+            stats.setBookCount(dailyBookCount != null ? dailyBookCount : 0L);
+            Long dailyUserCount = getLongValue(row.get("user_count"));
+            stats.setUserCount(dailyUserCount != null ? dailyUserCount : 0L);
             dailyTrend.add(stats);
         }
         vo.setDailyTrend(dailyTrend);
@@ -827,7 +827,8 @@ public class BackupService {
         }
     }
 
-    private String formatFileSize(long size) {
+    private String formatFileSize(Long size) {
+        if (size == null || size == 0) return "0 B";
         if (size < 1024) return size + " B";
         if (size < 1024 * 1024) return String.format("%.2f KB", size / 1024.0);
         if (size < 1024 * 1024 * 1024) return String.format("%.2f MB", size / (1024.0 * 1024));

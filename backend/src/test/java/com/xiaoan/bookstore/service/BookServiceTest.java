@@ -887,7 +887,7 @@ class BookServiceTest {
             doc.addPage(page);
             try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
                 contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA, 12);
+                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
                 contentStream.newLineAtOffset(100, 700);
                 contentStream.showText("Test Page");
                 contentStream.endText();
