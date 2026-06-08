@@ -1,9 +1,17 @@
 import Taro from '@tarojs/taro'
 import { Notification, UnreadCount, PageResult } from '@/types/notification'
+import { ensureLoggedIn } from './user'
 
 const BASE_URL = 'http://localhost:8080/api/mp'
 
 const request = async <T>(url: string, options: Taro.request.Option = {}): Promise<T> => {
+  try {
+    await ensureLoggedIn()
+  } catch (err) {
+    console.error('[Notification API] 登录失败', err)
+    throw err
+  }
+
   const token = Taro.getStorageSync('token')
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -25,7 +33,7 @@ const request = async <T>(url: string, options: Taro.request.Option = {}): Promi
       return data.data
     } else if (data.code === 401) {
       Taro.removeStorageSync('token')
-      Taro.navigateTo({ url: '/pages/login/index' })
+      Taro.removeStorageSync('userInfo')
       throw new Error('登录已过期')
     } else {
       Taro.showToast({ title: data.message || '请求失败', icon: 'none' })

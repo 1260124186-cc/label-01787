@@ -3,7 +3,8 @@ import { View, Text, Button } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import styles from './index.module.scss'
 import { Notification } from '@/types/notification'
-import { notificationTypes, getMockNotificationDetail } from '@/data/mockNotifications'
+import { notificationTypes } from '@/data/mockNotifications'
+import { getNotificationDetail } from '@/services/notification'
 
 const NotificationDetailPage: React.FC = () => {
   const router = useRouter()
@@ -17,7 +18,7 @@ const NotificationDetailPage: React.FC = () => {
     try {
       console.log('[NotificationDetail] 获取消息详情, id:', id)
       
-      const data = getMockNotificationDetail(id)
+      const data = await getNotificationDetail(id)
       if (data) {
         setNotification(data)
       } else {

@@ -4,12 +4,13 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
 import { Notification, NotificationType, UnreadCount } from '@/types/notification'
-import { notificationTypes, mockUnreadCount, getMockNotifications } from '@/data/mockNotifications'
+import { notificationTypes } from '@/data/mockNotifications'
+import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from '@/services/notification'
 
 const NotificationsPage: React.FC = () => {
   const [activeType, setActiveType] = useState<number>(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState<UnreadCount>(mockUnreadCount)
+  const [unreadCount, setUnreadCount] = useState<UnreadCount>({ 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 })
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [page, setPage] = useState(1)
@@ -18,7 +19,8 @@ const NotificationsPage: React.FC = () => {
   const fetchUnreadCount = useCallback(async () => {
     try {
       console.log('[Notification] 获取未读数量')
-      setUnreadCount(mockUnreadCount)
+      const data = await getUnreadCount()
+      setUnreadCount(data)
     } catch (err) {
       console.error('[Notification] 获取未读数量失败', err)
     }
@@ -33,7 +35,7 @@ const NotificationsPage: React.FC = () => {
     try {
       console.log('[Notification] 获取消息列表, type:', activeType, 'page:', currentPage)
       
-      const res = getMockNotifications(activeType || undefined, currentPage, 10)
+      const res = await getNotifications(activeType || undefined, currentPage, 10)
       
       if (reset) {
         setNotifications(res.records)
@@ -71,20 +73,25 @@ const NotificationsPage: React.FC = () => {
     setNotifications([])
   }
 
-  const handleItemClick = (item: Notification) => {
+  const handleItemClick = async (item: Notification) => {
     console.log('[Notification] 点击消息:', item.id)
     
     if (item.isRead === 0) {
-      setNotifications(prev => prev.map(n => 
-        n.id === item.id ? { ...n, isRead: 1 } : n
-      ))
-      const typeKey = item.type as keyof UnreadCount
-      if (unreadCount[typeKey] > 0) {
-        setUnreadCount(prev => ({
-          ...prev,
-          [typeKey]: prev[typeKey] - 1,
-          0: prev[0] - 1
-        }))
+      try {
+        await markAsRead(item.id)
+        setNotifications(prev => prev.map(n => 
+          n.id === item.id ? { ...n, isRead: 1 } : n
+        ))
+        const typeKey = item.type as keyof UnreadCount
+        if (unreadCount[typeKey] > 0) {
+          setUnreadCount(prev => ({
+            ...prev,
+            [typeKey]: prev[typeKey] - 1,
+            0: prev[0] - 1
+          }))
+        }
+      } catch (err) {
+        console.error('[Notification] 标记已读失败', err)
       }
     }
     
@@ -129,27 +136,33 @@ const NotificationsPage: React.FC = () => {
       Taro.showModal({
         title: '提示',
         content: activeType ? `确定将所有${notificationTypes[activeType - 1]?.name}标记为已读？` : '确定将所有消息标记为已读？',
-        success: (res) => {
+        success: async (res) => {
           if (res.confirm) {
-            console.log('[Notification] 全部已读, type:', activeType)
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: 1 })))
-            if (activeType) {
-              setUnreadCount(prev => ({
-                ...prev,
-                [activeType]: 0,
-                0: prev[0] - prev[activeType as keyof UnreadCount]
-              }))
-            } else {
-              setUnreadCount(prev => ({
-                ...prev,
-                0: 0,
-                1: 0,
-                2: 0,
-                3: 0,
-                4: 0
-              }))
+            try {
+              console.log('[Notification] 全部已读, type:', activeType)
+              await markAllAsRead(activeType || undefined)
+              setNotifications(prev => prev.map(n => ({ ...n, isRead: 1 })))
+              if (activeType) {
+                setUnreadCount(prev => ({
+                  ...prev,
+                  [activeType]: 0,
+                  0: prev[0] - prev[activeType as keyof UnreadCount]
+                }))
+              } else {
+                setUnreadCount(prev => ({
+                  ...prev,
+                  0: 0,
+                  1: 0,
+                  2: 0,
+                  3: 0,
+                  4: 0
+                }))
+              }
+              Taro.showToast({ title: '已标记为已读', icon: 'success' })
+            } catch (err) {
+              console.error('[Notification] 标记已读失败', err)
+              Taro.showToast({ title: '操作失败', icon: 'none' })
             }
-            Taro.showToast({ title: '已标记为已读', icon: 'success' })
           }
         }
       })

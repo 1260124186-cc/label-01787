@@ -2,14 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, Button } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import styles from './profile.module.scss'
-import { mockUnreadCount } from '@/data/mockNotifications'
+import { getUnreadCount } from '@/services/notification'
+import { ensureLoggedIn } from '@/services/user'
 
 const ProfilePage: React.FC = () => {
-  const [unreadCount, setUnreadCount] = useState(mockUnreadCount[0])
+  const [unreadCount, setUnreadCount] = useState(0)
 
-  const fetchUnread = () => {
-    console.log('[Profile] 获取未读消息数量')
-    setUnreadCount(mockUnreadCount[0])
+  const fetchUnread = async () => {
+    try {
+      console.log('[Profile] 获取未读消息数量')
+      await ensureLoggedIn()
+      const data = await getUnreadCount()
+      setUnreadCount(data[0] || 0)
+    } catch (err) {
+      console.error('[Profile] 获取未读数量失败', err)
+    }
   }
 
   const goToMessages = () => {
