@@ -1,0 +1,117 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: $page-padding;
+}
+
+.detailCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-card;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-xl;
+  padding-bottom: $spacing-lg;
+  border-bottom: 2rpx solid $color-divider;
+  
+  .typeIcon {
+    width: 96rpx;
+    height: 96rpx;
+    border-radius: $radius-md;
+    @include flex-center;
+    font-size: 48rpx;
+    flex-shrink: 0;
+  }
+  
+  .headerContent {
+    flex: 1;
+    
+    .typeTag {
+      display: inline-block;
+      padding: 4rpx 16rpx;
+      border-radius: $radius-xs;
+      font-size: $font-size-xs;
+      color: $color-text-white;
+      margin-bottom: $spacing-sm;
+    }
+    
+    .title {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      line-height: 1.4;
+      margin-bottom: $spacing-sm;
+    }
+    
+    .time {
+      font-size: $font-size-sm;
+      color: $color-text-tertiary;
+    }
+  }
+}
+
+.detailContent {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: 1.8;
+  
+  p {
+    margin-bottom: $spacing-md;
+  }
+  
+  .highlight {
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.actionBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-top: $spacing-xl;
+  transition: all $transition-base;
+  
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+  
+  &.secondary {
+    background: $color-bg-card;
+    border: 2rpx solid $color-primary;
+    color: $color-primary;
+    margin-top: $spacing-md;
+  }
+}
+
+.readStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-xl;
+  padding-top: $spacing-lg;
+  border-top: 2rpx solid $color-divider;
+  
+  .statusIcon {
+    font-size: $font-size-md;
+  }
+  
+  .statusText {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+  }
+}

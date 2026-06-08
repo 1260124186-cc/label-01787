@@ -39,6 +39,14 @@
           <el-icon><ShieldCheck /></el-icon>
           <template #title><span>合规审计</span></template>
         </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('notification:view')" index="/notifications">
+          <el-icon><Bell /></el-icon>
+          <template #title><span>公告管理</span></template>
+        </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('template:view')" index="/notification-templates">
+          <el-icon><DocumentCopy /></el-icon>
+          <template #title><span>通知模板</span></template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

@@ -250,8 +250,70 @@ INSERT INTO role_permission (role_id, permission_id) VALUES
 (3, 60), (3, 61), (3, 63), (3, 64)
 ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
 
+-- 消息通知表
+CREATE TABLE IF NOT EXISTS notification (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT DEFAULT NULL COMMENT '接收用户ID，NULL表示全体用户',
+    type TINYINT NOT NULL COMMENT '1-系统通知 2-审核结果 3-计划提醒 4-小组动态',
+    title VARCHAR(200) NOT NULL COMMENT '消息标题',
+    content TEXT NOT NULL COMMENT '消息内容',
+    extra_data VARCHAR(1000) DEFAULT '' COMMENT '附加数据(JSON格式，用于跳转参数)',
+    is_read TINYINT DEFAULT 0 COMMENT '0-未读 1-已读',
+    sender_id BIGINT DEFAULT NULL COMMENT '发送人ID(管理员ID)',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    read_at DATETIME DEFAULT NULL,
+    INDEX idx_user_id (user_id),
+    INDEX idx_user_read (user_id, is_read),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='消息通知表';
+
+-- 消息模板表
+CREATE TABLE IF NOT EXISTS notification_template (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '模板编码',
+    name VARCHAR(100) NOT NULL COMMENT '模板名称',
+    type TINYINT NOT NULL COMMENT '1-系统通知 2-审核结果 3-计划提醒 4-小组动态',
+    title VARCHAR(200) NOT NULL COMMENT '消息标题',
+    content TEXT NOT NULL COMMENT '消息内容(支持占位符{变量名})',
+    status TINYINT DEFAULT 1 COMMENT '0-禁用 1-启用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_code (code),
+    INDEX idx_type (type)
+) ENGINE=InnoDB COMMENT='消息模板表';
+
+-- 新增权限
+INSERT INTO permission (id, code, name, type, parent_id, path, sort_order) VALUES
+(70, 'notification_mgmt', '消息管理', 1, NULL, '/notifications', 8),
+(71, 'notification:view', '查看消息', 2, 70, '/api/admin/notifications', 1),
+(72, 'notification:send', '发送公告', 2, 70, '/api/admin/notifications/send', 2),
+(73, 'template:view', '查看模板', 2, 70, '/api/admin/notification-templates', 3),
+(74, 'template:create', '创建模板', 2, 70, '/api/admin/notification-templates/create', 4),
+(75, 'template:update', '修改模板', 2, 70, '/api/admin/notification-templates/*/update', 5),
+(76, 'template:delete', '删除模板', 2, 70, '/api/admin/notification-templates/*/delete', 6)
+ON DUPLICATE KEY UPDATE code = VALUES(code);
+
+-- 超级管理员：全部权限
+INSERT INTO role_permission (role_id, permission_id)
+SELECT 1, id FROM permission WHERE id >= 70
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 运营：消息管理权限
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(2, 70), (2, 71), (2, 72), (2, 73), (2, 74), (2, 75), (2, 76)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
 -- 初始化管理员账号 (密码: admin123)，默认超级管理员角色
 -- verifyPassword 方法兼容明文与 BCrypt，首次启动后可通过接口修改为 BCrypt 密码
 INSERT INTO admin_user (username, password, nickname, role_id, status) VALUES
 ('admin', 'admin123', '超级管理员', 1, 1)
 ON DUPLICATE KEY UPDATE username = username;
+
+-- 初始化消息模板
+INSERT INTO notification_template (code, name, type, title, content, status) VALUES
+('SYSTEM_ANNOUNCEMENT', '系统公告', 1, '系统公告', '{content}', 1),
+('BOOK_AUDIT_PASS', '书籍审核通过', 2, '审核结果通知', '您的书籍《{bookTitle}》已通过审核，快去阅读吧！', 1),
+('BOOK_AUDIT_REJECT', '书籍审核驳回', 2, '审核结果通知', '您的书籍《{bookTitle}》未通过审核，原因：{reason}', 1),
+('READING_PLAN_REMINDER', '阅读计划提醒', 3, '阅读提醒', '您今天的阅读计划还未完成，快去阅读吧！', 1),
+('GROUP_NEW_DYNAMIC', '小组新动态', 4, '小组动态', '{userName} 在小组发布了新动态，快去看看吧！', 1)
+ON DUPLICATE KEY UPDATE code = VALUES(code);

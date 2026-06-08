@@ -59,6 +59,18 @@ const routes = [
         name: 'Compliance',
         component: () => import('@/views/ComplianceReport.vue'),
         meta: { title: '合规审计', permission: 'audit:report' }
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: () => import('@/views/AnnouncementList.vue'),
+        meta: { title: '公告管理', permission: 'notification:view' }
+      },
+      {
+        path: 'notification-templates',
+        name: 'NotificationTemplates',
+        component: () => import('@/views/NotificationTemplateList.vue'),
+        meta: { title: '通知模板', permission: 'template:view' }
       }
     ]
   }
