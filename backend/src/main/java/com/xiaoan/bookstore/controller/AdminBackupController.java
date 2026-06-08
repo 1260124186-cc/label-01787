@@ -73,6 +73,9 @@ public class AdminBackupController {
         if (task == null) {
             return ResponseEntity.notFound().build();
         }
+        if (task.getFilePath() == null || task.getFilePath().isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
         Path filePath = backupService.getBackupFilePath(task);
 
         if (!Files.exists(filePath)) {
@@ -116,7 +119,15 @@ public class AdminBackupController {
             vo.setUserNickname("未知用户");
         }
         vo.setTaskType(task.getTaskType());
-        vo.setTaskTypeText(task.getTaskType() != null && task.getTaskType() == Constants.BACKUP_TYPE_EXPORT ? "导出" : "导入");
+        if (task.getTaskType() == null) {
+            vo.setTaskTypeText("未知");
+        } else if (task.getTaskType() == Constants.BACKUP_TYPE_EXPORT) {
+            vo.setTaskTypeText("导出");
+        } else if (task.getTaskType() == Constants.BACKUP_TYPE_IMPORT) {
+            vo.setTaskTypeText("导入");
+        } else {
+            vo.setTaskTypeText("未知");
+        }
         vo.setStatus(task.getStatus());
         vo.setStatusText(getStatusText(task.getStatus()));
         vo.setFileName(task.getFileName());

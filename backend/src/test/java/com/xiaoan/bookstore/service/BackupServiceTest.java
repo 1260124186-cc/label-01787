@@ -46,6 +46,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("BackupService 单元测试")
@@ -660,6 +661,272 @@ class BackupServiceTest {
             );
 
             assertEquals("不是导入任务", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("已完成的导入任务应返回缓存结果不重复导入")
+        void shouldReturnCachedResultForCompletedImport() throws Exception {
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_IMPORT, Constants.BACKUP_STATUS_COMPLETED);
+            task.setFilePath("1/imports/test.json");
+            task.setCategoryCount(5);
+            task.setAnnotationCount(10);
+            task.setRecordCount(20);
+            when(backupTaskMapper.selectById(1L)).thenReturn(task);
+
+            ExportDataDTO.ImportResult result = backupService.getImportResult(userId, 1L);
+
+            assertNotNull(result);
+            assertEquals(5, result.getCategoryImported());
+            assertEquals(10, result.getAnnotationImported());
+            assertEquals(20, result.getRecordImported());
+            verify(categoryMapper, never()).insert(any());
+            verify(annotationMapper, never()).insert(any());
+            verify(readingRecordMapper, never()).insert(any());
+        }
+
+        @Test
+        @DisplayName("filePath为null的导入任务应抛出异常")
+        void shouldThrowExceptionWhenImportFilePathIsNull() {
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_IMPORT, Constants.BACKUP_STATUS_PENDING);
+            task.setFilePath(null);
+            when(backupTaskMapper.selectById(1L)).thenReturn(task);
+
+            BusinessException ex = assertThrows(BusinessException.class, () ->
+                    backupService.getImportResult(userId, 1L)
+            );
+
+            assertEquals("获取导入结果失败: 导入文件路径不存在", ex.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("getBackupFilePath 测试")
+    class GetBackupFilePathTests {
+
+        @Test
+        @DisplayName("filePath为null应抛出异常")
+        void shouldThrowExceptionWhenFilePathIsNull() {
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_EXPORT, Constants.BACKUP_STATUS_COMPLETED);
+            task.setFilePath(null);
+
+            BusinessException ex = assertThrows(BusinessException.class, () ->
+                    backupService.getBackupFilePath(task)
+            );
+
+            assertEquals("备份文件路径不存在", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("filePath为空字符串应抛出异常")
+        void shouldThrowExceptionWhenFilePathIsEmpty() {
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_EXPORT, Constants.BACKUP_STATUS_COMPLETED);
+            task.setFilePath("");
+
+            BusinessException ex = assertThrows(BusinessException.class, () ->
+                    backupService.getBackupFilePath(task)
+            );
+
+            assertEquals("备份文件路径不存在", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("filePath为空白字符串应抛出异常")
+        void shouldThrowExceptionWhenFilePathIsBlank() {
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_EXPORT, Constants.BACKUP_STATUS_COMPLETED);
+            task.setFilePath("   ");
+
+            BusinessException ex = assertThrows(BusinessException.class, () ->
+                    backupService.getBackupFilePath(task)
+            );
+
+            assertEquals("备份文件路径不存在", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("正常filePath应返回正确路径")
+        void shouldReturnCorrectPathForValidFilePath() {
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_EXPORT, Constants.BACKUP_STATUS_COMPLETED);
+            task.setFilePath("1/backup_1_20260101.zip");
+
+            Path result = backupService.getBackupFilePath(task);
+
+            assertNotNull(result);
+            assertTrue(result.toString().contains("1/backup_1_20260101.zip"));
+        }
+    }
+
+    @Nested
+    @DisplayName("删除任务空路径测试")
+    class DeleteTaskNullFilePathTests {
+
+        @Test
+        @DisplayName("filePath为null时删除任务不应抛出NPE")
+        void shouldNotThrowNPEWhenFilePathIsNull() {
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_EXPORT, Constants.BACKUP_STATUS_COMPLETED);
+            task.setFilePath(null);
+            when(backupTaskMapper.selectById(1L)).thenReturn(task);
+            when(backupTaskMapper.deleteById(1L)).thenReturn(1);
+
+            assertDoesNotThrow(() -> backupService.deleteTask(1L));
+            verify(backupTaskMapper, times(1)).deleteById(1L);
+        }
+
+        @Test
+        @DisplayName("filePath为空时删除任务不应抛出NPE")
+        void shouldNotThrowNPEWhenFilePathIsEmpty() {
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_EXPORT, Constants.BACKUP_STATUS_COMPLETED);
+            task.setFilePath("");
+            when(backupTaskMapper.selectById(1L)).thenReturn(task);
+            when(backupTaskMapper.deleteById(1L)).thenReturn(1);
+
+            assertDoesNotThrow(() -> backupService.deleteTask(1L));
+            verify(backupTaskMapper, times(1)).deleteById(1L);
+        }
+    }
+
+    @Nested
+    @DisplayName("导入数据验证测试")
+    class ImportDataValidationTests {
+
+        @Test
+        @DisplayName("仅包含books的导入文件应通过验证")
+        void shouldAcceptImportWithOnlyBooks() throws Exception {
+            String json = "{\"books\": [{\"id\": 1, \"title\": \"Test Book\"}]}";
+            Path importDir = tempDir.resolve(userId.toString()).resolve("imports");
+            Files.createDirectories(importDir);
+            Path testFile = importDir.resolve("test_import.json");
+            Files.write(testFile, json.getBytes());
+
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_IMPORT, Constants.BACKUP_STATUS_PENDING);
+            task.setFilePath(userId + "/imports/test_import.json");
+            when(backupTaskMapper.selectById(1L)).thenReturn(task);
+            lenient().when(categoryMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(new ArrayList<>());
+            lenient().when(bookMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(new ArrayList<>());
+            lenient().when(backupTaskMapper.updateById(any())).thenReturn(1);
+
+            assertDoesNotThrow(() -> backupService.getImportResult(userId, 1L));
+        }
+
+        @Test
+        @DisplayName("仅包含reading_records的导入文件应通过验证")
+        void shouldAcceptImportWithOnlyReadingRecords() throws Exception {
+            String json = "{\"reading_records\": [{\"id\": 1, \"bookId\": 1}]}";
+            Path importDir = tempDir.resolve(userId.toString()).resolve("imports");
+            Files.createDirectories(importDir);
+            Path testFile = importDir.resolve("test_import.json");
+            Files.write(testFile, json.getBytes());
+
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_IMPORT, Constants.BACKUP_STATUS_PENDING);
+            task.setFilePath(userId + "/imports/test_import.json");
+            when(backupTaskMapper.selectById(1L)).thenReturn(task);
+            lenient().when(categoryMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(new ArrayList<>());
+            lenient().when(bookMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(new ArrayList<>());
+            lenient().when(backupTaskMapper.updateById(any())).thenReturn(1);
+
+            assertDoesNotThrow(() -> backupService.getImportResult(userId, 1L));
+        }
+
+        @Test
+        @DisplayName("不包含有效数据的导入文件应抛出异常")
+        void shouldRejectImportWithNoValidData() throws Exception {
+            String json = "{\"invalid_key\": \"value\"}";
+            Path importDir = tempDir.resolve(userId.toString()).resolve("imports");
+            Files.createDirectories(importDir);
+            Path testFile = importDir.resolve("test_import.json");
+            Files.write(testFile, json.getBytes());
+
+            BackupTask task = createBackupTask(1L, userId, Constants.BACKUP_TYPE_IMPORT, Constants.BACKUP_STATUS_PENDING);
+            task.setFilePath(userId + "/imports/test_import.json");
+            when(backupTaskMapper.selectById(1L)).thenReturn(task);
+            lenient().when(backupTaskMapper.updateById(any())).thenReturn(1);
+
+            BusinessException ex = assertThrows(BusinessException.class, () ->
+                    backupService.getImportResult(userId, 1L)
+            );
+
+            assertTrue(ex.getMessage().contains("导入文件格式不正确"),
+                    "Expected message to contain '导入文件格式不正确', but was: " + ex.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("存储统计空数据测试")
+    class StorageStatsEmptyDataTests {
+
+        @Test
+        @DisplayName("topUsers为空时应正常返回")
+        void shouldReturnEmptyTopUsers() {
+            when(userMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
+            when(bookMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(10L);
+            when(backupTaskMapper.getTotalFileSize()).thenReturn(1024L);
+            when(annotationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(20L);
+            when(readingRecordMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(30L);
+            when(categoryMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
+            when(backupTaskMapper.getTopUsersByStorage()).thenReturn(new ArrayList<>());
+            when(backupTaskMapper.getDailyStorageTrend(any(LocalDateTime.class))).thenReturn(new ArrayList<>());
+
+            StorageStatsVO vo = backupService.getStorageStats();
+
+            assertNotNull(vo);
+            assertNotNull(vo.getTopUsers());
+            assertTrue(vo.getTopUsers().isEmpty());
+            assertNotNull(vo.getDailyTrend());
+            assertTrue(vo.getDailyTrend().isEmpty());
+        }
+
+        @Test
+        @DisplayName("dailyTrend为空时应正常返回")
+        void shouldReturnEmptyDailyTrend() {
+            when(userMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
+            when(bookMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(10L);
+            when(backupTaskMapper.getTotalFileSize()).thenReturn(1024L);
+            when(annotationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(20L);
+            when(readingRecordMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(30L);
+            when(categoryMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
+
+            List<Map<String, Object>> topUsers = new ArrayList<>();
+            Map<String, Object> user1 = new HashMap<>();
+            user1.put("user_id", 100L);
+            user1.put("book_count", 5L);
+            user1.put("total_size", 512L);
+            topUsers.add(user1);
+            when(backupTaskMapper.getTopUsersByStorage()).thenReturn(topUsers);
+            when(userMapper.selectById(100L)).thenReturn(createUser(100L, "测试用户"));
+            when(backupTaskMapper.getDailyStorageTrend(any(LocalDateTime.class))).thenReturn(new ArrayList<>());
+
+            StorageStatsVO vo = backupService.getStorageStats();
+
+            assertNotNull(vo);
+            assertNotNull(vo.getDailyTrend());
+            assertTrue(vo.getDailyTrend().isEmpty());
+            assertEquals(1, vo.getTopUsers().size());
+        }
+
+        @Test
+        @DisplayName("总存储量为0时百分比计算不应异常")
+        void shouldHandleZeroTotalFileSize() {
+            when(userMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
+            when(bookMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(10L);
+            when(backupTaskMapper.getTotalFileSize()).thenReturn(0L);
+            when(annotationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(20L);
+            when(readingRecordMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(30L);
+            when(categoryMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
+
+            List<Map<String, Object>> topUsers = new ArrayList<>();
+            Map<String, Object> user1 = new HashMap<>();
+            user1.put("user_id", 100L);
+            user1.put("book_count", 5L);
+            user1.put("total_size", 0L);
+            topUsers.add(user1);
+            when(backupTaskMapper.getTopUsersByStorage()).thenReturn(topUsers);
+            when(userMapper.selectById(100L)).thenReturn(createUser(100L, "测试用户"));
+            when(backupTaskMapper.getDailyStorageTrend(any(LocalDateTime.class))).thenReturn(new ArrayList<>());
+
+            StorageStatsVO vo = backupService.getStorageStats();
+
+            assertNotNull(vo);
+            assertEquals(1, vo.getTopUsers().size());
+            assertEquals(0.0, vo.getTopUsers().get(0).getPercentage(), 0.001);
         }
     }
 

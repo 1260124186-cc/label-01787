@@ -317,7 +317,11 @@ public class BackupService {
     }
 
     public Path getBackupFilePath(BackupTask task) {
-        return Paths.get(backupPath, task.getFilePath()).toAbsolutePath().normalize();
+        String filePath = task.getFilePath();
+        if (filePath == null || filePath.isBlank()) {
+            throw new BusinessException("备份文件路径不存在");
+        }
+        return Paths.get(backupPath, filePath).toAbsolutePath().normalize();
     }
 
     @Transactional
@@ -381,7 +385,20 @@ public class BackupService {
 
     @Transactional
     protected ExportDataDTO.ImportResult processImport(BackupTask task) throws Exception {
+        if (task.getStatus() != null && task.getStatus() == Constants.BACKUP_STATUS_COMPLETED) {
+            ExportDataDTO.ImportResult result = new ExportDataDTO.ImportResult();
+            result.setCategoryImported(task.getCategoryCount() != null ? task.getCategoryCount() : 0);
+            result.setAnnotationImported(task.getAnnotationCount() != null ? task.getAnnotationCount() : 0);
+            result.setRecordImported(task.getRecordCount() != null ? task.getRecordCount() : 0);
+            result.setBooksToLink(new ArrayList<>());
+            result.setWarnings(new ArrayList<>());
+            return result;
+        }
+
         Long userId = task.getUserId();
+        if (task.getFilePath() == null || task.getFilePath().isBlank()) {
+            throw new BusinessException("导入文件路径不存在");
+        }
         Path importPath = getBackupFilePath(task);
 
         if (!Files.exists(importPath)) {
@@ -405,7 +422,11 @@ public class BackupService {
 
         Map<String, Object> importData = objectMapper.readValue(jsonData, new TypeReference<Map<String, Object>>() {});
 
-        if (!importData.containsKey("annotations") && !importData.containsKey("categories")) {
+        boolean hasValidData = importData.containsKey("annotations")
+                || importData.containsKey("categories")
+                || importData.containsKey("books")
+                || importData.containsKey("reading_records");
+        if (!hasValidData) {
             throw new BusinessException("导入文件格式不正确，缺少必要的数据");
         }
 
@@ -816,9 +837,12 @@ public class BackupService {
         BackupTask task = backupTaskMapper.selectById(taskId);
         if (task != null) {
             try {
-                Path filePath = getBackupFilePath(task);
-                if (Files.exists(filePath)) {
-                    Files.delete(filePath);
+                String filePathStr = task.getFilePath();
+                if (filePathStr != null && !filePathStr.isBlank()) {
+                    Path filePath = getBackupFilePath(task);
+                    if (Files.exists(filePath)) {
+                        Files.delete(filePath);
+                    }
                 }
             } catch (Exception e) {
                 log.warn("删除备份文件失败: {}", e.getMessage());

@@ -64,6 +64,9 @@ public class MpBackupController {
     public ResponseEntity<PathResource> downloadBackup(@PathVariable Long id) throws IOException {
         Long userId = TenantContext.getTenantId();
         BackupTask task = backupService.getTaskDetail(userId, id);
+        if (task.getFilePath() == null || task.getFilePath().isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
         Path filePath = backupService.getBackupFilePath(task);
 
         if (!Files.exists(filePath)) {
