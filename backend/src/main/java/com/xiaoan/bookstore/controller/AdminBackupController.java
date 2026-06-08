@@ -109,20 +109,24 @@ public class AdminBackupController {
         BackupTaskVO vo = new BackupTaskVO();
         vo.setId(task.getId());
         vo.setUserId(task.getUserId());
-        User user = userMapper.selectById(task.getUserId());
-        vo.setUserNickname(user != null ? user.getNickname() : "未知用户");
+        if (task.getUserId() != null) {
+            User user = userMapper.selectById(task.getUserId());
+            vo.setUserNickname(user != null ? user.getNickname() : "未知用户");
+        } else {
+            vo.setUserNickname("未知用户");
+        }
         vo.setTaskType(task.getTaskType());
-        vo.setTaskTypeText(task.getTaskType() == Constants.BACKUP_TYPE_EXPORT ? "导出" : "导入");
+        vo.setTaskTypeText(task.getTaskType() != null && task.getTaskType() == Constants.BACKUP_TYPE_EXPORT ? "导出" : "导入");
         vo.setStatus(task.getStatus());
         vo.setStatusText(getStatusText(task.getStatus()));
         vo.setFileName(task.getFileName());
         vo.setFileSize(task.getFileSize());
         vo.setFileSizeText(formatFileSize(task.getFileSize()));
-        vo.setBookCount(task.getBookCount());
-        vo.setAnnotationCount(task.getAnnotationCount());
-        vo.setRecordCount(task.getRecordCount());
-        vo.setCategoryCount(task.getCategoryCount());
-        vo.setProgress(task.getProgress());
+        vo.setBookCount(task.getBookCount() != null ? task.getBookCount() : 0);
+        vo.setAnnotationCount(task.getAnnotationCount() != null ? task.getAnnotationCount() : 0);
+        vo.setRecordCount(task.getRecordCount() != null ? task.getRecordCount() : 0);
+        vo.setCategoryCount(task.getCategoryCount() != null ? task.getCategoryCount() : 0);
+        vo.setProgress(task.getProgress() != null ? task.getProgress() : 0);
         vo.setErrorMessage(task.getErrorMessage());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         if (task.getCreatedAt() != null) {

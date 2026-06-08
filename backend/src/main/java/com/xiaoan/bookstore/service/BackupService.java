@@ -432,12 +432,12 @@ public class BackupService {
 
             for (int i = 0; i < categories.size(); i++) {
                 Map<String, Object> cat = categories.get(i);
-                String name = (String) cat.get("name");
+                String name = getStringValue(cat.get("name"));
                 if (name == null || name.isBlank()) continue;
 
                 if (existingCategoryNames.contains(name)) {
                     catSkipped++;
-                    Long oldId = cat.get("id") != null ? Long.valueOf(cat.get("id").toString()) : null;
+                    Long oldId = getLongValue(cat.get("id"));
                     if (oldId != null) {
                         for (Category existing : existingCategories) {
                             if (existing.getName().equals(name)) {
@@ -452,11 +452,11 @@ public class BackupService {
                 Category newCat = new Category();
                 newCat.setUserId(userId);
                 newCat.setName(name);
-                Integer sortOrder = cat.get("sortOrder") != null ? Integer.valueOf(cat.get("sortOrder").toString()) : i;
-                newCat.setSortOrder(sortOrder);
+                Integer sortOrder = getIntValue(cat.get("sortOrder"));
+                newCat.setSortOrder(sortOrder != null ? sortOrder : i);
                 categoryMapper.insert(newCat);
 
-                Long existingOldId = cat.get("id") != null ? Long.valueOf(cat.get("id").toString()) : null;
+                Long existingOldId = getLongValue(cat.get("id"));
                 if (existingOldId != null) {
                     oldToNewCategoryId.put(existingOldId, newCat.getId());
                 }
@@ -474,9 +474,9 @@ public class BackupService {
         if (importData.containsKey("books")) {
             List<Map<String, Object>> books = (List<Map<String, Object>>) importData.get("books");
             for (Map<String, Object> book : books) {
-                Long oldId = book.get("id") != null ? Long.valueOf(book.get("id").toString()) : null;
-                String title = (String) book.get("title");
-                String author = book.get("author") != null ? (String) book.get("author") : "";
+                Long oldId = getLongValue(book.get("id"));
+                String title = getStringValue(book.get("title"), "未知书籍");
+                String author = getStringValue(book.get("author"), "");
                 if (oldId != null) {
                     bookInfoMap.put(oldId, title + "||" + author);
                 }
@@ -507,8 +507,8 @@ public class BackupService {
             }
 
             for (Map<String, Object> ann : annotations) {
-                Long oldBookId = ann.get("bookId") != null ? Long.valueOf(ann.get("bookId").toString()) : null;
-                String bookTitle = ann.get("bookTitle") != null ? (String) ann.get("bookTitle") : "";
+                Long oldBookId = getLongValue(ann.get("bookId"));
+                String bookTitle = getStringValue(ann.get("bookTitle"), "");
 
                 Long newBookId = null;
                 if (oldBookId != null && bookInfoMap.containsKey(oldBookId)) {
@@ -529,10 +529,12 @@ public class BackupService {
                 Annotation newAnn = new Annotation();
                 newAnn.setUserId(userId);
                 newAnn.setBookId(newBookId);
-                newAnn.setPageNum(ann.get("pageNum") != null ? Integer.valueOf(ann.get("pageNum").toString()) : 1);
-                newAnn.setSelectedText(ann.get("selectedText") != null ? (String) ann.get("selectedText") : "");
-                newAnn.setContent(ann.get("content") != null ? (String) ann.get("content") : "");
-                newAnn.setType(ann.get("type") != null ? Integer.valueOf(ann.get("type").toString()) : Constants.ANNOTATION_NOTE);
+                Integer pageNum = getIntValue(ann.get("pageNum"));
+                newAnn.setPageNum(pageNum != null ? pageNum : 1);
+                newAnn.setSelectedText(getStringValue(ann.get("selectedText"), ""));
+                newAnn.setContent(getStringValue(ann.get("content"), ""));
+                Integer type = getIntValue(ann.get("type"));
+                newAnn.setType(type != null ? type : Constants.ANNOTATION_NOTE);
                 annotationMapper.insert(newAnn);
                 annImported++;
 
@@ -569,8 +571,8 @@ public class BackupService {
             DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
             for (Map<String, Object> rec : records) {
-                Long oldBookId = rec.get("bookId") != null ? Long.valueOf(rec.get("bookId").toString()) : null;
-                String bookTitle = rec.get("bookTitle") != null ? (String) rec.get("bookTitle") : "";
+                Long oldBookId = getLongValue(rec.get("bookId"));
+                String bookTitle = getStringValue(rec.get("bookTitle"), "");
 
                 Long newBookId = null;
                 if (oldBookId != null && bookInfoMap.containsKey(oldBookId)) {
@@ -591,7 +593,7 @@ public class BackupService {
                 ReadingRecord newRec = new ReadingRecord();
                 newRec.setUserId(userId);
                 newRec.setBookId(newBookId);
-                String startTimeStr = rec.get("startTime") != null ? (String) rec.get("startTime") : null;
+                String startTimeStr = getStringValue(rec.get("startTime"));
                 if (startTimeStr != null) {
                     try {
                         newRec.setStartTime(LocalDateTime.parse(startTimeStr.replace(" ", "T"), formatter));
@@ -602,14 +604,17 @@ public class BackupService {
                     newRec.setStartTime(LocalDateTime.now());
                 }
 
-                String endTimeStr = rec.get("endTime") != null ? (String) rec.get("endTime") : null;
+                String endTimeStr = getStringValue(rec.get("endTime"));
                 if (endTimeStr != null) {
                     try {
                         newRec.setEndTime(LocalDateTime.parse(endTimeStr.replace(" ", "T"), formatter));
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
-                newRec.setDuration(rec.get("duration") != null ? Integer.valueOf(rec.get("duration").toString()) : 0);
-                newRec.setLastPage(rec.get("lastPage") != null ? Integer.valueOf(rec.get("lastPage").toString()) : 0);
+                Integer duration = getIntValue(rec.get("duration"));
+                newRec.setDuration(duration != null ? duration : 0);
+                Integer lastPage = getIntValue(rec.get("lastPage"));
+                newRec.setLastPage(lastPage != null ? lastPage : 0);
                 readingRecordMapper.insert(newRec);
                 recImported++;
 
@@ -703,38 +708,47 @@ public class BackupService {
 
         LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
         userWrapper.eq(User::getStatus, Constants.STATUS_ENABLED);
-        vo.setTotalUsers(userMapper.selectCount(userWrapper));
+        Long userCount = userMapper.selectCount(userWrapper);
+        vo.setTotalUsers(userCount != null ? userCount : 0L);
 
         LambdaQueryWrapper<Book> bookWrapper = new LambdaQueryWrapper<>();
         bookWrapper.eq(Book::getStatus, Constants.STATUS_ENABLED);
-        vo.setTotalBooks(bookMapper.selectCount(bookWrapper));
+        Long bookCount = bookMapper.selectCount(bookWrapper);
+        vo.setTotalBooks(bookCount != null ? bookCount : 0L);
 
-        vo.setTotalFileSize(backupTaskMapper.getTotalFileSize());
+        Long totalFileSize = backupTaskMapper.getTotalFileSize();
+        vo.setTotalFileSize(totalFileSize != null ? totalFileSize : 0L);
         vo.setTotalFileSizeText(formatFileSize(vo.getTotalFileSize()));
 
         LambdaQueryWrapper<Annotation> annWrapper = new LambdaQueryWrapper<>();
-        vo.setTotalAnnotations(annotationMapper.selectCount(annWrapper));
+        Long annCount = annotationMapper.selectCount(annWrapper);
+        vo.setTotalAnnotations(annCount != null ? annCount : 0L);
 
         LambdaQueryWrapper<ReadingRecord> recWrapper = new LambdaQueryWrapper<>();
-        vo.setTotalReadingRecords(readingRecordMapper.selectCount(recWrapper));
+        Long recCount = readingRecordMapper.selectCount(recWrapper);
+        vo.setTotalReadingRecords(recCount != null ? recCount : 0L);
 
         LambdaQueryWrapper<Category> catWrapper = new LambdaQueryWrapper<>();
-        vo.setTotalCategories(categoryMapper.selectCount(catWrapper));
+        Long catCount = categoryMapper.selectCount(catWrapper);
+        vo.setTotalCategories(catCount != null ? catCount : 0L);
 
         List<Map<String, Object>> topUsersData = backupTaskMapper.getTopUsersByStorage();
         List<StorageStatsVO.UserStorageStats> topUsers = new ArrayList<>();
+        long totalSize = vo.getTotalFileSize() != null ? vo.getTotalFileSize() : 0L;
         for (Map<String, Object> row : topUsersData) {
             StorageStatsVO.UserStorageStats stats = new StorageStatsVO.UserStorageStats();
-            Long userId = ((Number) row.get("user_id")).longValue();
-            User user = userMapper.selectById(userId);
-            stats.setUserId(userId);
-            stats.setNickname(user != null ? user.getNickname() : "未知用户");
-            stats.setBookCount(((Number) row.get("book_count")).longValue());
-            Long fileSize = ((Number) row.get("total_size")).longValue();
-            stats.setFileSize(fileSize);
-            stats.setFileSizeText(formatFileSize(fileSize));
-            stats.setPercentage(vo.getTotalFileSize() > 0 ? (fileSize * 100.0 / vo.getTotalFileSize()) : 0);
-            topUsers.add(stats);
+            Long userId = getLongValue(row.get("user_id"));
+            if (userId != null) {
+                User user = userMapper.selectById(userId);
+                stats.setUserId(userId);
+                stats.setNickname(user != null ? user.getNickname() : "未知用户");
+                stats.setBookCount(getLongValue(row.get("book_count")));
+                Long fileSize = getLongValue(row.get("total_size"));
+                stats.setFileSize(fileSize != null ? fileSize : 0L);
+                stats.setFileSizeText(formatFileSize(stats.getFileSize()));
+                stats.setPercentage(totalSize > 0 ? (stats.getFileSize() * 100.0 / totalSize) : 0);
+                topUsers.add(stats);
+            }
         }
         vo.setTopUsers(topUsers);
 
@@ -743,15 +757,59 @@ public class BackupService {
         List<StorageStatsVO.DailyStorageStats> dailyTrend = new ArrayList<>();
         for (Map<String, Object> row : dailyData) {
             StorageStatsVO.DailyStorageStats stats = new StorageStatsVO.DailyStorageStats();
-            stats.setDate(row.get("date").toString());
-            stats.setFileSize(((Number) row.get("total_size")).longValue());
-            stats.setBookCount(((Number) row.get("book_count")).longValue());
-            stats.setUserCount(((Number) row.get("user_count")).longValue());
+            Object dateObj = row.get("date");
+            stats.setDate(dateObj != null ? dateObj.toString() : "");
+            Long fileSize = getLongValue(row.get("total_size"));
+            stats.setFileSize(fileSize != null ? fileSize : 0L);
+            Long bookCount = getLongValue(row.get("book_count"));
+            stats.setBookCount(bookCount != null ? bookCount : 0L);
+            Long userCount = getLongValue(row.get("user_count"));
+            stats.setUserCount(userCount != null ? userCount : 0L);
             dailyTrend.add(stats);
         }
         vo.setDailyTrend(dailyTrend);
 
         return vo;
+    }
+
+    private Long getLongValue(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof Number) {
+            return ((Number) obj).longValue();
+        }
+        try {
+            return Long.parseLong(obj.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Integer getIntValue(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof Number) {
+            return ((Number) obj).intValue();
+        }
+        try {
+            return Integer.parseInt(obj.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String getStringValue(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        return obj.toString();
+    }
+
+    private String getStringValue(Object obj, String defaultValue) {
+        String value = getStringValue(obj);
+        return value != null ? value : defaultValue;
     }
 
     public void deleteTask(Long taskId) {
