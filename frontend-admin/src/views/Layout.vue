@@ -47,6 +47,14 @@
           <el-icon><DocumentCopy /></el-icon>
           <template #title><span>通知模板</span></template>
         </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('backup:view') || userStore.isSuperAdmin" index="/backups">
+          <el-icon><Folder /></el-icon>
+          <template #title><span>备份管理</span></template>
+        </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('storage:view') || userStore.isSuperAdmin" index="/storage">
+          <el-icon><Files /></el-icon>
+          <template #title><span>存储统计</span></template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
