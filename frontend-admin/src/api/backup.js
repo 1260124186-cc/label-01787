@@ -1,38 +1,21 @@
-import request from '@/utils/request.js'
+import request from '@/utils/request'
 
 export function getBackupList(params) {
-  return request({
-    url: '/api/admin/backups',
-    method: 'get',
-    params
-  })
+  return request.get('/admin/backups', { params })
 }
 
 export function getBackupDetail(id) {
-  return request({
-    url: `/api/admin/backups/${id}`,
-    method: 'get'
-  })
+  return request.get(`/admin/backups/${id}`)
 }
 
 export function downloadBackup(id) {
-  return request({
-    url: `/api/admin/backups/${id}/download`,
-    method: 'get',
-    responseType: 'blob'
-  })
+  return request.get(`/admin/backups/${id}/download`, { responseType: 'blob' })
 }
 
 export function deleteBackup(id) {
-  return request({
-    url: `/api/admin/backups/${id}`,
-    method: 'delete'
-  })
+  return request.delete(`/admin/backups/${id}`)
 }
 
 export function getStorageStats() {
-  return request({
-    url: '/api/admin/storage',
-    method: 'get'
-  })
+  return request.get('/admin/storage')
 }
