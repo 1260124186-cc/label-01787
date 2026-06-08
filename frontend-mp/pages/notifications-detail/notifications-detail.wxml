@@ -1,48 +1,46 @@
-<view class="page-detail" wx:if="{{notification}}">
-  <!-- 消息头部 -->
-  <view class="detail-header">
-    <view class="detail-icon" style="background: {{notification.typeColor}}15;">
-      <text class="icon-text" style="color: {{notification.typeColor}};">{{notification.typeIcon}}</text>
-    </view>
-    <view class="detail-info">
-      <text class="detail-type" style="color: {{notification.typeColor}};">{{notification.typeName}}</text>
-      <text class="detail-time">{{notification.showTime}}</text>
-    </view>
-  </view>
-
-  <!-- 阅读状态 -->
-  <view class="read-status" wx:if="{{notification.isRead === 1}}">
-    <text class="status-text">已读 · {{notification.readTime}}</text>
-  </view>
-
-  <!-- 消息标题 -->
-  <view class="detail-title">
-    <text>{{notification.title}}</text>
-  </view>
-
-  <!-- 消息内容 -->
-  <view class="detail-content">
-    <text>{{notification.content}}</text>
-  </view>
-
-  <!-- 跳转按钮 -->
-  <view class="detail-actions" wx:if="{{notification.extraData}}">
-    <button class="jump-btn" bindtap="handleJump">查看详情</button>
-  </view>
-
-  <!-- 加载状态 -->
+<view class="page-detail">
+  <!-- 加载中 -->
   <view class="loading-state" wx:if="{{loading}}">
     <text>加载中...</text>
   </view>
-</view>
 
-<!-- 空状态 -->
-<view class="empty-state" wx:if="{{!notification && !loading}}">
-  <text class="empty-icon">📭</text>
-  <text class="empty-text">消息不存在</text>
-</view>
+  <!-- 消息详情 -->
+  <view class="detail-content" wx:elif="{{notification}}">
+    <!-- 消息头部 -->
+    <view class="detail-header">
+      <view class="detail-icon" style="background: {{notification.typeColor}}15;">
+        <text class="icon-text" style="color: {{notification.typeColor}};">{{notification.typeIcon}}</text>
+      </view>
+      <view class="detail-info">
+        <text class="detail-type" style="color: {{notification.typeColor}};">{{notification.typeName}}</text>
+        <text class="detail-time">{{notification.showTime}}</text>
+      </view>
+    </view>
 
-<!-- 加载中 -->
-<view class="loading-state" wx:if="{{loading}}">
-  <text>加载中...</text>
+    <!-- 阅读状态 -->
+    <view class="read-status" wx:if="{{notification.isRead === 1}}">
+      <text class="status-text">已读 · {{notification.readTime}}</text>
+    </view>
+
+    <!-- 消息标题 -->
+    <view class="detail-title">
+      <text>{{notification.title}}</text>
+    </view>
+
+    <!-- 消息内容 -->
+    <view class="detail-body">
+      <text>{{notification.content}}</text>
+    </view>
+
+    <!-- 跳转按钮 -->
+    <view class="detail-actions" wx:if="{{notification.extraData}}">
+      <button class="jump-btn" bindtap="handleJump">查看详情</button>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <text class="empty-icon">📭</text>
+    <text class="empty-text">消息不存在</text>
+  </view>
 </view>

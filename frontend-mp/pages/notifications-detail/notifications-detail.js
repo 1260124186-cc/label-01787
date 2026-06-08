@@ -1,18 +1,36 @@
+const app = getApp()
 const { getNotificationDetail, getTypeName, getTypeIcon, getTypeColor } = require('../../utils/notification')
 
 Page({
   data: {
     notification: null,
-    loading: true
+    loading: true,
+    notificationId: 0
   },
 
   onLoad(options) {
     const id = Number(options.id)
     if (id) {
-      this.fetchDetail(id)
+      this.setData({ notificationId: id })
+      this.checkLoginAndFetch(id)
     } else {
       wx.showToast({ title: '参数错误', icon: 'none' })
       setTimeout(() => wx.navigateBack(), 1500)
+    }
+  },
+
+  async checkLoginAndFetch(id) {
+    if (app.globalData.token) {
+      this.fetchDetail(id)
+    } else {
+      try {
+        await app.login()
+        this.fetchDetail(id)
+      } catch (e) {
+        console.error('登录失败', e)
+        wx.showToast({ title: '登录失败', icon: 'none' })
+        this.setData({ loading: false })
+      }
     }
   },
 

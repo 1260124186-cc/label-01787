@@ -74,17 +74,28 @@
 }
 
 /* 消息内容 */
-.detail-content {
+.detail-body {
   padding: 32rpx;
   background: #fff;
   border-radius: 16rpx;
   min-height: 300rpx;
 }
 
-.detail-content text {
+.detail-body text {
   font-size: 28rpx;
   color: #666;
   line-height: 1.8;
+}
+
+/* 详情内容容器 */
+.detail-content {
+  padding: 24rpx;
+}
+
+.detail-content .detail-header,
+.detail-content .read-status,
+.detail-content .detail-title {
+  margin-bottom: 16rpx;
 }
 
 /* 跳转按钮 */
