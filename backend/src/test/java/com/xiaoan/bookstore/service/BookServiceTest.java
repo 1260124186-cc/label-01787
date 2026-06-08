@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -860,7 +861,7 @@ class BookServiceTest {
                 doc.addPage(page);
                 try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
                     contentStream.beginText();
-                    contentStream.setFont(PDType1Font.HELVETICA, 12);
+                    contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
                     contentStream.newLineAtOffset(100, 700);
                     contentStream.showText("Page " + (i + 1));
                     contentStream.endText();
