@@ -1,5 +1,6 @@
 const { request } = require('../../utils/request')
 const { themes } = require('../../utils/util')
+const { getUnreadCount } = require('../../utils/notification')
 
 Page({
   data: {
@@ -9,7 +10,8 @@ Page({
     showNicknamePanel: false,
     currentTheme: 'white',
     themeText: '白色',
-    tempNickname: ''
+    tempNickname: '',
+    unreadCount: 0
   },
 
   onShow() {
@@ -23,11 +25,22 @@ Page({
     if (app.globalData.token) {
       this.setData({ isLogin: true })
       this.loadProfile()
+      this.fetchUnreadCount()
     } else {
       this.setData({
         isLogin: false,
-        userInfo: { nickname: '未登录' }
+        userInfo: { nickname: '未登录' },
+        unreadCount: 0
       })
+    }
+  },
+
+  async fetchUnreadCount() {
+    try {
+      const res = await getUnreadCount()
+      this.setData({ unreadCount: res.data[0] || 0 })
+    } catch (e) {
+      console.error('获取未读数量失败', e)
     }
   },
 
@@ -48,9 +61,16 @@ Page({
       wx.showToast({ title: '登录成功', icon: 'success' })
       this.setData({ isLogin: true })
       this.loadProfile()
+      this.fetchUnreadCount()
     }).catch(() => {
       wx.hideLoading()
       wx.showToast({ title: '登录失败', icon: 'none' })
+    })
+  },
+
+  goNotifications() {
+    wx.switchTab({
+      url: '/pages/notifications/notifications'
     })
   },
 

@@ -1,0 +1,61 @@
+<view class="page-notifications">
+  <!-- 顶部操作栏 -->
+  <view class="header">
+    <view class="mark-all-read" bindtap="handleMarkAllRead">
+      <text>全部已读</text>
+    </view>
+  </view>
+
+  <!-- 分类 Tab -->
+  <scroll-view class="type-tabs" scroll-x="true" enhanced show-scrollbar="{{false}}">
+    <view class="type-tab {{activeType === 0 ? 'active' : ''}}" bindtap="switchType" data-type="0">
+      <text class="tab-text">全部</text>
+      <view class="tab-badge" wx:if="{{unreadCount[0] > 0}}">
+        <text>{{unreadCount[0] > 99 ? '99+' : unreadCount[0]}}</text>
+      </view>
+    </view>
+    <view class="type-tab {{activeType === item.id ? 'active' : ''}}" 
+          wx:for="{{notificationTypes}}" 
+          wx:key="id" 
+          bindtap="switchType" 
+          data-type="{{item.id}}">
+      <text class="tab-text">{{item.icon}} {{item.name}}</text>
+      <view class="tab-badge" wx:if="{{unreadCount[item.id] > 0}}">
+        <text>{{unreadCount[item.id] > 99 ? '99+' : unreadCount[item.id]}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 消息列表 -->
+  <view class="notification-list" wx:if="{{notifications.length > 0}}">
+    <view class="notification-item {{item.isRead === 0 ? 'unread' : ''}}" 
+          wx:for="{{notifications}}" 
+          wx:key="id" 
+          bindtap="handleItemClick" 
+          data-item="{{item}}">
+      <view class="item-icon" style="background: {{item.typeColor}}15;">
+        <text class="icon-text" style="color: {{item.typeColor}};">{{item.typeIcon}}</text>
+      </view>
+      <view class="item-content">
+        <view class="item-header">
+          <text class="item-type" style="color: {{item.typeColor}};">{{item.typeName}}</text>
+          <text class="item-time">{{item.showTime}}</text>
+        </view>
+        <text class="item-title">{{item.title}}</text>
+        <text class="item-desc">{{item.content}}</text>
+      </view>
+      <view class="unread-dot" wx:if="{{item.isRead === 0}}"></view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:elif="{{!loading}}">
+    <text class="empty-icon">📭</text>
+    <text class="empty-text">暂无消息</text>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{loading && notifications.length > 0}}">
+    <text>加载中...</text>
+  </view>
+</view>

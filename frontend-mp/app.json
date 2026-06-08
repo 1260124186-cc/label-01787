@@ -3,10 +3,12 @@
     "pages/bookshelf/bookshelf",
     "pages/reader/reader",
     "pages/notes/notes",
+    "pages/notifications/notifications",
     "pages/summary/summary",
     "pages/profile/profile",
     "pages/category/category",
-    "pages/complaint/complaint"
+    "pages/complaint/complaint",
+    "pages/notifications-detail/notifications-detail"
   ],
   "window": {
     "backgroundTextStyle": "dark",
@@ -32,6 +34,12 @@
         "text": "笔记",
         "iconPath": "assets/icon-note.png",
         "selectedIconPath": "assets/icon-note-active.png"
+      },
+      {
+        "pagePath": "pages/notifications/notifications",
+        "text": "消息",
+        "iconPath": "assets/icon-bell.png",
+        "selectedIconPath": "assets/icon-bell-active.png"
       },
       {
         "pagePath": "pages/summary/summary",

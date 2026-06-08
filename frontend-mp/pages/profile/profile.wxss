@@ -99,6 +99,24 @@
   margin-right: 8rpx;
 }
 
+.menu-badge {
+  min-width: 32rpx;
+  height: 32rpx;
+  background: #E8734A;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8rpx;
+  margin-right: 8rpx;
+}
+
+.menu-badge text {
+  color: #fff;
+  font-size: 20rpx;
+  line-height: 1;
+}
+
 .menu-arrow {
   width: 24rpx;
   height: 24rpx;

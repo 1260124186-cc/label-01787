@@ -1,0 +1,140 @@
+.page-detail {
+  min-height: 100vh;
+  background: #F5F0EB;
+  padding: 24rpx;
+}
+
+/* 消息头部 */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 32rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.detail-icon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-text {
+  font-size: 44rpx;
+}
+
+.detail-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.detail-type {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.detail-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 阅读状态 */
+.read-status {
+  padding: 16rpx 32rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.status-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 消息标题 */
+.detail-title {
+  padding: 32rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.detail-title text {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* 消息内容 */
+.detail-content {
+  padding: 32rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  min-height: 300rpx;
+}
+
+.detail-content text {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.8;
+}
+
+/* 跳转按钮 */
+.detail-actions {
+  padding: 32rpx 0;
+}
+
+.jump-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #6B4226 0%, #8b5e3c 100%);
+  color: #fff;
+  font-size: 30rpx;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jump-btn::after {
+  border: none;
+}
+
+.jump-btn:active {
+  opacity: 0.8;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.empty-icon {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 加载状态 */
+.loading-state {
+  text-align: center;
+  padding: 120rpx 0;
+  font-size: 28rpx;
+  color: #999;
+}

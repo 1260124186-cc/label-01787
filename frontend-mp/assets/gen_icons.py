@@ -148,10 +148,67 @@ def icon_user(d, c):
     )
 
 
+def icon_bell(d, c):
+    """
+    Minimalist bell/notification icon – classic bell shape with clapper.
+    Simplified to use only lines and ellipses for compatibility.
+    """
+    cx = CS // 2
+    
+    # Bell body outline - using straight lines and arcs
+    bell_top = PAD + 8 * SCALE
+    bell_bot = CS - PAD - 12 * SCALE
+    bell_left = cx - 18 * SCALE
+    bell_right = cx + 18 * SCALE
+    
+    # Top dome (half circle)
+    d.arc(
+        [bell_left, bell_top, bell_right, bell_top + (bell_right - bell_left)],
+        180, 0,
+        fill=c,
+        width=SW
+    )
+    
+    # Left side
+    mid_y = bell_top + (bell_right - bell_left) / 2
+    d.line([(bell_left, mid_y), (bell_left, bell_bot)], fill=c, width=SW)
+    
+    # Right side
+    d.line([(bell_right, mid_y), (bell_right, bell_bot)], fill=c, width=SW)
+    
+    # Bottom curve (connecting the two sides)
+    d.arc(
+        [bell_left, bell_bot - 8 * SCALE, bell_right, bell_bot + 8 * SCALE],
+        0, 180,
+        fill=c,
+        width=SW
+    )
+    
+    # Bell clapper (small circle at bottom center)
+    clapper_r = 5 * SCALE
+    clapper_cy = bell_bot + 4 * SCALE
+    d.ellipse(
+        [cx - clapper_r, clapper_cy - clapper_r, cx + clapper_r, clapper_cy + clapper_r],
+        fill=c,
+        width=SW
+    )
+    
+    # Bell stem (small rectangle at top center)
+    stem_w = 10 * SCALE
+    stem_h = 8 * SCALE
+    stem_top = bell_top - stem_h
+    d.rectangle(
+        [cx - stem_w / 2, stem_top, cx + stem_w / 2, bell_top],
+        outline=c,
+        width=SW
+    )
+
+
 # ── Generate ─────────────────────────────────────────────────
 ICONS = [
     ('icon-book',  icon_book),
     ('icon-note',  icon_note),
+    ('icon-bell',  icon_bell),
     ('icon-chart', icon_chart),
     ('icon-user',  icon_user),
 ]
