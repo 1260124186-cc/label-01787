@@ -11,7 +11,8 @@
     "pages/notifications-detail/notifications-detail",
     "pages/backup/backup",
     "pages/membership/membership",
-    "pages/points/points"
+    "pages/points/points",
+    "pages/ai-summary/ai-summary"
   ],
   "window": {
     "backgroundTextStyle": "dark",

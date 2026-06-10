@@ -7,7 +7,9 @@ Page({
     summary: {},
     dailyData: [],
     durationText: '0分钟',
-    isLogin: false
+    isLogin: false,
+    isVip: false,
+    loading: false
   },
 
   onShow() {
@@ -26,12 +28,27 @@ Page({
   },
 
   setPeriod(e) {
-    this.setData({ period: e.currentTarget.dataset.period })
+    const period = e.currentTarget.dataset.period
+    if (period === 'year' && !this.data.isVip) {
+      wx.showModal({
+        title: '会员专属',
+        content: '年度统计为会员专属功能，升级会员即可查看',
+        confirmText: '升级会员',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/membership/membership' })
+          }
+        }
+      })
+      return
+    }
+    this.setData({ period })
     this.loadSummary()
   },
 
   async loadSummary() {
     if (!this.data.isLogin) return
+    this.setData({ loading: true })
     try {
       const res = await request({
         url: '/reading/summary',
@@ -41,7 +58,6 @@ Page({
       const totalSeconds = data.totalDuration || 0
       const durationText = formatDuration(totalSeconds)
 
-      // 处理每日数据用于柱状图
       const daily = data.dailyData || []
       const maxVal = Math.max(...daily.map(d => Number(d.total) || 0), 1)
       const dailyData = daily.map(d => {
@@ -56,10 +72,17 @@ Page({
       this.setData({
         summary: data,
         dailyData,
-        durationText
+        durationText,
+        isVip: data.isVip || false
       })
     } catch (e) {
       console.error('加载统计失败', e)
+    } finally {
+      this.setData({ loading: false })
     }
+  },
+
+  goMembership() {
+    wx.navigateTo({ url: '/pages/membership/membership' })
   }
 })

@@ -6,16 +6,18 @@ import java.util.Map;
 
 @Data
 public class ReadingSummaryVO {
-    /** 总阅读时长(秒) */
     private Long totalDuration;
-    /** 阅读书籍数 */
     private Integer bookCount;
-    /** 每日阅读数据 */
     private List<Map<String, Object>> dailyData;
-    /** 统计周期 week/month/year */
     private String period;
-    /** 周期开始 */
     private String periodStart;
-    /** 周期结束 */
     private String periodEnd;
+    private Boolean isVip;
+    private List<Map<String, Object>> bookRank;
+    private List<Map<String, Object>> categoryStats;
+    private String avgDailyDuration;
+    private String maxDayDuration;
+    private String maxDayDate;
+    private Integer readingDays;
+    private Double avgPagesPerDay;
 }

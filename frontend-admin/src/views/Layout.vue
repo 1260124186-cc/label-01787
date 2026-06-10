@@ -67,6 +67,14 @@
           <el-icon><Stamp /></el-icon>
           <template #title><span>会员管理</span></template>
         </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('convert:view')" index="/convert-tasks">
+          <el-icon><Picture /></el-icon>
+          <template #title><span>转图任务</span></template>
+        </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('ai_summary:view')" index="/ai-summaries">
+          <el-icon><MagicStick /></el-icon>
+          <template #title><span>AI摘要</span></template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

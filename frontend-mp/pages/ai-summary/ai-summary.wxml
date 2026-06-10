@@ -1,0 +1,41 @@
+<view class="page-ai-summary">
+  <view class="header-card card">
+    <view class="book-title">《{{bookTitle}}》</view>
+    <view class="ai-badge {{isVip ? 'vip' : 'free'}}">
+      <text>{{isVip ? '会员无限AI' : '免费额度'}}</text>
+      <text class="ai-count" wx:if="{{!isVip}}">{{aiUsedToday}}/{{aiDailyLimit}}</text>
+    </view>
+  </view>
+
+  <view class="summary-card card" wx:if="{{summary && summary.status === 1}}">
+    <view class="section-title">书籍摘要</view>
+    <view class="summary-content">{{summary.summary}}</view>
+
+    <view class="section-title key-points-title">核心要点</view>
+    <view class="key-points">
+      <text class="point-item" wx:for="{{summary.keyPointsList}}" wx:key="index">{{item}}</text>
+    </view>
+
+    <button class="share-btn" open-type="share">分享摘要</button>
+  </view>
+
+  <view class="summary-card card generating-card" wx:if="{{generating || (summary && summary.status === 2)}}">
+    <view class="loading-icon">⏳</view>
+    <text class="generating-text">AI正在生成摘要中...</text>
+    <text class="generating-tip">请稍候，大约需要10-30秒</text>
+  </view>
+
+  <view class="empty-card card" wx:if="{{!summary && !loading && !generating}}">
+    <view class="empty-icon">🤖</view>
+    <text class="empty-text">还没有AI摘要</text>
+    <text class="empty-desc">点击下方按钮，AI将为你生成书籍摘要和核心要点</text>
+  </view>
+
+  <view class="bottom-action">
+    <button class="generate-btn {{generating ? 'disabled' : ''}}" bindtap="generateSummary" disabled="{{generating}}">
+      {{generating ? '生成中...' : summary && summary.status === 1 ? '重新生成' : '生成AI摘要'}}
+    </button>
+    <text class="btn-tip" wx:if="{{!isVip}}">今日剩余 {{aiDailyLimit - aiUsedToday}} 次机会</text>
+    <text class="btn-tip vip-tip" wx:if="{{!isVip}}">升级会员解锁无限AI</text>
+  </view>
+</view>

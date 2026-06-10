@@ -101,6 +101,18 @@ const routes = [
         name: 'Members',
         component: () => import('@/views/MemberUserList.vue'),
         meta: { title: '会员管理', permission: 'member:view' }
+      },
+      {
+        path: 'convert-tasks',
+        name: 'ConvertTasks',
+        component: () => import('@/views/ConvertTaskList.vue'),
+        meta: { title: '转图任务', permission: 'convert:view' }
+      },
+      {
+        path: 'ai-summaries',
+        name: 'AiSummaries',
+        component: () => import('@/views/AiSummaryList.vue'),
+        meta: { title: 'AI摘要', permission: 'ai_summary:view' }
       }
     ]
   }

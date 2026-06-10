@@ -479,6 +479,41 @@ CREATE TABLE IF NOT EXISTS points_exchange (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB COMMENT='积分兑换记录表';
 
+CREATE TABLE IF NOT EXISTS ai_summary (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    book_id BIGINT NOT NULL COMMENT '书籍ID',
+    book_title VARCHAR(255) DEFAULT '' COMMENT '书籍标题',
+    summary TEXT COMMENT 'AI生成的摘要',
+    key_points TEXT COMMENT '核心要点',
+    status TINYINT DEFAULT 2 COMMENT '0-失败 1-成功 2-生成中',
+    error_msg VARCHAR(500) DEFAULT '' COMMENT '错误信息',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_book_id (book_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB COMMENT='AI摘要记录表';
+
+CREATE TABLE IF NOT EXISTS convert_task (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    book_id BIGINT NOT NULL COMMENT '书籍ID',
+    book_title VARCHAR(255) DEFAULT '' COMMENT '书籍标题',
+    total_pages INT DEFAULT 0 COMMENT '总页数',
+    converted_pages INT DEFAULT 0 COMMENT '已转换页数',
+    priority INT DEFAULT 1 COMMENT '优先级(数字越大优先级越高，VIP为10，免费用户为1)',
+    status TINYINT DEFAULT 0 COMMENT '0-等待中 1-处理中 2-已完成 3-失败',
+    error_msg VARCHAR(500) DEFAULT '' COMMENT '错误信息',
+    started_at DATETIME DEFAULT NULL COMMENT '开始处理时间',
+    finished_at DATETIME DEFAULT NULL COMMENT '完成时间',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_book_id (book_id),
+    INDEX idx_status_priority (status, priority)
+) ENGINE=InnoDB COMMENT='PDF转图任务表';
+
 -- 初始化会员套餐
 INSERT INTO membership_plan (code, name, description, price, duration_days, max_books, max_storage, ai_daily_limit, priority_queue, advanced_stats, sort_order) VALUES
 ('free', '免费版', '基础功能，适合轻度阅读用户', 0, 0, 20, 2147483648, 5, 0, 0, 1),

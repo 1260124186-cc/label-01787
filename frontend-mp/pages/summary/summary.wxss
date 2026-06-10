@@ -121,3 +121,175 @@
   color: #999;
   margin-top: 12rpx;
 }
+
+.period-tab.locked {
+  color: #ccc;
+  position: relative;
+}
+
+.lock-icon {
+  font-size: 20rpx;
+  margin-left: 4rpx;
+}
+
+.vip-upsell {
+  display: flex;
+  align-items: center;
+  margin-top: 32rpx;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #FFF7F0 0%, #FFEDE0 100%);
+  border-radius: 16rpx;
+  border: 1rpx solid #FFD7B5;
+}
+
+.upsell-icon {
+  font-size: 40rpx;
+  margin-right: 16rpx;
+}
+
+.upsell-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.upsell-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #D9662A;
+  margin-bottom: 4rpx;
+}
+
+.upsell-desc {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.upsell-arrow {
+  font-size: 32rpx;
+  color: #D9662A;
+}
+
+.advanced-section {
+  margin-top: 24rpx;
+}
+
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.rank-item:last-child {
+  border-bottom: none;
+}
+
+.rank-index {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 50%;
+  font-size: 24rpx;
+  color: #999;
+  margin-right: 20rpx;
+}
+
+.rank-index.top {
+  background: linear-gradient(135deg, #E8734A 0%, #D4A574 100%);
+  color: #fff;
+  font-weight: 600;
+}
+
+.rank-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.rank-title {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.rank-desc {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.rank-duration {
+  font-size: 26rpx;
+  color: #E8734A;
+  font-weight: 600;
+}
+
+.category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.category-item {
+  width: calc(50% - 8rpx);
+  padding: 20rpx;
+  background: #f9f9f9;
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.category-name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.category-books {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.category-duration {
+  font-size: 24rpx;
+  color: #E8734A;
+  margin-top: 8rpx;
+}
+
+.insight-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.insight-item {
+  width: calc(50% - 8rpx);
+  padding: 24rpx;
+  background: #f9f9f9;
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.insight-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.insight-value {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 600;
+}
+

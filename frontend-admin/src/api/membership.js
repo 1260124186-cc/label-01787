@@ -31,3 +31,19 @@ export function updatePointsRule(id, data) {
 export function adjustPoints(data) {
   return request.post('/admin/membership/points-adjust', data)
 }
+
+export function getConvertTaskList(params) {
+  return request.get('/admin/convert/tasks', { params })
+}
+
+export function getConvertTask(id) {
+  return request.get(`/admin/convert/task/${id}`)
+}
+
+export function getAiSummaryList(params) {
+  return request.get('/admin/ai/summaries', { params })
+}
+
+export function getAiSummary(id) {
+  return request.get(`/admin/ai/summary/${id}`)
+}
