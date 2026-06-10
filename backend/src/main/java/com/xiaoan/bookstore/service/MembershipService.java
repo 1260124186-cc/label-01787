@@ -185,10 +185,20 @@ public class MembershipService {
         }
         orderMapper.insert(order);
 
+        Map<String, Object> result = new HashMap<>();
+        result.put("orderNo", orderNo);
+        result.put("orderId", order.getId());
+        result.put("amount", plan.getPrice());
+
         try {
             Map<String, String> prepayResult = wxUtil.createPrepay(orderNo, plan.getPrice(), "购买" + plan.getName(), "");
             if (prepayResult != null && prepayResult.containsKey("prepayId")) {
                 order.setWxPrepayId(prepayResult.get("prepayId"));
+                result.put("timeStamp", prepayResult.get("timeStamp"));
+                result.put("nonceStr", prepayResult.get("nonceStr"));
+                result.put("package", prepayResult.get("package"));
+                result.put("paySign", prepayResult.get("paySign"));
+                result.put("signType", "RSA");
             } else {
                 order.setWxPrepayId("");
             }
@@ -197,9 +207,6 @@ public class MembershipService {
             log.warn("创建微信预支付失败: {}", e.getMessage());
         }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("orderNo", orderNo);
-        result.put("orderId", order.getId());
         return result;
     }
 
