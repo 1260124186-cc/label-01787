@@ -53,6 +53,9 @@ app:
   wx:
     app-id: ${WX_APP_ID:your-app-id}
     app-secret: ${WX_APP_SECRET:your-app-secret}
+    mch-id: ${WX_MCH_ID:}
+    mch-key: ${WX_MCH_KEY:}
+    notify-url: ${WX_NOTIFY_URL:}
   file:
     signed-url-expiration: 300
     max-downloads-per-hour: 10

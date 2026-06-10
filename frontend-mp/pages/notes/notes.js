@@ -81,7 +81,6 @@ Page({
   },
 
   editNote(e) {
-    // 简单实现：弹窗编辑
     const index = e.currentTarget.dataset.index
     const note = this.data.notes[index]
     const id = e.currentTarget.dataset.id
@@ -108,6 +107,34 @@ Page({
           } catch (e) {
             console.error('更新失败', e)
           }
+        }
+      }
+    })
+  },
+
+  shareExcerpt(e) {
+    const index = e.currentTarget.dataset.index
+    const note = this.data.notes[index]
+    if (!note.selectedText) {
+      wx.showToast({ title: '无书摘内容', icon: 'none' })
+      return
+    }
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    })
+    wx.showModal({
+      title: '分享书摘',
+      content: `"${note.selectedText}"\n\n——来自小安的书店`,
+      confirmText: '复制并分享',
+      success: (res) => {
+        if (res.confirm) {
+          wx.setClipboardData({
+            data: `"${note.selectedText}"\n\n——来自小安的书店`,
+            success: () => {
+              wx.showToast({ title: '已复制到剪贴板', icon: 'success' })
+            }
+          })
         }
       }
     })

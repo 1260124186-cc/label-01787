@@ -1,0 +1,59 @@
+<view class="page-points">
+  <view class="points-card">
+    <text class="points-balance">{{pointsInfo.balance || 0}}</text>
+    <text class="points-label">当前积分</text>
+    <button class="checkin-btn {{pointsInfo.todayCheckedIn ? 'checked' : ''}}" bindtap="doCheckIn" disabled="{{pointsInfo.todayCheckedIn}}">
+      {{pointsInfo.todayCheckedIn ? '今日已签到' : '签到'}}
+    </button>
+  </view>
+
+  <view class="stats-row">
+    <view class="stat-item">
+      <text class="stat-value">{{pointsInfo.totalEarned || 0}}</text>
+      <text class="stat-label">累计获得</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">{{pointsInfo.totalConsumed || 0}}</text>
+      <text class="stat-label">累计消费</text>
+    </view>
+  </view>
+
+  <view class="section-card card">
+    <text class="section-title">积分明细</text>
+    <view class="history-list" wx:if="{{historyList.length > 0}}">
+      <view class="history-item" wx:for="{{historyList}}" wx:key="id">
+        <view class="history-left">
+          <text class="history-desc">{{item.description}}</text>
+          <text class="history-time">{{item.createTime}}</text>
+        </view>
+        <text class="history-amount {{item.amount > 0 ? 'plus' : 'minus'}}">{{item.amount > 0 ? '+' : ''}}{{item.amount}}</text>
+      </view>
+    </view>
+    <view class="empty-tip" wx:else>
+      <text>暂无积分记录</text>
+    </view>
+    <view class="load-more-tip" wx:if="{{!hasMore && historyList.length > 0}}">
+      <text>没有更多了</text>
+    </view>
+  </view>
+
+  <view class="section-card card">
+    <text class="section-title">获取积分</text>
+    <view class="rules-list" wx:if="{{rules.length > 0}}">
+      <view class="rule-item" wx:for="{{rules}}" wx:key="id">
+        <view class="rule-icon-wrap">
+          <text class="rule-icon-text">{{item.icon}}</text>
+        </view>
+        <view class="rule-info">
+          <text class="rule-name">{{item.name}}</text>
+          <text class="rule-desc">{{item.description || ''}}</text>
+        </view>
+        <text class="rule-points">+{{item.points}}</text>
+      </view>
+    </view>
+    <view class="empty-tip" wx:else>
+      <text>暂无积分规则</text>
+    </view>
+  </view>
+</view>

@@ -76,5 +76,34 @@ public class Constants {
     /** 备份格式版本 */
     public static final String BACKUP_SCHEMA_VERSION = "1.0";
 
+    public static final String PLAN_FREE = "free";
+    public static final String PLAN_VIP = "vip";
+
+    public static final int ORDER_TYPE_MEMBERSHIP = 1;
+    public static final int ORDER_TYPE_STORAGE = 2;
+
+    public static final int ORDER_STATUS_PENDING = 0;
+    public static final int ORDER_STATUS_PAID = 1;
+    public static final int ORDER_STATUS_CANCELLED = 2;
+    public static final int ORDER_STATUS_REFUNDED = 3;
+
+    public static final int POINTS_TYPE_EARN = 1;
+    public static final int POINTS_TYPE_CONSUME = 2;
+
+    public static final String POINTS_CATEGORY_DAILY_CHECKIN = "daily_checkin";
+    public static final String POINTS_CATEGORY_UPLOAD_BOOK = "upload_book";
+    public static final String POINTS_CATEGORY_SHARE_EXCERPT = "share_excerpt";
+    public static final String POINTS_CATEGORY_EXCHANGE_VIP = "exchange_vip";
+    public static final String POINTS_CATEGORY_EXCHANGE_STORAGE = "exchange_storage";
+    public static final String POINTS_CATEGORY_ADMIN_ADJUST = "admin_adjust";
+
+    public static final int EXCHANGE_TYPE_VIP_DAYS = 1;
+    public static final int EXCHANGE_TYPE_STORAGE = 2;
+
+    public static final long BYTES_PER_MB = 1024L * 1024L;
+    public static final long BYTES_PER_GB = 1024L * 1024L * 1024L;
+
+    public static final int ORDER_EXPIRE_MINUTES = 30;
+
     private Constants() {}
 }

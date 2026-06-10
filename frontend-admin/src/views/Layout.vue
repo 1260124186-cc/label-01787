@@ -55,6 +55,18 @@
           <el-icon><Files /></el-icon>
           <template #title><span>存储统计</span></template>
         </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('plan:view')" index="/membership-plans">
+          <el-icon><PriceTag /></el-icon>
+          <template #title><span>套餐配置</span></template>
+        </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('order:view')" index="/orders">
+          <el-icon><List /></el-icon>
+          <template #title><span>订单列表</span></template>
+        </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('member:view')" index="/members">
+          <el-icon><Stamp /></el-icon>
+          <template #title><span>会员管理</span></template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

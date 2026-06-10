@@ -139,6 +139,14 @@ Page({
     wx.navigateTo({ url: '/pages/backup/backup' })
   },
 
+  goMembership() {
+    wx.navigateTo({ url: '/pages/membership/membership' })
+  },
+
+  goPoints() {
+    wx.navigateTo({ url: '/pages/points/points' })
+  },
+
   showThemePicker() {
     this.setData({ showTheme: true })
   },

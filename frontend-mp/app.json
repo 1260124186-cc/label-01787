@@ -9,7 +9,9 @@
     "pages/category/category",
     "pages/complaint/complaint",
     "pages/notifications-detail/notifications-detail",
-    "pages/backup/backup"
+    "pages/backup/backup",
+    "pages/membership/membership",
+    "pages/points/points"
   ],
   "window": {
     "backgroundTextStyle": "dark",

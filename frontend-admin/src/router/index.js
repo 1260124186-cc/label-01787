@@ -83,6 +83,24 @@ const routes = [
         name: 'Storage',
         component: () => import('@/views/StorageStats.vue'),
         meta: { title: '存储统计', permission: 'storage:view' }
+      },
+      {
+        path: 'membership-plans',
+        name: 'MembershipPlans',
+        component: () => import('@/views/MembershipPlanList.vue'),
+        meta: { title: '套餐配置', permission: 'plan:view' }
+      },
+      {
+        path: 'orders',
+        name: 'Orders',
+        component: () => import('@/views/OrderList.vue'),
+        meta: { title: '订单列表', permission: 'order:view' }
+      },
+      {
+        path: 'members',
+        name: 'Members',
+        component: () => import('@/views/MemberUserList.vue'),
+        meta: { title: '会员管理', permission: 'member:view' }
       }
     ]
   }

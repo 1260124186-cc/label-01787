@@ -25,6 +25,7 @@
       <view class="note-footer">
         <text class="note-time">{{item.createdAt}}</text>
         <view class="note-actions">
+          <text class="action-btn share-btn" bindtap="shareExcerpt" data-id="{{item.id}}" data-index="{{index}}" wx:if="{{item.selectedText}}">分享书摘</text>
           <text class="action-btn" bindtap="editNote" data-id="{{item.id}}" data-index="{{index}}">编辑</text>
           <text class="action-btn danger" bindtap="deleteNote" data-id="{{item.id}}">删除</text>
         </view>

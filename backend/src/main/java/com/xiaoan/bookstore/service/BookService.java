@@ -38,6 +38,8 @@ public class BookService {
     private static final Logger log = LoggerFactory.getLogger(BookService.class);
     private final BookMapper bookMapper;
     private final ContentComplianceService contentComplianceService;
+    private final MembershipService membershipService;
+    private final PointsService pointsService;
 
     @Value("${app.upload.path}")
     private String uploadPath;
@@ -57,6 +59,10 @@ public class BookService {
         if (file.getSize() > maxFileSize) {
             throw new BusinessException("文件大小不能超过150MB");
         }
+
+        membershipService.checkBookQuota(userId);
+        membershipService.checkStorageQuota(userId, file.getSize());
+
         String originalName = file.getOriginalFilename();
         if (originalName == null || !originalName.toLowerCase().endsWith(".pdf")) {
             throw new BusinessException("仅支持PDF文件");
@@ -96,6 +102,13 @@ public class BookService {
             }
 
             log.info("书籍上传成功: userId={}, title={}, pages={}, copyrightDeclared={}", userId, bookTitle, pageCount, book.getCopyrightDeclared());
+
+            try {
+                pointsService.earnPoints(userId, Constants.POINTS_CATEGORY_UPLOAD_BOOK, 0, "上传书籍《" + bookTitle + "》", String.valueOf(book.getId()));
+            } catch (Exception e) {
+                log.warn("积分发放失败，不影响上传: {}", e.getMessage());
+            }
+
             return book;
         } catch (BusinessException e) {
             throw e;

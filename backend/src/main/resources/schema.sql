@@ -364,3 +364,158 @@ ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
 INSERT INTO role_permission (role_id, permission_id) VALUES
 (3, 80), (3, 81), (3, 84)
 ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 会员套餐配置表
+CREATE TABLE IF NOT EXISTS membership_plan (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '套餐编码(free/vip)',
+    name VARCHAR(100) NOT NULL COMMENT '套餐名称',
+    description VARCHAR(500) DEFAULT '' COMMENT '套餐描述',
+    price INT NOT NULL DEFAULT 0 COMMENT '价格(分)',
+    duration_days INT NOT NULL DEFAULT 30 COMMENT '时长(天)',
+    max_books INT NOT NULL DEFAULT 20 COMMENT '书籍数量上限',
+    max_storage BIGINT NOT NULL DEFAULT 2147483648 COMMENT '存储上限(字节)',
+    ai_daily_limit INT NOT NULL DEFAULT 5 COMMENT 'AI每日使用上限',
+    priority_queue TINYINT NOT NULL DEFAULT 0 COMMENT '0-普通队列 1-优先转图队列',
+    advanced_stats TINYINT NOT NULL DEFAULT 0 COMMENT '0-基础统计 1-高级统计报告',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    status TINYINT DEFAULT 1 COMMENT '0-禁用 1-启用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_code (code)
+) ENGINE=InnoDB COMMENT='会员套餐配置表';
+
+-- 用户会员状态表
+CREATE TABLE IF NOT EXISTS user_membership (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL UNIQUE COMMENT '用户ID',
+    plan_code VARCHAR(50) NOT NULL DEFAULT 'free' COMMENT '当前套餐编码',
+    expire_at DATETIME DEFAULT NULL COMMENT '会员过期时间',
+    auto_renew TINYINT DEFAULT 0 COMMENT '0-不自动续费 1-自动续费',
+    extra_storage BIGINT DEFAULT 0 COMMENT '额外购买的存储空间(字节)',
+    ai_used_today INT DEFAULT 0 COMMENT '今日AI使用次数',
+    ai_usage_date VARCHAR(10) DEFAULT '' COMMENT 'AI使用计数日期(yyyy-MM-dd)',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_expire_at (expire_at)
+) ENGINE=InnoDB COMMENT='用户会员状态表';
+
+-- 积分账户表
+CREATE TABLE IF NOT EXISTS points_account (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL UNIQUE COMMENT '用户ID',
+    balance INT NOT NULL DEFAULT 0 COMMENT '当前积分余额',
+    total_earned INT NOT NULL DEFAULT 0 COMMENT '累计获得积分',
+    total_consumed INT NOT NULL DEFAULT 0 COMMENT '累计消费积分',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB COMMENT='积分账户表';
+
+-- 积分记录表
+CREATE TABLE IF NOT EXISTS points_record (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    type TINYINT NOT NULL COMMENT '1-获得 2-消费',
+    category VARCHAR(50) NOT NULL COMMENT '分类(daily_checkin/upload_book/share_excerpt/exchange_vip/exchange_storage/admin_adjust)',
+    points INT NOT NULL COMMENT '积分数量(正数)',
+    balance_after INT NOT NULL COMMENT '变动后余额',
+    description VARCHAR(200) DEFAULT '' COMMENT '描述',
+    ref_id VARCHAR(100) DEFAULT '' COMMENT '关联业务ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_category (category),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='积分记录表';
+
+-- 积分规则配置表
+CREATE TABLE IF NOT EXISTS points_rule (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '规则编码',
+    name VARCHAR(100) NOT NULL COMMENT '规则名称',
+    category VARCHAR(50) NOT NULL COMMENT '分类',
+    points INT NOT NULL COMMENT '积分数',
+    daily_limit INT DEFAULT 0 COMMENT '每日上限(0=不限)',
+    description VARCHAR(200) DEFAULT '' COMMENT '描述',
+    status TINYINT DEFAULT 1 COMMENT '0-禁用 1-启用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_code (code)
+) ENGINE=InnoDB COMMENT='积分规则配置表';
+
+-- 订单表
+CREATE TABLE IF NOT EXISTS `order` (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_no VARCHAR(64) NOT NULL UNIQUE COMMENT '订单号',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    plan_id BIGINT DEFAULT NULL COMMENT '套餐ID',
+    order_type TINYINT NOT NULL COMMENT '1-会员购买 2-存储包购买',
+    amount INT NOT NULL COMMENT '金额(分)',
+    status TINYINT NOT NULL DEFAULT 0 COMMENT '0-待支付 1-已支付 2-已取消 3-已退款',
+    wx_prepay_id VARCHAR(64) DEFAULT '' COMMENT '微信预支付ID',
+    wx_transaction_id VARCHAR(64) DEFAULT '' COMMENT '微信支付交易号',
+    storage_gb INT DEFAULT NULL COMMENT '存储包大小(GB，order_type=2时有效)',
+    paid_at DATETIME DEFAULT NULL COMMENT '支付时间',
+    expired_at DATETIME DEFAULT NULL COMMENT '订单过期时间',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_order_no (order_no),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='订单表';
+
+-- 积分兑换记录表
+CREATE TABLE IF NOT EXISTS points_exchange (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    exchange_type TINYINT NOT NULL COMMENT '1-兑换会员天数 2-兑换存储包',
+    points_cost INT NOT NULL COMMENT '消耗积分',
+    value INT NOT NULL COMMENT '兑换值(天数或MB数)',
+    order_no VARCHAR(64) DEFAULT '' COMMENT '关联订单号',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='积分兑换记录表';
+
+-- 初始化会员套餐
+INSERT INTO membership_plan (code, name, description, price, duration_days, max_books, max_storage, ai_daily_limit, priority_queue, advanced_stats, sort_order) VALUES
+('free', '免费版', '基础功能，适合轻度阅读用户', 0, 0, 20, 2147483648, 5, 0, 0, 1),
+('vip', '会员版', '无限书籍、50GB存储、优先转图、高级统计', 1500, 30, 0, 53687091200, 0, 1, 1, 2)
+ON DUPLICATE KEY UPDATE code = VALUES(code);
+
+-- 初始化积分规则
+INSERT INTO points_rule (code, name, category, points, daily_limit, description) VALUES
+('daily_checkin', '每日打卡', 'daily_checkin', 10, 1, '每日签到获得积分'),
+('upload_book', '上传书籍', 'upload_book', 20, 3, '上传一本新书获得积分'),
+('share_excerpt', '分享书摘', 'share_excerpt', 15, 5, '分享书摘获得积分')
+ON DUPLICATE KEY UPDATE code = VALUES(code);
+
+-- 新增会员管理权限
+INSERT INTO permission (id, code, name, type, parent_id, path, sort_order) VALUES
+(90, 'membership_mgmt', '会员管理', 1, NULL, '/membership', 10),
+(91, 'plan:view', '查看套餐', 2, 90, '/api/admin/membership/plans', 1),
+(92, 'plan:create', '创建套餐', 2, 90, '/api/admin/membership/plans/create', 2),
+(93, 'plan:update', '修改套餐', 2, 90, '/api/admin/membership/plans/*/update', 3),
+(94, 'order:view', '查看订单', 2, 90, '/api/admin/membership/orders', 4),
+(95, 'member:view', '查看会员状态', 2, 90, '/api/admin/membership/members', 5),
+(96, 'points_rule:view', '查看积分规则', 2, 90, '/api/admin/membership/points-rules', 6),
+(97, 'points_rule:update', '修改积分规则', 2, 90, '/api/admin/membership/points-rules/*/update', 7),
+(98, 'points_adjust', '调整用户积分', 2, 90, '/api/admin/membership/points-adjust', 8)
+ON DUPLICATE KEY UPDATE code = VALUES(code);
+
+-- 超级管理员：会员管理权限
+INSERT INTO role_permission (role_id, permission_id)
+SELECT 1, id FROM permission WHERE id >= 90
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 运营：会员管理权限
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(2, 90), (2, 91), (2, 92), (2, 93), (2, 94), (2, 95), (2, 96), (2, 97), (2, 98)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 只读审计：查看会员和订单权限
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(3, 90), (3, 91), (3, 94), (3, 95), (3, 96)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);

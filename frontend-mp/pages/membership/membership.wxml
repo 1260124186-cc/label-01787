@@ -1,0 +1,110 @@
+<view class="page-membership">
+  <view class="user-plan-card">
+    <view class="plan-badge {{quota.isVip ? 'vip' : 'free'}}">
+      <text>{{quota.isVip ? '会员版' : '免费版'}}</text>
+    </view>
+    <text class="plan-expire" wx:if="{{quota.isVip && quota.expireAt}}">到期时间：{{quota.expireAt}}</text>
+    <text class="plan-expire" wx:if="{{!quota.isVip}}">升级会员解锁更多功能</text>
+  </view>
+
+  <view class="section-card card">
+    <text class="section-title">配额使用</text>
+    <view class="quota-item">
+      <view class="quota-row">
+        <text class="quota-label">书籍数量</text>
+        <text class="quota-value">{{quota.currentBooks || 0}}/{{quota.maxBooks > 0 ? quota.maxBooks : '无限'}}</text>
+      </view>
+      <view class="quota-bar" wx:if="{{quota.maxBooks > 0}}">
+        <view class="quota-bar-fill" style="width: {{quota.maxBooks ? (quota.currentBooks / quota.maxBooks * 100) : 0}}%;"></view>
+      </view>
+      <view class="quota-bar" wx:else>
+        <view class="quota-bar-fill" style="width: 10%; background: #4CAF50;"></view>
+      </view>
+    </view>
+    <view class="quota-item">
+      <view class="quota-row">
+        <text class="quota-label">存储空间</text>
+        <text class="quota-value">{{formatBytes(quota.usedStorage)}}/{{formatBytes(quota.maxStorage)}}</text>
+      </view>
+      <view class="quota-bar">
+        <view class="quota-bar-fill" style="width: {{quota.maxStorage ? (quota.usedStorage / quota.maxStorage * 100) : 0}}%; background: #E8734A;"></view>
+      </view>
+    </view>
+    <view class="quota-item">
+      <view class="quota-row">
+        <text class="quota-label">AI使用</text>
+        <text class="quota-value">{{quota.aiUsedToday || 0}}/{{quota.aiDailyLimit > 0 ? quota.aiDailyLimit : '无限'}} 今日</text>
+      </view>
+      <view class="quota-bar" wx:if="{{quota.aiDailyLimit > 0}}">
+        <view class="quota-bar-fill" style="width: {{quota.aiDailyLimit ? (quota.aiUsedToday / quota.aiDailyLimit * 100) : 0}}%; background: #8b5e3c;"></view>
+      </view>
+      <view class="quota-bar" wx:else>
+        <view class="quota-bar-fill" style="width: 5%; background: #4CAF50;"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card card">
+    <text class="section-title">方案对比</text>
+    <view class="plans-row">
+      <view class="plan-card {{!quota.isVip ? 'current' : ''}}">
+        <text class="plan-card-name">{{freePlan.name || '免费版'}}</text>
+        <text class="plan-card-price">¥0</text>
+        <view class="plan-features">
+          <text class="plan-feature" wx:if="{{freePlan.maxBooks > 0}}">• {{freePlan.maxBooks}}本书籍</text>
+          <text class="plan-feature" wx:else>• 无限书籍</text>
+          <text class="plan-feature">• {{formatBytes(freePlan.maxStorage)}}存储</text>
+          <text class="plan-feature" wx:if="{{freePlan.aiDailyLimit > 0}}">• 每日{{freePlan.aiDailyLimit}}次AI</text>
+          <text class="plan-feature" wx:else>• 无限AI使用</text>
+        </view>
+        <view class="plan-card-tag" wx:if="{{!quota.isVip}}">当前方案</view>
+      </view>
+      <view class="plan-card vip-plan {{quota.isVip ? 'current' : ''}}">
+        <text class="plan-card-name">{{vipPlan.name || '会员版'}}</text>
+        <text class="plan-card-price">¥{{(vipPlan.price / 100).toFixed(1)}}/{{vipPlan.durationDays}}天</text>
+        <view class="plan-features">
+          <text class="plan-feature" wx:if="{{vipPlan.maxBooks > 0}}">• {{vipPlan.maxBooks}}本书籍</text>
+          <text class="plan-feature" wx:else>• 无限书籍</text>
+          <text class="plan-feature">• {{formatBytes(vipPlan.maxStorage)}}存储</text>
+          <text class="plan-feature" wx:if="{{vipPlan.aiDailyLimit > 0}}">• 每日{{vipPlan.aiDailyLimit}}次AI</text>
+          <text class="plan-feature" wx:else>• 无限AI使用</text>
+          <text class="plan-feature" wx:if="{{vipPlan.priorityQueue === 1}}">• 优先转图队列</text>
+          <text class="plan-feature" wx:if="{{vipPlan.advancedStats === 1}}">• 高级统计报告</text>
+        </view>
+        <view class="plan-card-tag" wx:if="{{quota.isVip}}">当前方案</view>
+      </view>
+    </view>
+    <button class="purchase-btn" wx:if="{{!quota.isVip}}" bindtap="purchaseVip">开通会员</button>
+    <button class="renew-btn" wx:if="{{quota.isVip}}" bindtap="purchaseVip">续费会员</button>
+  </view>
+
+  <view class="section-card card">
+    <text class="section-title">积分兑换</text>
+    <view class="exchange-item">
+      <view class="exchange-info">
+        <text class="exchange-label">兑换会员天数</text>
+        <text class="exchange-desc">100积分/天</text>
+      </view>
+      <view class="exchange-action">
+        <input class="exchange-input" type="number" value="{{exchangeDays}}" bindinput="onExchangeDaysInput" />
+        <text class="exchange-unit">天</text>
+        <button class="exchange-btn" bindtap="exchangeVipDays">兑换</button>
+      </view>
+    </view>
+    <view class="exchange-divider"></view>
+    <view class="exchange-item">
+      <view class="exchange-info">
+        <text class="exchange-label">兑换存储空间</text>
+        <text class="exchange-desc">200积分/GB</text>
+      </view>
+      <view class="exchange-action">
+        <input class="exchange-input" type="number" value="{{exchangeGB}}" bindinput="onExchangeGBInput" />
+        <text class="exchange-unit">GB</text>
+        <button class="exchange-btn" bindtap="exchangeStorage">兑换</button>
+      </view>
+    </view>
+    <view class="exchange-points-tip">
+      <text>当前积分：{{pointsInfo.balance || 0}}</text>
+    </view>
+  </view>
+</view>

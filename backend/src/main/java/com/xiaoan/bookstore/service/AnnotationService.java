@@ -21,6 +21,7 @@ public class AnnotationService {
     private static final Logger log = LoggerFactory.getLogger(AnnotationService.class);
     private final AnnotationMapper annotationMapper;
     private final ContentComplianceService contentComplianceService;
+    private final PointsService pointsService;
 
     public Annotation create(Long userId, AnnotationDTO dto) {
         Annotation ann = new Annotation();
@@ -40,6 +41,14 @@ public class AnnotationService {
             contentComplianceService.auditText(Constants.AUDIT_TARGET_ANNOTATION, ann.getId(), auditContent);
         } catch (Exception e) {
             log.warn("批注内容审核失败，不影响保存: {}", e.getMessage());
+        }
+
+        if (dto.getType() != null && dto.getType() == Constants.ANNOTATION_NOTE && dto.getSelectedText() != null && !dto.getSelectedText().isEmpty()) {
+            try {
+                pointsService.earnPoints(userId, Constants.POINTS_CATEGORY_SHARE_EXCERPT, 0, "分享书摘", String.valueOf(ann.getId()));
+            } catch (Exception e) {
+                log.warn("分享书摘积分发放失败，不影响保存: {}", e.getMessage());
+            }
         }
 
         log.info("添加批注: userId={}, bookId={}, page={}", userId, dto.getBookId(), dto.getPageNum());
