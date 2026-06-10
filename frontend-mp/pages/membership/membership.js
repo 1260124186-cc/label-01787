@@ -9,12 +9,26 @@ function formatBytes(bytes) {
 Page({
   data: {
     quota: {},
+    quotaFormatted: {
+      usedStorageText: '0MB',
+      maxStorageText: '0MB',
+      storagePercent: 0,
+      booksPercent: 0,
+      aiPercent: 0
+    },
     plans: [],
     pointsInfo: {},
     exchangeDays: 1,
     exchangeGB: 1,
     freePlan: null,
+    freePlanFormatted: {
+      maxStorageText: '0MB'
+    },
     vipPlan: null,
+    vipPlanFormatted: {
+      maxStorageText: '0MB',
+      priceText: '0'
+    },
     purchasing: false
   },
 
@@ -27,7 +41,15 @@ Page({
   async loadQuota() {
     try {
       const res = await request({ url: '/membership/quota' })
-      this.setData({ quota: res.data })
+      const quota = res.data || {}
+      const quotaFormatted = {
+        usedStorageText: formatBytes(quota.usedStorage),
+        maxStorageText: formatBytes(quota.maxStorage),
+        storagePercent: quota.maxStorage ? Math.min(100, (quota.usedStorage / quota.maxStorage) * 100) : 0,
+        booksPercent: quota.maxBooks > 0 ? Math.min(100, (quota.currentBooks / quota.maxBooks) * 100) : 0,
+        aiPercent: quota.aiDailyLimit > 0 ? Math.min(100, (quota.aiUsedToday / quota.aiDailyLimit) * 100) : 0
+      }
+      this.setData({ quota, quotaFormatted })
     } catch (e) {
       console.error('加载配额失败', e)
     }
@@ -39,7 +61,14 @@ Page({
       const plans = res.data || []
       const freePlan = plans.find(p => p.code === 'free') || {}
       const vipPlan = plans.find(p => p.code === 'vip') || {}
-      this.setData({ plans, freePlan, vipPlan })
+      const freePlanFormatted = {
+        maxStorageText: formatBytes(freePlan.maxStorage)
+      }
+      const vipPlanFormatted = {
+        maxStorageText: formatBytes(vipPlan.maxStorage),
+        priceText: vipPlan.price ? (vipPlan.price / 100).toFixed(1) : '0'
+      }
+      this.setData({ plans, freePlan, vipPlan, freePlanFormatted, vipPlanFormatted })
     } catch (e) {
       console.error('加载方案失败', e)
     }

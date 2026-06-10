@@ -15,7 +15,7 @@
         <text class="quota-value">{{quota.currentBooks || 0}}/{{quota.maxBooks > 0 ? quota.maxBooks : '无限'}}</text>
       </view>
       <view class="quota-bar" wx:if="{{quota.maxBooks > 0}}">
-        <view class="quota-bar-fill" style="width: {{quota.maxBooks ? (quota.currentBooks / quota.maxBooks * 100) : 0}}%;"></view>
+        <view class="quota-bar-fill" style="width: {{quotaFormatted.booksPercent}}%;"></view>
       </view>
       <view class="quota-bar" wx:else>
         <view class="quota-bar-fill" style="width: 10%; background: #4CAF50;"></view>
@@ -24,10 +24,10 @@
     <view class="quota-item">
       <view class="quota-row">
         <text class="quota-label">存储空间</text>
-        <text class="quota-value">{{formatBytes(quota.usedStorage)}}/{{formatBytes(quota.maxStorage)}}</text>
+        <text class="quota-value">{{quotaFormatted.usedStorageText}}/{{quotaFormatted.maxStorageText}}</text>
       </view>
       <view class="quota-bar">
-        <view class="quota-bar-fill" style="width: {{quota.maxStorage ? (quota.usedStorage / quota.maxStorage * 100) : 0}}%; background: #E8734A;"></view>
+        <view class="quota-bar-fill" style="width: {{quotaFormatted.storagePercent}}%; background: #E8734A;"></view>
       </view>
     </view>
     <view class="quota-item">
@@ -36,7 +36,7 @@
         <text class="quota-value">{{quota.aiUsedToday || 0}}/{{quota.aiDailyLimit > 0 ? quota.aiDailyLimit : '无限'}} 今日</text>
       </view>
       <view class="quota-bar" wx:if="{{quota.aiDailyLimit > 0}}">
-        <view class="quota-bar-fill" style="width: {{quota.aiDailyLimit ? (quota.aiUsedToday / quota.aiDailyLimit * 100) : 0}}%; background: #8b5e3c;"></view>
+        <view class="quota-bar-fill" style="width: {{quotaFormatted.aiPercent}}%; background: #8b5e3c;"></view>
       </view>
       <view class="quota-bar" wx:else>
         <view class="quota-bar-fill" style="width: 5%; background: #4CAF50;"></view>
@@ -53,7 +53,7 @@
         <view class="plan-features">
           <text class="plan-feature" wx:if="{{freePlan.maxBooks > 0}}">• {{freePlan.maxBooks}}本书籍</text>
           <text class="plan-feature" wx:else>• 无限书籍</text>
-          <text class="plan-feature">• {{formatBytes(freePlan.maxStorage)}}存储</text>
+          <text class="plan-feature">• {{freePlanFormatted.maxStorageText}}存储</text>
           <text class="plan-feature" wx:if="{{freePlan.aiDailyLimit > 0}}">• 每日{{freePlan.aiDailyLimit}}次AI</text>
           <text class="plan-feature" wx:else>• 无限AI使用</text>
         </view>
@@ -61,11 +61,11 @@
       </view>
       <view class="plan-card vip-plan {{quota.isVip ? 'current' : ''}}">
         <text class="plan-card-name">{{vipPlan.name || '会员版'}}</text>
-        <text class="plan-card-price">¥{{(vipPlan.price / 100).toFixed(1)}}/{{vipPlan.durationDays}}天</text>
+        <text class="plan-card-price">¥{{vipPlanFormatted.priceText}}/{{vipPlan.durationDays}}天</text>
         <view class="plan-features">
           <text class="plan-feature" wx:if="{{vipPlan.maxBooks > 0}}">• {{vipPlan.maxBooks}}本书籍</text>
           <text class="plan-feature" wx:else>• 无限书籍</text>
-          <text class="plan-feature">• {{formatBytes(vipPlan.maxStorage)}}存储</text>
+          <text class="plan-feature">• {{vipPlanFormatted.maxStorageText}}存储</text>
           <text class="plan-feature" wx:if="{{vipPlan.aiDailyLimit > 0}}">• 每日{{vipPlan.aiDailyLimit}}次AI</text>
           <text class="plan-feature" wx:else>• 无限AI使用</text>
           <text class="plan-feature" wx:if="{{vipPlan.priorityQueue === 1}}">• 优先转图队列</text>
