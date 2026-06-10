@@ -29,15 +29,18 @@ public class DatabaseMigrationRunner implements CommandLineRunner {
     }
 
     private void migrateBackupTaskTable() {
-        try {
-            jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'backup_task'",
-                    Integer.class
-            );
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'backup_task'",
+                Integer.class
+        );
+
+        if (count != null && count > 0) {
             log.info("backup_task 表已存在，跳过创建");
-        } catch (Exception e) {
-            log.info("backup_task 表不存在，开始创建...");
-            jdbcTemplate.execute("""
+            return;
+        }
+
+        log.info("backup_task 表不存在(count={})，开始创建...", count);
+        jdbcTemplate.execute("""
                 CREATE TABLE IF NOT EXISTS backup_task (
                     id BIGINT PRIMARY KEY AUTO_INCREMENT,
                     user_id BIGINT NOT NULL COMMENT '用户ID',
@@ -60,8 +63,7 @@ public class DatabaseMigrationRunner implements CommandLineRunner {
                     INDEX idx_created_at (created_at)
                 ) ENGINE=InnoDB COMMENT='备份任务表'
                 """);
-            log.info("backup_task 表创建成功");
-        }
+        log.info("backup_task 表创建成功");
     }
 
     private void migrateBackupPermissions() {
