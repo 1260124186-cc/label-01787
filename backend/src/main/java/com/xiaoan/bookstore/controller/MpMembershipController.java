@@ -49,11 +49,16 @@ public class MpMembershipController {
     }
 
     @PostMapping("/membership/pay-callback")
-    public Result<Void> payCallback(@RequestBody Map<String, String> body) {
+    @Log("前端支付确认")
+    public Result<Map<String, Object>> payCallback(@RequestBody Map<String, String> body) {
+        Long userId = TenantContext.getTenantId();
         String orderNo = body.get("orderNo");
         String transactionId = body.get("transactionId");
-        membershipService.handlePayCallback(orderNo, transactionId);
-        return Result.success();
+        if (orderNo == null || orderNo.isEmpty()) {
+            throw new BusinessException("订单号不能为空");
+        }
+        Map<String, Object> result = membershipService.confirmPay(userId, orderNo, transactionId);
+        return Result.success(result);
     }
 
     @GetMapping("/points/info")

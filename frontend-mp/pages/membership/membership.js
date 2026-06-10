@@ -14,7 +14,8 @@ Page({
     exchangeDays: 1,
     exchangeGB: 1,
     freePlan: null,
-    vipPlan: null
+    vipPlan: null,
+    purchasing: false
   },
 
   onShow() {
@@ -76,12 +77,28 @@ Page({
     return features
   },
 
+  async confirmPay(orderNo) {
+    try {
+      const res = await request({
+        url: '/membership/pay-callback',
+        method: 'POST',
+        data: { orderNo }
+      })
+      return res.data
+    } catch (e) {
+      console.error('支付确认失败', e)
+      return null
+    }
+  },
+
   async purchaseVip() {
+    if (this.data.purchasing) return
     const vipPlan = this.data.vipPlan
     if (!vipPlan || !vipPlan.id) {
       wx.showToast({ title: '暂无会员方案', icon: 'none' })
       return
     }
+    this.setData({ purchasing: true })
     try {
       const res = await request({
         url: '/membership/order',
@@ -89,15 +106,24 @@ Page({
         data: { planId: vipPlan.id, orderType: 1 }
       })
       const paymentData = res.data
-      if (paymentData && paymentData.timeStamp && paymentData.nonceStr && paymentData.package && paymentData.paySign) {
+      const orderNo = paymentData.orderNo
+
+      const hasPaymentParams = paymentData.timeStamp && paymentData.nonceStr && paymentData.package && paymentData.paySign
+
+      if (hasPaymentParams) {
         wx.requestPayment({
           timeStamp: paymentData.timeStamp,
           nonceStr: paymentData.nonceStr,
           package: paymentData.package,
-          signType: paymentData.signType || 'MD5',
+          signType: paymentData.signType || 'RSA',
           paySign: paymentData.paySign,
-          success: () => {
-            wx.showToast({ title: '开通成功', icon: 'success' })
+          success: async () => {
+            const result = await this.confirmPay(orderNo)
+            if (result && result.activated) {
+              wx.showToast({ title: '开通成功', icon: 'success' })
+            } else {
+              wx.showToast({ title: '支付确认中，请稍后查看', icon: 'none' })
+            }
             this.loadQuota()
             this.loadPoints()
           },
@@ -108,21 +134,38 @@ Page({
           }
         })
       } else {
-        wx.showToast({ title: '开通成功', icon: 'success' })
-        this.loadQuota()
-        this.loadPoints()
+        wx.showModal({
+          title: '确认支付',
+          content: '当前为模拟支付模式，确认支付¥' + ((paymentData.amount || 0) / 100).toFixed(2) + '开通会员？',
+          success: async (modalRes) => {
+            if (modalRes.confirm) {
+              const result = await this.confirmPay(orderNo)
+              if (result && result.activated) {
+                wx.showToast({ title: '开通成功', icon: 'success' })
+              } else {
+                wx.showToast({ title: '开通失败，请重试', icon: 'none' })
+              }
+              this.loadQuota()
+              this.loadPoints()
+            }
+          }
+        })
       }
     } catch (e) {
       console.error('开通会员失败', e)
+    } finally {
+      this.setData({ purchasing: false })
     }
   },
 
   async purchaseStorage() {
+    if (this.data.purchasing) return
     const vipPlan = this.data.vipPlan
     if (!vipPlan || !vipPlan.id) {
       wx.showToast({ title: '暂无存储包方案', icon: 'none' })
       return
     }
+    this.setData({ purchasing: true })
     try {
       const res = await request({
         url: '/membership/order',
@@ -130,15 +173,24 @@ Page({
         data: { planId: vipPlan.id, orderType: 2, storageGB: 10 }
       })
       const paymentData = res.data
-      if (paymentData && paymentData.timeStamp && paymentData.nonceStr && paymentData.package && paymentData.paySign) {
+      const orderNo = paymentData.orderNo
+
+      const hasPaymentParams = paymentData.timeStamp && paymentData.nonceStr && paymentData.package && paymentData.paySign
+
+      if (hasPaymentParams) {
         wx.requestPayment({
           timeStamp: paymentData.timeStamp,
           nonceStr: paymentData.nonceStr,
           package: paymentData.package,
-          signType: paymentData.signType || 'MD5',
+          signType: paymentData.signType || 'RSA',
           paySign: paymentData.paySign,
-          success: () => {
-            wx.showToast({ title: '购买成功', icon: 'success' })
+          success: async () => {
+            const result = await this.confirmPay(orderNo)
+            if (result && result.activated) {
+              wx.showToast({ title: '购买成功', icon: 'success' })
+            } else {
+              wx.showToast({ title: '支付确认中，请稍后查看', icon: 'none' })
+            }
             this.loadQuota()
           },
           fail: (err) => {
@@ -148,11 +200,26 @@ Page({
           }
         })
       } else {
-        wx.showToast({ title: '购买成功', icon: 'success' })
-        this.loadQuota()
+        wx.showModal({
+          title: '确认支付',
+          content: '当前为模拟支付模式，确认支付¥' + ((paymentData.amount || 0) / 100).toFixed(2) + '购买存储包？',
+          success: async (modalRes) => {
+            if (modalRes.confirm) {
+              const result = await this.confirmPay(orderNo)
+              if (result && result.activated) {
+                wx.showToast({ title: '购买成功', icon: 'success' })
+              } else {
+                wx.showToast({ title: '购买失败，请重试', icon: 'none' })
+              }
+              this.loadQuota()
+            }
+          }
+        })
       }
     } catch (e) {
       console.error('购买存储包失败', e)
+    } finally {
+      this.setData({ purchasing: false })
     }
   },
 

@@ -225,6 +225,47 @@ public class MembershipService {
         order.setPaidAt(LocalDateTime.now());
         orderMapper.updateById(order);
 
+        activateByOrder(order);
+    }
+
+    public Map<String, Object> confirmPay(Long userId, String orderNo, String transactionId) {
+        OrderEntity order = orderMapper.selectOne(
+                new LambdaQueryWrapper<OrderEntity>().eq(OrderEntity::getOrderNo, orderNo)
+        );
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        if (!order.getUserId().equals(userId)) {
+            throw new BusinessException("无权操作此订单");
+        }
+        if (order.getStatus() == Constants.ORDER_STATUS_PAID) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("activated", true);
+            result.put("orderNo", orderNo);
+            return result;
+        }
+        if (order.getStatus() != Constants.ORDER_STATUS_PENDING) {
+            throw new BusinessException("订单状态异常，无法确认支付");
+        }
+
+        order.setStatus(Constants.ORDER_STATUS_PAID);
+        if (transactionId != null && !transactionId.isEmpty()) {
+            order.setWxTransactionId(transactionId);
+        } else {
+            order.setWxTransactionId("client_confirm_" + orderNo);
+        }
+        order.setPaidAt(LocalDateTime.now());
+        orderMapper.updateById(order);
+
+        activateByOrder(order);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("activated", true);
+        result.put("orderNo", orderNo);
+        return result;
+    }
+
+    private void activateByOrder(OrderEntity order) {
         if (Constants.ORDER_TYPE_MEMBERSHIP == order.getOrderType()) {
             MembershipPlan plan = membershipPlanMapper.selectById(order.getPlanId());
             if (plan != null) {
