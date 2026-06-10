@@ -35,6 +35,7 @@ public class AdminService {
     private final OperationLogMapper operationLogMapper;
     private final JwtUtil jwtUtil;
     private final RbacService rbacService;
+    private final GroupService groupService;
 
     private String decodePassword(String encoded) {
         try {
@@ -101,6 +102,7 @@ public class AdminService {
                 java.time.LocalDateTime.now());
         data.put("totalReadingSeconds", totalDuration != null ? totalDuration : 0L);
         data.put("logCount", operationLogMapper.selectCount(null));
+        data.putAll(groupService.adminDashboard());
         return data;
     }
 

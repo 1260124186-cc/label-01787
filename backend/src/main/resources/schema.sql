@@ -554,3 +554,122 @@ ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
 INSERT INTO role_permission (role_id, permission_id) VALUES
 (3, 90), (3, 91), (3, 94), (3, 95), (3, 96)
 ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 读书小组表
+CREATE TABLE IF NOT EXISTS book_group (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL COMMENT '小组名称',
+    description VARCHAR(500) DEFAULT '' COMMENT '小组简介',
+    invite_code VARCHAR(20) NOT NULL UNIQUE COMMENT '邀请码',
+    creator_id BIGINT NOT NULL COMMENT '创建人用户ID',
+    member_count INT DEFAULT 1 COMMENT '成员数量',
+    status TINYINT DEFAULT 1 COMMENT '0-已封禁 1-正常',
+    ban_reason VARCHAR(500) DEFAULT '' COMMENT '封禁原因',
+    banned_at DATETIME DEFAULT NULL COMMENT '封禁时间',
+    banned_by BIGINT DEFAULT NULL COMMENT '封禁管理员ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_creator_id (creator_id),
+    INDEX idx_status (status),
+    INDEX idx_invite_code (invite_code)
+) ENGINE=InnoDB COMMENT='读书小组表';
+
+-- 小组成员表
+CREATE TABLE IF NOT EXISTS group_member (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    group_id BIGINT NOT NULL COMMENT '小组ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    role TINYINT DEFAULT 2 COMMENT '1-组长 2-普通成员',
+    reading_public TINYINT DEFAULT 0 COMMENT '阅读书籍是否公开 0-不公开(仅时长) 1-公开',
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_group_user (group_id, user_id),
+    INDEX idx_group_id (group_id),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB COMMENT='小组成员表';
+
+-- 小组共读计划表
+CREATE TABLE IF NOT EXISTS group_reading_plan (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    group_id BIGINT NOT NULL COMMENT '小组ID',
+    book_title VARCHAR(200) NOT NULL COMMENT '共读书名',
+    book_author VARCHAR(100) DEFAULT '' COMMENT '共读作者',
+    creator_id BIGINT NOT NULL COMMENT '创建人ID',
+    start_date DATE DEFAULT NULL COMMENT '计划开始日期',
+    end_date DATE DEFAULT NULL COMMENT '计划结束日期',
+    description VARCHAR(500) DEFAULT '' COMMENT '计划描述',
+    status TINYINT DEFAULT 1 COMMENT '0-已结束 1-进行中',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_group_id (group_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB COMMENT='小组共读计划表';
+
+-- 共读计划成员参与表
+CREATE TABLE IF NOT EXISTS group_plan_member (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    plan_id BIGINT NOT NULL COMMENT '共读计划ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    book_id BIGINT DEFAULT NULL COMMENT '用户上传的同名书籍ID',
+    total_duration INT DEFAULT 0 COMMENT '累计阅读时长(秒)',
+    last_read_at DATETIME DEFAULT NULL COMMENT '最后阅读时间',
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '加入计划时间',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_plan_user (plan_id, user_id),
+    INDEX idx_plan_id (plan_id),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB COMMENT='共读计划成员参与表';
+
+-- 小组动态表
+CREATE TABLE IF NOT EXISTS group_dynamic (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    group_id BIGINT NOT NULL COMMENT '小组ID',
+    user_id BIGINT NOT NULL COMMENT '发布人ID',
+    type TINYINT NOT NULL COMMENT '1-打卡 2-书摘',
+    content TEXT COMMENT '动态内容',
+    book_title VARCHAR(200) DEFAULT '' COMMENT '关联书名(书摘时)',
+    excerpt_text TEXT COMMENT '书摘原文(书摘时)',
+    duration INT DEFAULT 0 COMMENT '阅读时长(秒，打卡时)',
+    likes INT DEFAULT 0 COMMENT '点赞数',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_group_id (group_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='小组动态表';
+
+-- 小组动态点赞表
+CREATE TABLE IF NOT EXISTS group_dynamic_like (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    dynamic_id BIGINT NOT NULL COMMENT '动态ID',
+    user_id BIGINT NOT NULL COMMENT '点赞用户ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_dynamic_user (dynamic_id, user_id),
+    INDEX idx_dynamic_id (dynamic_id),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB COMMENT='小组动态点赞表';
+
+-- 新增小组管理权限
+INSERT INTO permission (id, code, name, type, parent_id, path, sort_order) VALUES
+(100, 'group_mgmt', '小组管理', 1, NULL, '/groups', 11),
+(101, 'group:view', '查看小组', 2, 100, '/api/admin/groups', 1),
+(102, 'group:ban', '封禁/解封小组', 2, 100, '/api/admin/groups/*/ban', 2),
+(103, 'group:dynamic_view', '查看小组动态', 2, 100, '/api/admin/groups/*/dynamics', 3)
+ON DUPLICATE KEY UPDATE code = VALUES(code);
+
+-- 超级管理员：小组管理权限
+INSERT INTO role_permission (role_id, permission_id)
+SELECT 1, id FROM permission WHERE id >= 100
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 运营：小组管理权限
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(2, 100), (2, 101), (2, 102), (2, 103)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 只读审计：查看小组权限
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(3, 100), (3, 101), (3, 103)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
