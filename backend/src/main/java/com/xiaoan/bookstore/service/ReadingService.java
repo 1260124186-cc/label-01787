@@ -2,8 +2,8 @@ package com.xiaoan.bookstore.service;
 
 import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.common.TenantValidator;
+import com.xiaoan.bookstore.dto.QuotaVO;
 import com.xiaoan.bookstore.dto.ReadingSummaryVO;
-import com.xiaoan.bookstore.entity.QuotaVO;
 import com.xiaoan.bookstore.entity.ReadingRecord;
 import com.xiaoan.bookstore.exception.BusinessException;
 import com.xiaoan.bookstore.mapper.ReadingRecordMapper;

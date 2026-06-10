@@ -9,7 +9,7 @@ import com.xiaoan.bookstore.service.AiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/mp/ai")

@@ -1,7 +1,7 @@
 package com.xiaoan.bookstore.dto;
 
 import lombok.Data;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 @Data
 public class AiSummaryDTO {
