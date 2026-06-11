@@ -31,8 +31,20 @@ Page({
     bgColor: '#FFFFFF',
     showUI: false,
     showToc: false,
+    showBookmark: false,
     showTheme: false,
     showNoteDialog: false,
+    showBookmarkDialog: false,
+    bookmarkEditMode: false,
+    editingBookmarkId: null,
+    bookmarkTitle: '',
+    bookmarkRemark: '',
+    bookmarkIsChapter: false,
+    bookmarks: [],
+    chapterBookmarks: [],
+    currentBookmarked: false,
+    currentBookmarkId: null,
+    tocActiveTab: 'toc',
     noteText: '',
     noteContent: '',
     noteType: 2,
@@ -40,7 +52,8 @@ Page({
     loading: false,
     startUnitNum: 1,
     _scrollTimer: null,
-    _chapterHtmlCache: {}
+    _chapterHtmlCache: {},
+    _longPressTimer: null
   },
 
   onLoad(options) {
@@ -66,8 +79,52 @@ Page({
     await this.loadBook()
     await this.determineStreamType()
     await this.loadToc()
+    await this.loadBookmarks()
     await this.loadStartContent()
     this.startReading()
+  },
+
+  async loadBookmarks() {
+    try {
+      const [bookmarksRes, chapterRes] = await Promise.all([
+        request({ url: `/bookmarks/book/${this.data.bookId}?isChapter=0` }),
+        request({ url: `/bookmarks/book/${this.data.bookId}?isChapter=1` })
+      ])
+      const bookmarks = bookmarksRes.data || []
+      const chapterBookmarks = chapterRes.data || []
+      this.setData({ bookmarks, chapterBookmarks })
+      this.checkCurrentBookmark()
+      if (this.data.toc.length === 0 && this.data.streamType === STREAM_IMAGE) {
+        this.mergeTocWithChapterBookmarks()
+      }
+    } catch (e) {
+      console.error('加载书签失败', e)
+    }
+  },
+
+  mergeTocWithChapterBookmarks() {
+    const merged = this.data.chapterBookmarks.map(bm => ({
+      title: bm.title || `第${bm.pageNum}页`,
+      page: bm.pageNum,
+      isBookmark: true,
+      bookmarkId: bm.id
+    }))
+    this.setData({ toc: merged })
+  },
+
+  async checkCurrentBookmark() {
+    try {
+      const res = await request({
+        url: `/bookmarks/check?bookId=${this.data.bookId}&pageNum=${this.data.displayUnit}`
+      })
+      const bm = res.data
+      this.setData({
+        currentBookmarked: !!bm,
+        currentBookmarkId: bm ? bm.id : null
+      })
+    } catch (e) {
+      this.setData({ currentBookmarked: false, currentBookmarkId: null })
+    }
   },
 
   async determineStreamType() {
@@ -477,6 +534,260 @@ Page({
   openAiAssistant() {
     wx.navigateTo({
       url: `/pages/ai-assistant/ai-assistant?id=${this.data.bookId}&page=${this.data.displayUnit}`
+    })
+  },
+
+  onPageLongPress() {
+    this.addBookmarkQuick()
+  },
+
+  onTouchStartPage() {
+    if (this._longPressTimer) clearTimeout(this._longPressTimer)
+    this._longPressTimer = setTimeout(() => {
+      this.addBookmarkQuick()
+    }, 600)
+  },
+
+  onTouchEndPage() {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer)
+      this._longPressTimer = null
+    }
+  },
+
+  async addBookmarkQuick() {
+    if (this.data.currentBookmarked) {
+      wx.showToast({ title: '当前页已添加书签', icon: 'none' })
+      return
+    }
+    const defaultTitle = this.data.streamType === STREAM_HTML
+      ? `第${this.data.displayUnit}章`
+      : `第${this.data.displayUnit}页`
+    this.setData({
+      showBookmarkDialog: true,
+      bookmarkEditMode: false,
+      editingBookmarkId: null,
+      bookmarkTitle: defaultTitle,
+      bookmarkRemark: '',
+      bookmarkIsChapter: false
+    })
+  },
+
+  async addBookmarkFromToolbar() {
+    if (this.data.currentBookmarked) {
+      wx.showActionSheet({
+        itemList: ['取消当前书签', '编辑书签'],
+        success: async (res) => {
+          if (res.tapIndex === 0) {
+            this.deleteBookmark(this.data.currentBookmarkId)
+          } else if (res.tapIndex === 1) {
+            this.editBookmark(this.data.currentBookmarkId)
+          }
+        }
+      })
+      return
+    }
+    this.addBookmarkQuick()
+  },
+
+  editBookmark(bookmarkId) {
+    const bm = this.data.bookmarks.find(b => b.id === bookmarkId)
+      || this.data.chapterBookmarks.find(b => b.id === bookmarkId)
+    if (!bm) return
+    this.setData({
+      showBookmarkDialog: true,
+      bookmarkEditMode: true,
+      editingBookmarkId: bookmarkId,
+      bookmarkTitle: bm.title || '',
+      bookmarkRemark: bm.remark || '',
+      bookmarkIsChapter: bm.isChapter === 1
+    })
+  },
+
+  hideBookmarkDialog() {
+    this.setData({ showBookmarkDialog: false })
+  },
+
+  onBookmarkTitleInput(e) {
+    this.setData({ bookmarkTitle: e.detail.value })
+  },
+
+  onBookmarkRemarkInput(e) {
+    this.setData({ bookmarkRemark: e.detail.value })
+  },
+
+  toggleBookmarkIsChapter() {
+    this.setData({ bookmarkIsChapter: !this.data.bookmarkIsChapter })
+  },
+
+  async submitBookmark() {
+    const pageNum = this.data.streamType === STREAM_HTML
+      ? this.data.displayUnit - 1
+      : this.data.displayUnit
+    const unitType = this.data.streamType === STREAM_HTML ? 2 : 1
+
+    try {
+      if (this.data.bookmarkEditMode && this.data.editingBookmarkId) {
+        await request({
+          url: `/bookmarks/${this.data.editingBookmarkId}`,
+          method: 'PUT',
+          data: {
+            bookId: Number(this.data.bookId),
+            pageNum,
+            title: this.data.bookmarkTitle,
+            remark: this.data.bookmarkRemark,
+            isChapter: this.data.bookmarkIsChapter ? 1 : 0
+          }
+        })
+        wx.showToast({ title: '已更新', icon: 'success' })
+      } else {
+        await request({
+          url: '/bookmarks',
+          method: 'POST',
+          data: {
+            bookId: Number(this.data.bookId),
+            bookTitle: this.data.book.title,
+            pageNum,
+            unitType,
+            title: this.data.bookmarkTitle,
+            remark: this.data.bookmarkRemark,
+            isChapter: this.data.bookmarkIsChapter ? 1 : 0
+          }
+        })
+        wx.showToast({ title: '书签已添加', icon: 'success' })
+      }
+      this.setData({ showBookmarkDialog: false })
+      await this.loadBookmarks()
+    } catch (e) {
+      console.error('保存书签失败', e)
+      wx.showToast({ title: '保存失败', icon: 'none' })
+    }
+  },
+
+  async deleteBookmark(bookmarkId) {
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这个书签吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await request({
+              url: `/bookmarks/${bookmarkId}`,
+              method: 'DELETE'
+            })
+            wx.showToast({ title: '已删除', icon: 'success' })
+            await this.loadBookmarks()
+          } catch (e) {
+            console.error('删除书签失败', e)
+            wx.showToast({ title: '删除失败', icon: 'none' })
+          }
+        }
+      }
+    })
+  },
+
+  toggleBookmarkPanel() {
+    this.setData({
+      showBookmark: !this.data.showBookmark,
+      showToc: false,
+      tocActiveTab: this.data.tocActiveTab || 'bookmark'
+    })
+  },
+
+  switchTocTab(e) {
+    const tab = e.currentTarget.dataset.tab
+    this.setData({ tocActiveTab: tab })
+  },
+
+  toggleTocPanel() {
+    this.setData({
+      showToc: !this.data.showToc,
+      showBookmark: false,
+      tocActiveTab: this.data.tocActiveTab || 'toc'
+    })
+  },
+
+  jumpToBookmark(e) {
+    const bm = e.currentTarget.dataset.bookmark
+    const unitType = bm.unitType || 1
+    const pageNum = bm.pageNum
+    this.setData({ showBookmark: false, showToc: false })
+
+    if (this.data.streamType === STREAM_HTML) {
+      this.jumpToChapter({
+        currentTarget: { dataset: { index: pageNum } }
+      })
+    } else {
+      this.jumpToPage({
+        currentTarget: { dataset: { page: pageNum } }
+      })
+    }
+  },
+
+  moveBookmarkUp(e) {
+    const idx = e.currentTarget.dataset.index
+    const type = e.currentTarget.dataset.type
+    const list = type === 'chapter' ? [...this.data.chapterBookmarks] : [...this.data.bookmarks]
+    if (idx <= 0) return
+    const temp = list[idx]
+    list[idx] = list[idx - 1]
+    list[idx - 1] = temp
+    this.updateBookmarkOrder(list, type)
+  },
+
+  moveBookmarkDown(e) {
+    const idx = e.currentTarget.dataset.index
+    const type = e.currentTarget.dataset.type
+    const list = type === 'chapter' ? [...this.data.chapterBookmarks] : [...this.data.bookmarks]
+    if (idx >= list.length - 1) return
+    const temp = list[idx]
+    list[idx] = list[idx + 1]
+    list[idx + 1] = temp
+    this.updateBookmarkOrder(list, type)
+  },
+
+  async updateBookmarkOrder(list, type) {
+    const ids = list.map(b => b.id)
+    try {
+      await request({
+        url: '/bookmarks/reorder',
+        method: 'PUT',
+        data: ids
+      })
+      if (type === 'chapter') {
+        this.setData({ chapterBookmarks: list })
+        if (this.data.toc.length > 0 && this.data.toc[0].isBookmark) {
+          this.mergeTocWithChapterBookmarks()
+        }
+      } else {
+        this.setData({ bookmarks: list })
+      }
+    } catch (e) {
+      console.error('排序失败', e)
+      wx.showToast({ title: '排序失败', icon: 'none' })
+    }
+  },
+
+  calcCurrentUnit(selector) {
+    const query = this.createSelectorQuery()
+    query.selectAll(selector).boundingClientRect()
+    query.exec((res) => {
+      if (!res || !res[0] || res[0].length === 0) return
+      const rects = res[0]
+      const screenMid = 300
+      let visibleIndex = 0
+      for (let i = 0; i < rects.length; i++) {
+        if (rects[i].top <= screenMid && rects[i].bottom > 0) {
+          visibleIndex = i
+        }
+      }
+      const newUnit = this.data.streamType === STREAM_HTML
+        ? (this.data.loadedChapters[visibleIndex]?.chapterIndex ?? 0) + 1
+        : this.data.startUnitNum + visibleIndex
+      if (newUnit !== this.data.displayUnit && newUnit > 0) {
+        this.setData({ displayUnit: newUnit })
+        this.checkCurrentBookmark()
+      }
     })
   }
 })

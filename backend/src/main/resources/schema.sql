@@ -748,3 +748,22 @@ ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
 INSERT INTO role_permission (role_id, permission_id) VALUES
 (3, 110), (3, 111)
 ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 书签表
+CREATE TABLE IF NOT EXISTS bookmark (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    book_id BIGINT NOT NULL COMMENT '书籍ID',
+    book_title VARCHAR(200) DEFAULT '' COMMENT '书籍标题（冗余存储，方便列表展示）',
+    page_num INT NOT NULL COMMENT '页码（PDF）或章节索引（EPUB）',
+    unit_type TINYINT NOT NULL DEFAULT 1 COMMENT '1-页码 2-章节',
+    title VARCHAR(200) DEFAULT '' COMMENT '书签名称/标题',
+    remark VARCHAR(500) DEFAULT '' COMMENT '可选备注',
+    sort_order INT DEFAULT 0 COMMENT '排序权重',
+    is_chapter TINYINT DEFAULT 0 COMMENT '0-普通书签 1-章节锚点（无目录PDF用作章节）',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_user_book (user_id, book_id),
+    INDEX idx_book_page (book_id, page_num)
+) ENGINE=InnoDB COMMENT='书签/阅读锚点表';

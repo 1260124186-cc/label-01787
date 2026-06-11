@@ -630,3 +630,404 @@ page {
   padding: 24rpx 0;
   box-sizing: border-box;
 }
+
+/* ========== 书签相关样式 ========== */
+
+/* 顶部栏右侧按钮组 */
+.bar-right-btns {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.bar-btn {
+  padding: 12rpx 20rpx;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  color: rgba(255,255,255,0.9);
+  border-radius: 8rpx;
+}
+
+.bar-btn.active {
+  color: #E8734A;
+}
+
+.bar-btn .icon {
+  color: inherit;
+  font-size: 32rpx;
+}
+
+/* 书签图标（填充状态） */
+.icon-bookmark.filled,
+.icon-bookmark-filled {
+  color: #E8734A !important;
+}
+
+/* 页面上的书签标记 */
+.bookmark-badge {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  width: 56rpx;
+  height: 56rpx;
+  background: rgba(255, 107, 53, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+.bookmark-badge .icon {
+  color: #fff !important;
+  font-size: 28rpx;
+  transform: scale(1.1);
+}
+
+/* 书签侧栏 */
+.bookmark-panel {
+  /* 复用 toc-panel 样式，独立扩展 */
+}
+
+.bookmark-tabs {
+  display: flex;
+  border-bottom: 1rpx solid #eee;
+  background: #fafafa;
+}
+
+.bookmark-tab {
+  flex: 1;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #666;
+  position: relative;
+}
+
+.bookmark-tab.active {
+  color: #6B4226;
+  font-weight: 600;
+}
+
+.bookmark-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background: #6B4226;
+  border-radius: 2rpx;
+}
+
+.bookmark-list {
+  padding: 0;
+}
+
+.bookmark-item {
+  border-bottom: 1rpx solid #f5f5f5;
+  background: #fff;
+}
+
+.bookmark-item:active {
+  background: #faf8f6;
+}
+
+.bookmark-main {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  gap: 16rpx;
+}
+
+.bookmark-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bookmark-chapter-tag {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  background: linear-gradient(135deg, #FF9966, #FF5E62);
+  color: #fff;
+  font-size: 22rpx;
+  border-radius: 6rpx;
+  margin-bottom: 8rpx;
+}
+
+.bookmark-title {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookmark-meta {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+  line-height: 1.4;
+  margin-bottom: 6rpx;
+}
+
+.bookmark-remark {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.5;
+  margin-top: 8rpx;
+  padding: 12rpx 16rpx;
+  background: #f8f6f4;
+  border-radius: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.icon-arrow-right {
+  color: #ccc;
+  font-size: 28rpx;
+  flex-shrink: 0;
+}
+
+.bookmark-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12rpx;
+  padding: 12rpx 24rpx 20rpx;
+  background: #fafafa;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.bookmark-action-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 1rpx solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.bookmark-action-btn:active {
+  background: #f0f0f0;
+}
+
+.bookmark-action-btn .icon {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.bookmark-action-btn.edit .icon {
+  color: #4A90D9;
+}
+
+.bookmark-action-btn.delete .icon {
+  color: #E74C3C;
+}
+
+.empty-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #bbb;
+  margin-top: 12rpx;
+  line-height: 1.6;
+  padding: 0 32rpx;
+}
+
+/* 书签弹窗 */
+.bookmark-dialog {
+  /* 复用 note-dialog 样式 */
+}
+
+.form-label {
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 12rpx;
+  margin-top: 8rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 20rpx;
+  border: 2rpx solid #eee;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  margin-bottom: 16rpx;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.bookmark-remark-input {
+  min-height: 160rpx !important;
+  margin-bottom: 24rpx;
+}
+
+/* 复选框 */
+.form-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 16rpx 12rpx;
+  background: #fafafa;
+  border-radius: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.form-checkbox-row:active {
+  background: #f5f2ef;
+}
+
+.checkbox {
+  width: 40rpx;
+  height: 40rpx;
+  border: 3rpx solid #ddd;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 4rpx;
+  background: #fff;
+}
+
+.checkbox.checked {
+  background: #6B4226;
+  border-color: #6B4226;
+}
+
+.checkbox.checked .icon {
+  color: #fff !important;
+  font-size: 24rpx;
+}
+
+.checkbox-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkbox-title {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 6rpx;
+}
+
+.checkbox-desc {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+  line-height: 1.5;
+}
+
+/* 工具栏按钮组，因为新增了按钮需要适配 */
+.bottom-bar .actions {
+  flex-wrap: wrap;
+  gap: 8rpx 0;
+}
+
+.bottom-bar .tool-btn {
+  min-width: 14%;
+  padding: 10rpx 16rpx;
+  font-size: 22rpx;
+}
+
+.bottom-bar .tool-btn .icon {
+  font-size: 32rpx;
+}
+
+/* 主题适配 */
+.theme-dark .bookmark-tabs {
+  background: #2A2A44;
+  border-bottom-color: rgba(255,255,255,0.1);
+}
+
+.theme-dark .bookmark-tab {
+  color: #aaa;
+}
+
+.theme-dark .bookmark-tab.active {
+  color: #E8734A;
+}
+
+.theme-dark .bookmark-item {
+  background: #1A1A2E;
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+
+.theme-dark .bookmark-item:active {
+  background: #252540;
+}
+
+.theme-dark .bookmark-title {
+  color: #E0E0E0;
+}
+
+.theme-dark .bookmark-meta {
+  color: #888;
+}
+
+.theme-dark .bookmark-remark {
+  background: rgba(255,255,255,0.05);
+  color: #bbb;
+}
+
+.theme-dark .bookmark-actions {
+  background: rgba(255,255,255,0.03);
+  border-top-color: rgba(255,255,255,0.08);
+}
+
+.theme-dark .bookmark-action-btn {
+  background: #2A2A44;
+  border-color: rgba(255,255,255,0.15);
+}
+
+.theme-dark .bookmark-action-btn:active {
+  background: #353555;
+}
+
+.theme-dark .bookmark-action-btn .icon {
+  color: #aaa;
+}
+
+.theme-dark .form-input {
+  background: #2A2A44;
+  border-color: rgba(255,255,255,0.15);
+  color: #E0E0E0;
+}
+
+.theme-dark .form-label {
+  color: #E0E0E0;
+}
+
+.theme-dark .form-checkbox-row {
+  background: rgba(255,255,255,0.05);
+}
+
+.theme-dark .checkbox {
+  background: #2A2A44;
+  border-color: rgba(255,255,255,0.2);
+}
+
+.theme-dark .checkbox-label .checkbox-title {
+  color: #E0E0E0;
+}
+
+.theme-dark .checkbox-label .checkbox-desc {
+  color: #888;
+}

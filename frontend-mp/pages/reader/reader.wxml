@@ -5,8 +5,13 @@
       <view class="icon icon-back"></view>
     </view>
     <view class="bar-title">{{book.title}}</view>
-    <view class="bar-right" bindtap="toggleToc">
-      <text>目录</text>
+    <view class="bar-right-btns">
+      <view class="bar-btn {{currentBookmarked ? 'active' : ''}}" bindtap="addBookmarkFromToolbar">
+        <view class="icon icon-bookmark {{currentBookmarked ? 'filled' : ''}}"></view>
+      </view>
+      <view class="bar-btn" bindtap="toggleTocPanel">
+        <text>目录</text>
+      </view>
     </view>
   </view>
 
@@ -34,9 +39,13 @@
     bindscroll="onScroll"
     bindscrolltolower="loadMorePages"
     lower-threshold="300">
-    <view wx:for="{{loadedPages}}" wx:key="index" class="page-image-wrap" id="unit-{{index}}">
-      <image src="{{item}}" mode="widthFix" class="page-image" lazy-load />
+    <view wx:for="{{loadedPages}}" wx:key="index" class="page-image-wrap" id="unit-{{index}}"
+      bindlongpress="onPageLongPress">
+      <image src="{{item}}" mode="widthFix" class="page-image" lazy-load show-menu-by-longpress="{{false}}" />
       <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
+      <view class="bookmark-badge" wx:if="{{currentBookmarked && index === displayUnit - startUnitNum}}">
+        <view class="icon icon-bookmark-filled"></view>
+      </view>
     </view>
     <view class="load-more" wx:if="{{currentUnit < totalUnits}}" bindtap="loadMorePages">
       <text>{{loading ? '加载中...' : '加载更多'}}</text>
@@ -52,9 +61,12 @@
     style="background-color: {{bgColor}};">
     <swiper-item wx:for="{{loadedPages}}" wx:key="index">
       <scroll-view scroll-y class="swiper-page-scroll" style="background-color: {{bgColor}};">
-        <view class="page-image-wrap">
-          <image src="{{item}}" mode="widthFix" class="page-image" />
+        <view class="page-image-wrap" bindlongpress="onPageLongPress">
+          <image src="{{item}}" mode="widthFix" class="page-image" show-menu-by-longpress="{{false}}" />
           <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
+          <view class="bookmark-badge" wx:if="{{currentBookmarked && index === displayUnit - startUnitNum}}">
+            <view class="icon icon-bookmark-filled"></view>
+          </view>
         </view>
       </scroll-view>
     </swiper-item>
@@ -68,12 +80,16 @@
     bindscroll="onScrollHtml"
     bindscrolltolower="loadMoreChapters"
     lower-threshold="300">
-    <view wx:for="{{loadedChapters}}" wx:key="chapterIndex" class="chapter-wrap" id="chapter-{{item.chapterIndex}}">
+    <view wx:for="{{loadedChapters}}" wx:key="chapterIndex" class="chapter-wrap" id="chapter-{{item.chapterIndex}}"
+      bindlongpress="onPageLongPress">
       <view class="chapter-title-bar" wx:if="{{item.title}}">
         <text class="chapter-title-text">{{item.title}}</text>
       </view>
       <view class="chapter-body rich-text-{{theme}}">
         <rich-text nodes="{{item.html}}" space="nbsp"></rich-text>
+      </view>
+      <view class="bookmark-badge" wx:if="{{currentBookmarked && item.chapterIndex === displayUnit - 1}}">
+        <view class="icon icon-bookmark-filled"></view>
       </view>
     </view>
     <view class="load-more" wx:if="{{currentUnit < totalUnits}}" bindtap="loadMoreChapters">
@@ -89,12 +105,16 @@
     bindchange="onSwiperChangeHtml" bindtap="toggleUI"
     style="background-color: {{bgColor}};">
     <swiper-item wx:for="{{loadedChapters}}" wx:key="chapterIndex">
-      <scroll-view scroll-y class="swiper-page-scroll html-reader" style="background-color: {{bgColor}};">
+      <scroll-view scroll-y class="swiper-page-scroll html-reader" style="background-color: {{bgColor}};"
+        bindlongpress="onPageLongPress">
         <view class="chapter-title-bar" wx:if="{{item.title}}">
           <text class="chapter-title-text">{{item.title}}</text>
         </view>
         <view class="chapter-body rich-text-{{theme}}">
           <rich-text nodes="{{item.html}}" space="nbsp"></rich-text>
+        </view>
+        <view class="bookmark-badge" wx:if="{{currentBookmarked && item.chapterIndex === displayUnit - 1}}">
+          <view class="icon icon-bookmark-filled"></view>
         </view>
       </scroll-view>
     </swiper-item>
@@ -118,9 +138,17 @@
         <view class="icon icon-palette"></view>
         <text>主题</text>
       </view>
+      <view class="tool-btn {{currentBookmarked ? 'active' : ''}}" bindtap="addBookmarkFromToolbar">
+        <view class="icon icon-bookmark {{currentBookmarked ? 'filled' : ''}}"></view>
+        <text>书签</text>
+      </view>
       <view class="tool-btn" bindtap="addNote">
         <view class="icon icon-note"></view>
         <text>笔记</text>
+      </view>
+      <view class="tool-btn" bindtap="toggleBookmarkPanel">
+        <view class="icon icon-list"></view>
+        <text>书签列表</text>
       </view>
       <view class="tool-btn" bindtap="openAiAssistant">
         <view class="icon icon-ai"></view>
@@ -129,12 +157,14 @@
     </view>
   </view>
 
+  <!-- 目录/书签侧栏遮罩 -->
+  <view class="toc-mask" wx:if="{{showToc || showBookmark}}" bindtap="toggleTocPanel" catchtap="toggleBookmarkPanel"></view>
+
   <!-- 目录侧栏 -->
-  <view class="toc-mask" wx:if="{{showToc}}" bindtap="toggleToc"></view>
   <view class="toc-panel {{showToc ? 'show' : ''}}">
     <view class="toc-header">
       <text class="toc-title">目录</text>
-      <view class="toc-close" bindtap="toggleToc"><view class="icon icon-close"></view></view>
+      <view class="toc-close" bindtap="toggleTocPanel"><view class="icon icon-close"></view></view>
     </view>
     <scroll-view scroll-y class="toc-list">
       <block wx:if="{{streamType === 'html'}}">
@@ -146,12 +176,96 @@
       <block wx:else>
         <view class="toc-item" wx:for="{{toc}}" wx:key="index" bindtap="jumpToPage" data-page="{{item.page}}">
           <text class="toc-text">{{item.title}}</text>
-          <text class="toc-page">{{item.page}}</text>
+          <text class="toc-page">{{item.page}}{{item.isBookmark ? ' (锚点)' : ''}}</text>
         </view>
       </block>
       <view class="empty-state" wx:if="{{toc.length === 0}}">
         <text class="empty-text">暂无目录信息</text>
+        <text class="empty-hint">可在书签列表中添加"章节锚点"代替目录导航</text>
       </view>
+    </scroll-view>
+  </view>
+
+  <!-- 书签侧栏 -->
+  <view class="toc-panel bookmark-panel {{showBookmark ? 'show' : ''}}">
+    <view class="toc-header">
+      <text class="toc-title">书签 / 章节锚点</text>
+      <view class="toc-close" bindtap="toggleBookmarkPanel"><view class="icon icon-close"></view></view>
+    </view>
+    <view class="bookmark-tabs">
+      <view class="bookmark-tab {{tocActiveTab === 'bookmark' ? 'active' : ''}}" bindtap="switchTocTab" data-tab="bookmark">
+        <text>书签 ({{bookmarks.length}})</text>
+      </view>
+      <view class="bookmark-tab {{tocActiveTab === 'chapter' ? 'active' : ''}}" bindtap="switchTocTab" data-tab="chapter">
+        <text>章节锚点 ({{chapterBookmarks.length}})</text>
+      </view>
+    </view>
+    <scroll-view scroll-y class="toc-list bookmark-list">
+      <block wx:if="{{tocActiveTab === 'bookmark'}}">
+        <view class="bookmark-item" wx:for="{{bookmarks}}" wx:key="id" wx:for-index="idx">
+          <view class="bookmark-main" bindtap="jumpToBookmark" data-bookmark="{{item}}">
+            <view class="bookmark-info">
+              <text class="bookmark-title">{{item.title || '未命名书签'}}</text>
+              <text class="bookmark-meta">
+                第{{item.pageNum}}{{item.unitType === 2 ? '章' : '页'}} · {{item.createdAt}}
+              </text>
+              <text class="bookmark-remark" wx:if="{{item.remark}}">{{item.remark}}</text>
+            </view>
+            <view class="icon icon-arrow-right"></view>
+          </view>
+          <view class="bookmark-actions">
+            <view class="bookmark-action-btn" bindtap="moveBookmarkUp" data-index="{{idx}}" data-type="bookmark" wx:if="{{idx > 0}}">
+              <view class="icon icon-up"></view>
+            </view>
+            <view class="bookmark-action-btn" bindtap="moveBookmarkDown" data-index="{{idx}}" data-type="bookmark" wx:if="{{idx < bookmarks.length - 1}}">
+              <view class="icon icon-down"></view>
+            </view>
+            <view class="bookmark-action-btn edit" bindtap="editBookmark" data-id="{{item.id}}">
+              <view class="icon icon-edit"></view>
+            </view>
+            <view class="bookmark-action-btn delete" bindtap="deleteBookmark" data-id="{{item.id}}">
+              <view class="icon icon-trash"></view>
+            </view>
+          </view>
+        </view>
+        <view class="empty-state" wx:if="{{bookmarks.length === 0}}">
+          <text class="empty-text">暂无书签</text>
+          <text class="empty-hint">点击工具栏"书签"按钮或长按页面添加</text>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="bookmark-item" wx:for="{{chapterBookmarks}}" wx:key="id" wx:for-index="idx">
+          <view class="bookmark-main" bindtap="jumpToBookmark" data-bookmark="{{item}}">
+            <view class="bookmark-info">
+              <view class="bookmark-chapter-tag">章节锚点</view>
+              <text class="bookmark-title">{{item.title || '未命名章节'}}</text>
+              <text class="bookmark-meta">
+                第{{item.pageNum}}{{item.unitType === 2 ? '章' : '页'}}
+              </text>
+              <text class="bookmark-remark" wx:if="{{item.remark}}">{{item.remark}}</text>
+            </view>
+            <view class="icon icon-arrow-right"></view>
+          </view>
+          <view class="bookmark-actions">
+            <view class="bookmark-action-btn" bindtap="moveBookmarkUp" data-index="{{idx}}" data-type="chapter" wx:if="{{idx > 0}}">
+              <view class="icon icon-up"></view>
+            </view>
+            <view class="bookmark-action-btn" bindtap="moveBookmarkDown" data-index="{{idx}}" data-type="chapter" wx:if="{{idx < chapterBookmarks.length - 1}}">
+              <view class="icon icon-down"></view>
+            </view>
+            <view class="bookmark-action-btn edit" bindtap="editBookmark" data-id="{{item.id}}">
+              <view class="icon icon-edit"></view>
+            </view>
+            <view class="bookmark-action-btn delete" bindtap="deleteBookmark" data-id="{{item.id}}">
+              <view class="icon icon-trash"></view>
+            </view>
+          </view>
+        </view>
+        <view class="empty-state" wx:if="{{chapterBookmarks.length === 0}}">
+          <text class="empty-text">暂无章节锚点</text>
+          <text class="empty-hint">添加书签时勾选"设为章节锚点"，无目录的PDF可用来代替章节导航</text>
+        </view>
+      </block>
     </scroll-view>
   </view>
 
@@ -193,5 +307,34 @@
       </view>
     </view>
     <button class="btn-primary note-submit" bindtap="submitNote">保存</button>
+  </view>
+
+  <!-- 书签编辑弹窗 -->
+  <view class="note-mask" wx:if="{{showBookmarkDialog}}" bindtap="hideBookmarkDialog"></view>
+  <view class="note-dialog bookmark-dialog {{showBookmarkDialog ? 'show' : ''}}">
+    <view class="note-header">
+      <text class="note-title">{{bookmarkEditMode ? '编辑书签' : '添加书签'}}</text>
+      <view class="note-close" bindtap="hideBookmarkDialog"><view class="icon icon-close"></view></view>
+    </view>
+    <view class="note-body">
+      <view class="form-label">书签名称</view>
+      <input class="form-input" placeholder="请输入书签名称" value="{{bookmarkTitle}}"
+        bindinput="onBookmarkTitleInput" maxlength="200" />
+      <view class="form-label">备注说明（可选）</view>
+      <textarea class="note-input bookmark-remark-input" placeholder="添加备注说明..." value="{{bookmarkRemark}}"
+        bindinput="onBookmarkRemarkInput" maxlength="500" />
+      <view class="form-checkbox-row" bindtap="toggleBookmarkIsChapter">
+        <view class="checkbox {{bookmarkIsChapter ? 'checked' : ''}}">
+          <view class="icon icon-check" wx:if="{{bookmarkIsChapter}}"></view>
+        </view>
+        <view class="checkbox-label">
+          <text class="checkbox-title">设为章节锚点</text>
+          <text class="checkbox-desc">无目录的PDF可用来代替章节导航</text>
+        </view>
+      </view>
+    </view>
+    <button class="btn-primary note-submit" bindtap="submitBookmark">
+      {{bookmarkEditMode ? '保存修改' : '添加书签'}}
+    </button>
   </view>
 </view>
