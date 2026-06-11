@@ -180,5 +180,9 @@ public class Constants {
     /** 书籍回收站过期天数 */
     public static final int BOOK_TRASH_EXPIRE_DAYS = 7;
 
+    public static final int FAMILY_ROLE_PARENT = 1;
+    public static final int FAMILY_ROLE_CHILD = 2;
+    public static final int FAMILY_MAX_MEMBERS_DEFAULT = 6;
+
     private Constants() {}
 }

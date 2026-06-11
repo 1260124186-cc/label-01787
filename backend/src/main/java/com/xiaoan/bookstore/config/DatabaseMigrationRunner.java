@@ -25,6 +25,8 @@ public class DatabaseMigrationRunner implements CommandLineRunner {
             migrateBookPerformanceFields();
             migrateSysConfigTable();
             migrateConfigPermissions();
+            migrateFamilyTables();
+            migrateFamilyPermissions();
             log.info("数据库迁移检查完成");
         } catch (Exception e) {
             log.error("数据库迁移失败: {}", e.getMessage(), e);
@@ -283,6 +285,132 @@ public class DatabaseMigrationRunner implements CommandLineRunner {
                 ON DUPLICATE KEY UPDATE role_id = VALUES(role_id)
                 """);
             log.info("只读审计角色备份权限分配完成");
+        } catch (Exception e) {
+            log.warn("只读审计角色权限分配失败: {}", e.getMessage());
+        }
+    }
+
+    private void migrateFamilyTables() {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'family'",
+                    Integer.class
+            );
+            if (count != null && count > 0) {
+                log.info("家庭相关表已存在，跳过创建");
+                return;
+            }
+
+            log.info("创建家庭子账号相关表...");
+            jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS family (
+                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                    name VARCHAR(100) NOT NULL COMMENT '家庭名称',
+                    invite_code VARCHAR(20) NOT NULL UNIQUE COMMENT '邀请码',
+                    owner_id BIGINT NOT NULL COMMENT '家长(主账号)用户ID',
+                    member_count INT DEFAULT 1 COMMENT '成员数量',
+                    max_members INT DEFAULT 6 COMMENT '最大成员数',
+                    shared_storage BIGINT DEFAULT 0 COMMENT '共享存储池大小(字节)',
+                    status TINYINT DEFAULT 1 COMMENT '0-已解散 1-正常',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_owner_id (owner_id),
+                    INDEX idx_status (status),
+                    INDEX idx_invite_code (invite_code)
+                ) ENGINE=InnoDB COMMENT='家庭表'
+                """);
+
+            jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS family_member (
+                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                    family_id BIGINT NOT NULL COMMENT '家庭ID',
+                    user_id BIGINT NOT NULL COMMENT '用户ID',
+                    role TINYINT DEFAULT 2 COMMENT '1-家长 2-子女',
+                    nickname VARCHAR(50) DEFAULT '' COMMENT '家庭内昵称',
+                    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY uk_family_user (family_id, user_id),
+                    INDEX idx_family_id (family_id),
+                    INDEX idx_user_id (user_id)
+                ) ENGINE=InnoDB COMMENT='家庭成员表'
+                """);
+
+            jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS family_shared_book (
+                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                    family_id BIGINT NOT NULL COMMENT '家庭ID',
+                    book_id BIGINT NOT NULL COMMENT '书籍ID',
+                    shared_by BIGINT NOT NULL COMMENT '共享操作人ID',
+                    shared_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '共享时间',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uk_family_book (family_id, book_id),
+                    INDEX idx_family_id (family_id),
+                    INDEX idx_book_id (book_id)
+                ) ENGINE=InnoDB COMMENT='家庭共享书架表'
+                """);
+
+            log.info("家庭子账号相关表创建成功");
+        } catch (Exception e) {
+            log.error("创建家庭子账号相关表失败: {}", e.getMessage());
+        }
+    }
+
+    private void migrateFamilyPermissions() {
+        String[] permissions = {
+                "(130, 'family_mgmt', '家庭管理', 1, NULL, '/families', 14)",
+                "(131, 'family:view', '查看家庭', 2, 130, '/api/admin/families', 1)"
+        };
+
+        for (String perm : permissions) {
+            try {
+                jdbcTemplate.execute("""
+                    INSERT INTO permission (id, code, name, type, parent_id, path, sort_order)
+                    VALUES
+                    """ + perm + """
+                    ON DUPLICATE KEY UPDATE
+                        code = VALUES(code),
+                        name = VALUES(name),
+                        type = VALUES(type),
+                        parent_id = VALUES(parent_id),
+                        path = VALUES(path),
+                        sort_order = VALUES(sort_order)
+                    """);
+            } catch (Exception e) {
+                log.warn("权限插入失败（可能已存在）: {}", e.getMessage());
+            }
+        }
+        log.info("家庭管理权限初始化完成");
+
+        try {
+            jdbcTemplate.execute("""
+                INSERT INTO role_permission (role_id, permission_id)
+                SELECT 1, id FROM permission WHERE id >= 130 AND id <= 131
+                ON DUPLICATE KEY UPDATE role_id = VALUES(role_id)
+                """);
+            log.info("超级管理员家庭管理权限分配完成");
+        } catch (Exception e) {
+            log.warn("超级管理员权限分配失败: {}", e.getMessage());
+        }
+
+        try {
+            jdbcTemplate.execute("""
+                INSERT INTO role_permission (role_id, permission_id) VALUES
+                (2, 130), (2, 131)
+                ON DUPLICATE KEY UPDATE role_id = VALUES(role_id)
+                """);
+            log.info("运营角色家庭管理权限分配完成");
+        } catch (Exception e) {
+            log.warn("运营角色权限分配失败: {}", e.getMessage());
+        }
+
+        try {
+            jdbcTemplate.execute("""
+                INSERT INTO role_permission (role_id, permission_id) VALUES
+                (3, 130), (3, 131)
+                ON DUPLICATE KEY UPDATE role_id = VALUES(role_id)
+                """);
+            log.info("只读审计角色家庭管理权限分配完成");
         } catch (Exception e) {
             log.warn("只读审计角色权限分配失败: {}", e.getMessage());
         }
