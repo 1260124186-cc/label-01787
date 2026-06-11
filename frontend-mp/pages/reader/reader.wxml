@@ -305,6 +305,30 @@
         <view class="type-btn {{noteType === 1 ? 'active' : ''}}" bindtap="setNoteType" data-type="1">评语</view>
         <view class="type-btn {{noteType === 2 ? 'active' : ''}}" bindtap="setNoteType" data-type="2">笔记</view>
       </view>
+
+      <view class="form-label">标签（用逗号分隔，如：复习,重点）</view>
+      <input class="form-input" placeholder="输入标签，多个用逗号分隔" value="{{noteTags}}"
+        bindinput="onNoteTagsInput" maxlength="200" />
+
+      <view class="note-options">
+        <view class="option-row">
+          <text class="option-label">置顶</text>
+          <view class="switch {{noteIsPinned ? 'on' : ''}}" bindtap="toggleNotePin">
+            <view class="switch-dot"></view>
+          </view>
+        </view>
+
+        <view class="option-row">
+          <text class="option-label">标记颜色</text>
+          <view class="color-options">
+            <view class="color-dot {{noteColor === item.key ? 'selected' : ''}}"
+              wx:for="{{colorOptions}}" wx:key="key"
+              style="background: {{item.color}};"
+              bindtap="selectNoteColor" data-color="{{item.key}}">
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
     <button class="btn-primary note-submit" bindtap="submitNote">保存</button>
   </view>

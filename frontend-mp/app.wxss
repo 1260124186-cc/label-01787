@@ -396,3 +396,186 @@ page {
   left: 50%;
   transform: translateX(-50%);
 }
+
+/* 图钉/置顶图标 */
+.icon-pin {
+  width: 28rpx;
+  height: 36rpx;
+  position: relative;
+}
+.icon-pin::before {
+  content: '';
+  position: absolute;
+  width: 20rpx;
+  height: 20rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  top: 0;
+  left: 2rpx;
+}
+.icon-pin::after {
+  content: '';
+  position: absolute;
+  width: 3rpx;
+  height: 12rpx;
+  background: currentColor;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 导出图标 */
+.icon-export {
+  width: 32rpx;
+  height: 36rpx;
+  position: relative;
+}
+.icon-export::before {
+  content: '';
+  position: absolute;
+  width: 24rpx;
+  height: 20rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.icon-export::after {
+  content: '';
+  position: absolute;
+  width: 3rpx;
+  height: 14rpx;
+  background: currentColor;
+  top: 2rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: -6rpx 6rpx 0 currentColor, 6rpx 6rpx 0 currentColor;
+}
+
+/* 对勾图标 */
+.icon-check {
+  width: 28rpx;
+  height: 28rpx;
+  position: relative;
+}
+.icon-check::after {
+  content: '';
+  position: absolute;
+  width: 10rpx;
+  height: 18rpx;
+  border-right: 3rpx solid currentColor;
+  border-bottom: 3rpx solid currentColor;
+  transform: rotate(45deg);
+  top: 2rpx;
+  left: 6rpx;
+}
+
+/* 向下箭头 */
+.icon-arrow-down {
+  width: 16rpx;
+  height: 16rpx;
+  border-right: 3rpx solid currentColor;
+  border-bottom: 3rpx solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* 书签图标 */
+.icon-bookmark {
+  width: 28rpx;
+  height: 36rpx;
+  position: relative;
+}
+.icon-bookmark::before {
+  content: '';
+  position: absolute;
+  width: 22rpx;
+  height: 30rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx 4rpx 0 0;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.icon-bookmark::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 11rpx solid transparent;
+  border-right: 11rpx solid transparent;
+  border-top: 10rpx solid currentColor;
+  bottom: 3rpx;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.icon-bookmark.filled::before,
+.icon-bookmark-filled::before {
+  background: currentColor;
+}
+
+/* 列表图标 */
+.icon-list {
+  width: 32rpx;
+  height: 28rpx;
+  position: relative;
+}
+.icon-list::before {
+  content: '';
+  position: absolute;
+  width: 32rpx;
+  height: 3rpx;
+  background: currentColor;
+  top: 4rpx;
+  left: 0;
+  box-shadow: 0 8rpx 0 currentColor, 0 16rpx 0 currentColor;
+}
+
+/* 向上箭头 */
+.icon-up {
+  width: 16rpx;
+  height: 16rpx;
+  border-left: 3rpx solid currentColor;
+  border-top: 3rpx solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* 向下箭头 */
+.icon-down {
+  width: 16rpx;
+  height: 16rpx;
+  border-right: 3rpx solid currentColor;
+  border-bottom: 3rpx solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* 垃圾桶图标 */
+.icon-trash {
+  width: 28rpx;
+  height: 32rpx;
+  position: relative;
+}
+.icon-trash::before {
+  content: '';
+  position: absolute;
+  width: 20rpx;
+  height: 22rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 0 0 4rpx 4rpx;
+  bottom: 2rpx;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.icon-trash::after {
+  content: '';
+  position: absolute;
+  width: 24rpx;
+  height: 3rpx;
+  background: currentColor;
+  top: 4rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 2rpx;
+}

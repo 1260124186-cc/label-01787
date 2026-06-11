@@ -34,6 +34,14 @@ Page({
     showBookmark: false,
     showTheme: false,
     showNoteDialog: false,
+    noteTags: '',
+    noteIsPinned: false,
+    noteColor: 'yellow',
+    colorOptions: [
+      { key: 'yellow', name: '黄色', color: '#FFD93D' },
+      { key: 'green', name: '绿色', color: '#4CAF50' },
+      { key: 'pink', name: '粉色', color: '#E91E63' }
+    ],
     showBookmarkDialog: false,
     bookmarkEditMode: false,
     editingBookmarkId: null,
@@ -567,7 +575,15 @@ Page({
   },
 
   addNote() {
-    this.setData({ showNoteDialog: true, noteText: '', noteContent: '', noteType: 2 })
+    this.setData({
+      showNoteDialog: true,
+      noteText: '',
+      noteContent: '',
+      noteType: 2,
+      noteTags: '',
+      noteIsPinned: false,
+      noteColor: 'yellow'
+    })
   },
 
   hideNoteDialog() {
@@ -582,8 +598,21 @@ Page({
     this.setData({ noteContent: e.detail.value })
   },
 
+  onNoteTagsInput(e) {
+    this.setData({ noteTags: e.detail.value })
+  },
+
   setNoteType(e) {
     this.setData({ noteType: Number(e.currentTarget.dataset.type) })
+  },
+
+  toggleNotePin() {
+    this.setData({ noteIsPinned: !this.data.noteIsPinned })
+  },
+
+  selectNoteColor(e) {
+    const color = e.currentTarget.dataset.color
+    this.setData({ noteColor: color })
   },
 
   async submitNote() {
@@ -600,7 +629,10 @@ Page({
           pageNum: this.data.displayUnit,
           selectedText: this.data.noteText,
           content: this.data.noteContent,
-          type: this.data.noteType
+          type: this.data.noteType,
+          tags: this.data.noteTags,
+          isPinned: this.data.noteIsPinned ? 1 : 0,
+          color: this.data.noteColor
         }
       })
       wx.showToast({ title: '保存成功', icon: 'success' })

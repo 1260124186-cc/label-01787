@@ -158,5 +158,17 @@ public class Constants {
     /** 高亮上下文字数 */
     public static final int SEARCH_HIGHLIGHT_CONTEXT = 30;
 
+    /** 批注颜色：黄色 */
+    public static final String ANNOTATION_COLOR_YELLOW = "yellow";
+    /** 批注颜色：绿色 */
+    public static final String ANNOTATION_COLOR_GREEN = "green";
+    /** 批注颜色：粉色 */
+    public static final String ANNOTATION_COLOR_PINK = "pink";
+
+    /** 批注未置顶 */
+    public static final int ANNOTATION_NOT_PINNED = 0;
+    /** 批注已置顶 */
+    public static final int ANNOTATION_PINNED = 1;
+
     private Constants() {}
 }

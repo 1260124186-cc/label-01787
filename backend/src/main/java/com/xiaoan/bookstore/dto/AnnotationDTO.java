@@ -15,4 +15,7 @@ public class AnnotationDTO {
     private String content;
     @NotNull(message = "类型不能为空")
     private Integer type;
+    private String tags;
+    private Integer isPinned;
+    private String color;
 }

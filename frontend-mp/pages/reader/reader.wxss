@@ -624,6 +624,92 @@ page {
   border-color: #6B4226;
 }
 
+.form-label {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+  margin-top: 8rpx;
+}
+
+.form-input {
+  width: 100%;
+  padding: 20rpx;
+  border: 2rpx solid #eee;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  margin-bottom: 20rpx;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.note-options {
+  margin-top: 8rpx;
+}
+
+.option-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.option-row:last-child {
+  border-bottom: none;
+}
+
+.option-label {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.switch {
+  width: 80rpx;
+  height: 44rpx;
+  background: #ddd;
+  border-radius: 22rpx;
+  position: relative;
+  transition: background 0.3s;
+}
+
+.switch.on {
+  background: #6B4226;
+}
+
+.switch-dot {
+  width: 36rpx;
+  height: 36rpx;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  transition: left 0.3s;
+  box-shadow: 0 2rpx 4rpx rgba(0,0,0,0.2);
+}
+
+.switch.on .switch-dot {
+  left: 40rpx;
+}
+
+.color-options {
+  display: flex;
+  gap: 20rpx;
+}
+
+.color-dot {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  border: 4rpx solid transparent;
+  box-sizing: border-box;
+}
+
+.color-dot.selected {
+  border-color: #6B4226;
+  transform: scale(1.1);
+}
+
 .note-submit {
   width: 100% !important;
   margin: 8rpx 0 0 0 !important;

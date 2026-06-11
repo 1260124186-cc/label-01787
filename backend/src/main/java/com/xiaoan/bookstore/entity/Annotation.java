@@ -15,6 +15,9 @@ public class Annotation {
     private String selectedText;
     private String content;
     private Integer type;
+    private String tags;
+    private Integer isPinned;
+    private String color;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)
