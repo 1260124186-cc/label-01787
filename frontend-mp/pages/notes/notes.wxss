@@ -29,6 +29,42 @@
   border-radius: 30rpx;
 }
 
+.search-section {
+  padding: 20rpx 24rpx 16rpx;
+  background: #fff;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #F5F0EB;
+  border-radius: 40rpx;
+  padding: 16rpx 24rpx;
+  gap: 12rpx;
+}
+
+.search-box .icon-search {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+  color: #999;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.search-clear {
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
 .filter-section {
   display: flex;
   align-items: center;
@@ -73,9 +109,21 @@
   flex-shrink: 0;
 }
 
+.book-select.active {
+  background: #EFE3D4;
+}
+
 .book-label {
   font-size: 24rpx;
   color: #666;
+  max-width: 120rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.book-select.active .book-label {
+  color: #6B4226;
 }
 
 .tag-dropdown {
@@ -110,6 +158,69 @@
   color: #999;
   font-size: 24rpx;
   padding: 20rpx 0;
+}
+
+.book-filter-dropdown {
+  display: none;
+  background: #fff;
+  border-top: 1rpx solid #F0ECE6;
+  max-height: 500rpx;
+  overflow-y: auto;
+}
+
+.book-filter-dropdown.show {
+  display: block;
+}
+
+.book-filter-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  gap: 16rpx;
+  border-bottom: 1rpx solid #F5F0EB;
+}
+
+.book-filter-item.active {
+  background: #F5F0EB;
+}
+
+.book-filter-title {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.book-filter-meta {
+  font-size: 24rpx;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.icon-check {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+  color: #6B4226;
+}
+
+.jump-to-reader {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 4rpx 12rpx;
+  background: rgba(107, 66, 38, 0.1);
+  border-radius: 16rpx;
+  font-size: 20rpx;
+  color: #6B4226;
+  margin-left: 8rpx;
+}
+
+.jump-to-reader .icon-book {
+  width: 24rpx;
+  height: 24rpx;
 }
 
 .export-menu {

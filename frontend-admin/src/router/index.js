@@ -31,6 +31,12 @@ const routes = [
         meta: { title: '书籍管理', permission: 'book:view' }
       },
       {
+        path: 'books/:id',
+        name: 'BookDetail',
+        component: () => import('@/views/BookDetail.vue'),
+        meta: { title: '书籍详情', permission: 'book:view' }
+      },
+      {
         path: 'logs',
         name: 'Logs',
         component: () => import('@/views/LogList.vue'),

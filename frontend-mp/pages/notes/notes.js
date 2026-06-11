@@ -20,7 +20,9 @@ Page({
     showExportMenu: false,
     books: [],
     selectedBookId: null,
-    generatingImage: false
+    generatingImage: false,
+    searchKeyword: '',
+    showBookFilter: false
   },
 
   onShow() {
@@ -75,6 +77,7 @@ Page({
       if (this.data.noteType !== '') params.type = this.data.noteType
       if (this.data.currentTag) params.tag = this.data.currentTag
       if (this.data.selectedBookId) params.bookId = this.data.selectedBookId
+      if (this.data.searchKeyword) params.keyword = this.data.searchKeyword
       const res = await request({ url: '/annotations', data: params })
       const records = res.data.records || []
       const processed = records.map(item => {
@@ -127,6 +130,46 @@ Page({
     const bookId = e.currentTarget.dataset.id
     this.setData({ selectedBookId: bookId, showExportMenu: false })
     this.refreshNotes()
+  },
+
+  toggleBookFilter() {
+    this.setData({ showBookFilter: !this.data.showBookFilter, showExportMenu: false })
+  },
+
+  selectBookFilter(e) {
+    const bookId = e.currentTarget.dataset.id
+    this.setData({
+      selectedBookId: bookId === this.data.selectedBookId ? null : bookId,
+      showBookFilter: false
+    })
+    this.refreshNotes()
+  },
+
+  onSearchInput(e) {
+    this.setData({ searchKeyword: e.detail.value })
+  },
+
+  onSearchConfirm() {
+    this.refreshNotes()
+  },
+
+  clearSearch() {
+    this.setData({ searchKeyword: '' })
+    this.refreshNotes()
+  },
+
+  jumpToReader(e) {
+    const note = e.currentTarget.dataset.note
+    if (!note || !note.bookId) return
+    const bookId = note.bookId
+    const pageNum = note.pageNum
+    const selectedText = note.selectedText || ''
+    const highlight = encodeURIComponent(selectedText)
+    const matchStart = selectedText ? 0 : 0
+    const matchEnd = selectedText ? selectedText.length : 0
+    wx.navigateTo({
+      url: `/pages/reader/reader?id=${bookId}&page=${pageNum}&highlight=${highlight}&matchStart=${matchStart}&matchEnd=${matchEnd}`
+    })
   },
 
   async exportMarkdown() {

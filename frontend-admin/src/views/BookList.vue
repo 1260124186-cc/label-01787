@@ -92,8 +92,16 @@
             <el-tag v-else type="info" size="small">未索引</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column label="操作" width="340" fixed="right">
           <template #default="{ row }">
+            <el-button
+              size="small"
+              type="primary"
+              link
+              @click="viewBookDetail(row)"
+            >
+              查看详情
+            </el-button>
             <el-button
               v-if="row.bookFormat === 'pdf' && row.status === 1"
               size="small"
@@ -167,6 +175,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, BottomRight } from '@element-plus/icons-vue'
 import {
@@ -174,6 +183,8 @@ import {
   getBookUploader, previewBookPdf
 } from '@/api/admin'
 import { getIndexStatus, rebuildIndex } from '@/api/search'
+
+const router = useRouter()
 
 const tableRef = ref(null)
 const tableData = ref([])
@@ -239,6 +250,10 @@ const handleSelectionChange = (selection) => {
 const clearSelection = () => {
   selectedIds.value = []
   tableRef.value?.clearSelection()
+}
+
+const viewBookDetail = (row) => {
+  router.push(`/books/${row.id}`)
 }
 
 const handleRebuildIndex = async (row) => {

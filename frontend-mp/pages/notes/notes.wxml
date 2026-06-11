@@ -7,6 +7,20 @@
     </view>
   </view>
 
+  <view class="search-section">
+    <view class="search-box">
+      <view class="icon icon-search"></view>
+      <input class="search-input" placeholder="搜索笔记内容、书摘或标签"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+        confirm-type="search" />
+      <view class="search-clear" wx:if="{{searchKeyword}}" bindtap="clearSearch">
+        <view class="icon icon-close"></view>
+      </view>
+    </view>
+  </view>
+
   <view class="filter-section">
     <scroll-view scroll-x class="type-tabs">
       <view class="tab {{noteType === '' ? 'active' : ''}}" bindtap="setFilter" data-type="">全部</view>
@@ -17,8 +31,8 @@
       </view>
     </scroll-view>
 
-    <view class="book-select" bindtap="toggleExportMenu">
-      <text class="book-label">{{selectedBookId ? '已选书籍' : '选择书籍'}}</text>
+    <view class="book-select {{selectedBookId ? 'active' : ''}}" bindtap="toggleBookFilter">
+      <text class="book-label">{{selectedBookId ? (books.find(b => b.id === selectedBookId)?.title?.substring(0, 6) + '...' || '已选书籍') : '筛选书籍'}}</text>
       <view class="icon icon-arrow-down"></view>
     </view>
   </view>
@@ -34,6 +48,22 @@
     </view>
     <view class="empty-tag" wx:if="{{allTags.length === 0}}">
       暂无标签，给笔记添加标签后可在此筛选
+    </view>
+  </view>
+
+  <view class="book-filter-dropdown {{showBookFilter ? 'show' : ''}}">
+    <view class="book-filter-item {{!selectedBookId ? 'active' : ''}}" bindtap="selectBookFilter" data-id="">
+      全部书籍
+    </view>
+    <view class="book-filter-item {{selectedBookId === item.id ? 'active' : ''}}"
+      wx:for="{{books}}" wx:key="id"
+      bindtap="selectBookFilter" data-id="{{item.id}}">
+      <text class="book-filter-title">{{item.title}}</text>
+      <text class="book-filter-meta">{{item.author || '未知作者'}}</text>
+      <view class="icon icon-check" wx:if="{{selectedBookId === item.id}}"></view>
+    </view>
+    <view class="empty-book" wx:if="{{books.length === 0}}">
+      暂无书籍
     </view>
   </view>
 
@@ -69,8 +99,10 @@
   <view class="note-list">
     <view class="note-card {{item.isPinned ? 'pinned' : ''}}"
       style="border-left: 8rpx solid {{item.colorInfo.border}}; background: {{item.colorInfo.bg}};"
-      wx:for="{{notes}}" wx:key="id">
-      <view class="note-header">
+      wx:for="{{notes}}" wx:key="id"
+      data-note="{{item}}"
+      bindtap="jumpToReader">
+      <view class="note-header" catchtap="">
         <view class="note-left">
           <view class="note-tag {{item.type === 1 ? 'tag-comment' : 'tag-note'}}">
             {{item.type === 1 ? '评语' : '笔记'}}
@@ -79,8 +111,12 @@
           <view class="pin-icon" wx:if="{{item.isPinned}}">
             <view class="icon icon-pin"></view>
           </view>
+          <view class="jump-to-reader">
+            <view class="icon icon-book"></view>
+            <text>查看原文</text>
+          </view>
         </view>
-        <view class="note-actions-top">
+        <view class="note-actions-top" catchtap="">
           <view class="action-icon" bindtap="togglePin" data-id="{{item.id}}">
             <view class="icon icon-pin {{item.isPinned ? 'active' : ''}}"></view>
           </view>
@@ -103,7 +139,7 @@
       <view class="note-content">
         <text>{{item.content}}</text>
       </view>
-      <view class="note-footer">
+      <view class="note-footer" catchtap="">
         <text class="note-time">{{item.createdAt}}</text>
         <view class="note-actions">
           <text class="action-btn share-btn" bindtap="shareExcerpt" data-id="{{item.id}}" data-index="{{index}}" wx:if="{{item.selectedText}}">分享书摘</text>

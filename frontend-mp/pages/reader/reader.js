@@ -144,7 +144,16 @@ Page({
     _pageImageCache: {},
     _preloadTimer: null,
     _requestTimestamps: [],
-    weakNetworkThresholdKb: 50
+    weakNetworkThresholdKb: 50,
+    textLayerEnabled: false,
+    currentPageText: '',
+    pageTextCache: {},
+    textSelectionStart: -1,
+    textSelectionEnd: -1,
+    selectingText: false,
+    showTextSelectionBar: false,
+    pageTextLines: [],
+    annotationHighlights: []
   },
 
   onLoad(options) {
@@ -773,7 +782,7 @@ Page({
   },
 
   scrollToHighlight() {
-    const { highlightKeyword, streamType, format, displayUnit } = this.data
+    const { highlightKeyword, streamType, format, displayUnit, highlightMatchStart, highlightMatchEnd } = this.data
     if (!highlightKeyword) return
     setTimeout(() => {
       if (streamType === STREAM_HTML) {
@@ -789,6 +798,18 @@ Page({
           }
         })
       } else if (streamType === STREAM_IMAGE) {
+        if (!this.data.textLayerEnabled) {
+          this.setData({ textLayerEnabled: true })
+        }
+        this.loadPageText(displayUnit)
+        setTimeout(() => {
+          this.setData({
+            textSelectionStart: highlightMatchStart,
+            textSelectionEnd: highlightMatchEnd,
+            selectingText: true,
+            selectedText: highlightKeyword
+          })
+        }, 600)
         const query = this.createSelectorQuery()
         query.selectAll('.page-image-wrap').boundingClientRect()
         query.selectViewport().scrollOffset()
@@ -1322,7 +1343,179 @@ Page({
       if (newUnit !== this.data.displayUnit && newUnit > 0) {
         this.setData({ displayUnit: newUnit })
         this.checkCurrentBookmark()
+        if (this.data.textLayerEnabled) {
+          this.loadPageText(newUnit)
+        }
       }
+    })
+  },
+
+  toggleTextLayer() {
+    const newEnabled = !this.data.textLayerEnabled
+    this.setData({ textLayerEnabled: newEnabled })
+    if (newEnabled) {
+      this.loadPageText(this.data.displayUnit)
+      this.loadPageAnnotationHighlights(this.data.displayUnit)
+      wx.showToast({ title: '文本层已开启，可划词批注', icon: 'none' })
+    } else {
+      this.clearTextSelection()
+      this.setData({ annotationHighlights: [] })
+    }
+  },
+
+  async loadPageText(pageNum) {
+    if (pageNum <= 0) return
+    const cacheKey = `page_${pageNum}`
+    if (this.data.pageTextCache[cacheKey]) {
+      this.processPageText(this.data.pageTextCache[cacheKey])
+      return
+    }
+    try {
+      const res = await request({
+        url: `/books/${this.data.bookId}/text/${pageNum}`
+      })
+      const text = res.data || ''
+      const cache = { ...this.data.pageTextCache }
+      cache[cacheKey] = text
+      this.setData({ pageTextCache: cache })
+      this.processPageText(text)
+    } catch (e) {
+      console.error('加载页面文本失败', pageNum, e)
+      this.setData({ currentPageText: '', pageTextLines: [] })
+    }
+  },
+
+  processPageText(text) {
+    if (!text) {
+      this.setData({ currentPageText: '', pageTextLines: [] })
+      return
+    }
+    const lines = text.split(/\n/).map((line, idx) => ({
+      index: idx,
+      text: line,
+      charStart: text.indexOf(line),
+      charEnd: text.indexOf(line) + line.length
+    })).filter(l => l.text.trim())
+    this.setData({ currentPageText: text, pageTextLines: lines })
+  },
+
+  onTextTouchStart(e) {
+    if (!this.data.textLayerEnabled) return
+    const charIndex = e.currentTarget.dataset.charindex
+    if (charIndex === undefined || charIndex === null) return
+    this.setData({
+      selectingText: true,
+      textSelectionStart: charIndex,
+      textSelectionEnd: charIndex
+    })
+  },
+
+  onTextTouchMove(e) {
+    if (!this.data.textLayerEnabled || !this.data.selectingText) return
+    const charIndex = e.currentTarget.dataset.charindex
+    if (charIndex === undefined || charIndex === null) return
+    if (charIndex > this.data.textSelectionStart) {
+      this.setData({ textSelectionEnd: charIndex })
+    } else {
+      this.setData({ textSelectionStart: charIndex, textSelectionEnd: this.data.textSelectionStart })
+    }
+  },
+
+  onTextTouchEnd() {
+    if (!this.data.textLayerEnabled || !this.data.selectingText) return
+    this.setData({ selectingText: false })
+    const start = this.data.textSelectionStart
+    const end = this.data.textSelectionEnd
+    if (start >= 0 && end > start && this.data.currentPageText) {
+      const selected = this.data.currentPageText.substring(start, end).trim()
+      if (selected.length > 0) {
+        this.setData({ showTextSelectionBar: true })
+      } else {
+        this.clearTextSelection()
+      }
+    } else {
+      this.clearTextSelection()
+    }
+  },
+
+  clearTextSelection() {
+    this.setData({
+      textSelectionStart: -1,
+      textSelectionEnd: -1,
+      selectingText: false,
+      showTextSelectionBar: false
+    })
+  },
+
+  createAnnotationFromSelection() {
+    const start = this.data.textSelectionStart
+    const end = this.data.textSelectionEnd
+    if (start < 0 || end <= start || !this.data.currentPageText) return
+    const selectedText = this.data.currentPageText.substring(start, end).trim()
+    if (!selectedText) return
+    this.setData({
+      showNoteDialog: true,
+      noteText: selectedText,
+      noteContent: '',
+      noteType: 2,
+      noteTags: '',
+      noteIsPinned: false,
+      noteColor: 'yellow',
+      showTextSelectionBar: false
+    })
+  },
+
+  copySelectedText() {
+    const start = this.data.textSelectionStart
+    const end = this.data.textSelectionEnd
+    if (start < 0 || end <= start || !this.data.currentPageText) return
+    const selectedText = this.data.currentPageText.substring(start, end).trim()
+    if (!selectedText) return
+    wx.setClipboardData({
+      data: selectedText,
+      success: () => {
+        wx.showToast({ title: '已复制', icon: 'success' })
+        this.clearTextSelection()
+      }
+    })
+  },
+
+  async loadPageAnnotationHighlights(pageNum) {
+    if (pageNum <= 0) return
+    try {
+      const res = await request({
+        url: '/annotations',
+        data: { bookId: this.data.bookId, page: 1, size: 100 }
+      })
+      const annotations = res.data?.records || []
+      const pageAnnotations = annotations.filter(a => a.pageNum === pageNum && a.selectedText)
+      this.setData({ annotationHighlights: pageAnnotations })
+    } catch (e) {
+      console.error('加载页面批注高亮失败', e)
+    }
+  },
+
+  jumpToAnnotationPage(annotation) {
+    if (!annotation || !annotation.bookId) return
+    const bookId = annotation.bookId
+    const pageNum = annotation.pageNum
+    const selectedText = annotation.selectedText || ''
+    const matchStart = annotation.selectedText ? 0 : 0
+    const matchEnd = annotation.selectedText ? annotation.selectedText.length : 0
+    const highlight = encodeURIComponent(selectedText)
+    wx.navigateTo({
+      url: `/pages/reader/reader?id=${bookId}&page=${pageNum}&highlight=${highlight}&matchStart=${matchStart}&matchEnd=${matchEnd}`
+    })
+  },
+
+  jumpToAnnotation(e) {
+    const annotation = e.currentTarget.dataset.annotation
+    if (!annotation) return
+    wx.showModal({
+      title: '批注详情',
+      content: `${annotation.selectedText ? '「' + annotation.selectedText + '」\n\n' : ''}${annotation.content || ''}`,
+      showCancel: false,
+      confirmText: '知道了'
     })
   }
 })

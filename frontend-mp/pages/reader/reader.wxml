@@ -44,6 +44,24 @@
       style="transform: scale({{imageScale}}); transform-origin: top center;">
       <block wx:if="{{item}}">
         <image src="{{item}}" mode="widthFix" class="page-image" lazy-load show-menu-by-longpress="{{false}}" />
+        <view class="text-layer-overlay" wx:if="{{textLayerEnabled && index === displayUnit - startUnitNum && pageTextLines.length > 0}}"
+          catchtap="toggleUI">
+          <view wx:for="{{pageTextLines}}" wx:for-item="textLine" wx:key="index" class="text-layer-line"
+            style="font-size: {{fontSizeValue}}rpx; line-height: {{lineHeightValue}}; color: {{textColor}};">
+            <text wx:for="{{textLine.text}}" wx:for-item="char" wx:for-index="charIdx" wx:key="charIdx"
+              class="text-layer-char {{(textLine.charStart + charIdx) >= textSelectionStart && (textLine.charStart + charIdx) < textSelectionEnd ? 'selected' : ''}}"
+              data-charindex="{{textLine.charStart + charIdx}}"
+              bindtouchstart="onTextTouchStart"
+              bindtouchmove="onTextTouchMove"
+              bindtouchend="onTextTouchEnd">{{char}}</text>
+          </view>
+          <view wx:for="{{annotationHighlights}}" wx:for-item="hl" wx:key="id"
+            class="annotation-highlight color-{{hl.color}}"
+            data-annotation="{{hl}}"
+            bindtap="jumpToAnnotation">
+            <text class="annotation-highlight-text">{{hl.selectedText}}</text>
+          </view>
+        </view>
       </block>
       <view wx:else class="skeleton-page">
         <view class="skeleton-header"></view>
@@ -79,11 +97,30 @@
     bindchange="onSwiperChange" bindtap="toggleUI"
     style="background-color: {{bgColor}};">
     <swiper-item wx:for="{{loadedPages}}" wx:key="index">
-      <scroll-view scroll-y class="swiper-page-scroll" style="background-color: {{bgColor}};">
+      <scroll-view scroll-y class="swiper-page-scroll" style="background-color: {{bgColor}};"
+        bindscroll="onScroll">
         <view class="page-image-wrap" bindlongpress="onPageLongPress"
           style="transform: scale({{imageScale}}); transform-origin: top center;">
           <block wx:if="{{item}}">
             <image src="{{item}}" mode="widthFix" class="page-image" show-menu-by-longpress="{{false}}" />
+            <view class="text-layer-overlay" wx:if="{{textLayerEnabled && index === swiperIndex && pageTextLines.length > 0}}"
+              catchtap="toggleUI">
+              <view wx:for="{{pageTextLines}}" wx:for-item="textLine" wx:key="index" class="text-layer-line"
+                style="font-size: {{fontSizeValue}}rpx; line-height: {{lineHeightValue}}; color: {{textColor}};">
+                <text wx:for="{{textLine.text}}" wx:for-item="char" wx:for-index="charIdx" wx:key="charIdx"
+                  class="text-layer-char {{(textLine.charStart + charIdx) >= textSelectionStart && (textLine.charStart + charIdx) < textSelectionEnd ? 'selected' : ''}}"
+                  data-charindex="{{textLine.charStart + charIdx}}"
+                  bindtouchstart="onTextTouchStart"
+                  bindtouchmove="onTextTouchMove"
+                  bindtouchend="onTextTouchEnd">{{char}}</text>
+              </view>
+              <view wx:for="{{annotationHighlights}}" wx:for-item="hl" wx:key="id"
+                class="annotation-highlight color-{{hl.color}}"
+                data-annotation="{{hl}}"
+                bindtap="jumpToAnnotation">
+                <text class="annotation-highlight-text">{{hl.selectedText}}</text>
+              </view>
+            </view>
           </block>
           <view wx:else class="skeleton-page">
             <view class="skeleton-header"></view>
@@ -207,6 +244,10 @@
       <view class="tool-btn" bindtap="toggleBookmarkPanel">
         <view class="icon icon-list"></view>
         <text>书签列表</text>
+      </view>
+      <view class="tool-btn {{textLayerEnabled ? 'active' : ''}}" bindtap="toggleTextLayer">
+        <view class="icon icon-text"></view>
+        <text>文本层</text>
       </view>
       <view class="tool-btn" bindtap="openAiAssistant">
         <view class="icon icon-ai"></view>
@@ -487,4 +528,23 @@
       {{bookmarkEditMode ? '保存修改' : '添加书签'}}
     </button>
   </view>
+
+  <!-- 文本选择工具栏 -->
+  <view class="text-selection-bar {{showTextSelectionBar ? 'show' : ''}}">
+    <view class="selection-bar-btn" bindtap="copySelectedText">
+      <view class="icon icon-copy"></view>
+      <text>复制</text>
+    </view>
+    <view class="selection-bar-btn" bindtap="createAnnotationFromSelection">
+      <view class="icon icon-note"></view>
+      <text>批注</text>
+    </view>
+    <view class="selection-bar-btn" bindtap="clearTextSelection">
+      <view class="icon icon-close"></view>
+      <text>取消</text>
+    </view>
+  </view>
+
+  <!-- 文本层遮罩（防止点击穿透） -->
+  <view class="text-layer-mask" wx:if="{{selectingText}}" catchtouchmove></view>
 </view>

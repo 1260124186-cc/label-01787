@@ -1747,3 +1747,196 @@ page {
   font-size: 26rpx;
   z-index: 999;
 }
+
+/* ========== 文本层样式 ========== */
+.text-layer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 50;
+  padding: 32rpx;
+  box-sizing: border-box;
+  overflow-y: auto;
+  user-select: none;
+}
+
+.text-layer-line {
+  position: relative;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-bottom: 8rpx;
+}
+
+.text-layer-char {
+  position: relative;
+  display: inline;
+  transition: background-color 0.1s ease;
+}
+
+.text-layer-char.selected {
+  background-color: rgba(255, 217, 61, 0.5);
+  border-radius: 4rpx;
+}
+
+.text-layer-char:active {
+  background-color: rgba(255, 217, 61, 0.3);
+}
+
+.annotation-highlight {
+  position: relative;
+  margin: 16rpx 0;
+  padding: 16rpx 20rpx;
+  border-radius: 8rpx;
+  border-left: 6rpx solid;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.annotation-highlight.color-yellow {
+  border-left-color: #FFD93D;
+  background: rgba(255, 249, 230, 0.9);
+}
+
+.annotation-highlight.color-green {
+  border-left-color: #4CAF50;
+  background: rgba(232, 245, 233, 0.9);
+}
+
+.annotation-highlight.color-pink {
+  border-left-color: #E91E63;
+  background: rgba(252, 228, 236, 0.9);
+}
+
+.annotation-highlight-text {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.6;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.text-selection-bar {
+  position: fixed;
+  top: 120rpx;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100rpx);
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+  display: flex;
+  gap: 32rpx;
+  z-index: 500;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.text-selection-bar.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.selection-bar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  color: #fff;
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  min-width: 80rpx;
+}
+
+.selection-bar-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.selection-bar-btn .icon {
+  font-size: 32rpx;
+  color: #fff;
+}
+
+.text-layer-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 400;
+  background: transparent;
+}
+
+/* 文本层图标 */
+.icon-text {
+  width: 32rpx;
+  height: 32rpx;
+  position: relative;
+}
+
+.icon-text::before {
+  content: 'T';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28rpx;
+  font-weight: 700;
+  font-family: Georgia, serif;
+}
+
+.icon-copy {
+  width: 32rpx;
+  height: 32rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+  position: relative;
+  margin-left: -8rpx;
+  margin-top: 4rpx;
+}
+
+.icon-copy::before {
+  content: '';
+  position: absolute;
+  width: 24rpx;
+  height: 24rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+  top: -8rpx;
+  left: 8rpx;
+  background: inherit;
+}
+
+/* 深色模式文本层适配 */
+.theme-dark .text-layer-overlay {
+  background: rgba(26, 26, 46, 0.9);
+}
+
+.theme-dark .text-layer-char.selected {
+  background-color: rgba(255, 217, 61, 0.4);
+}
+
+.theme-dark .annotation-highlight {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.theme-dark .annotation-highlight-text {
+  color: #bbb;
+}
+
+/* 护眼绿文本层适配 */
+.theme-green .text-layer-overlay {
+  background: rgba(235, 249, 237, 0.9);
+}
+
+/* 羊皮纸文本层适配 */
+.theme-sepia .text-layer-overlay {
+  background: rgba(245, 240, 235, 0.9);
+}

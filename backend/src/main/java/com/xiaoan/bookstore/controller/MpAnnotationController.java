@@ -30,10 +30,11 @@ public class MpAnnotationController {
     public Result<?> list(@RequestParam(required = false) Long bookId,
                           @RequestParam(required = false) Integer type,
                           @RequestParam(required = false) String tag,
+                          @RequestParam(required = false) String keyword,
                           @RequestParam(defaultValue = "1") int page,
                           @RequestParam(defaultValue = "20") int size) {
         Long userId = TenantContext.getTenantId();
-        return Result.success(annotationService.list(userId, bookId, type, tag, page, size));
+        return Result.success(annotationService.list(userId, bookId, type, tag, keyword, page, size));
     }
 
     @GetMapping("/tags")

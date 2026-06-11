@@ -204,3 +204,29 @@ export function refreshConfigCache() {
     headers: { 'X-Sensitive-Operation': 'update_config' }
   })
 }
+
+export function getAnnotationList(params) {
+  return request.get('/admin/annotations', { params })
+}
+
+export function getBookAnnotationDistribution(bookId) {
+  return request.get(`/admin/books/${bookId}/annotations/distribution`)
+}
+
+export function getBookAnnotationsByPage(bookId, pageNum) {
+  return request.get(`/admin/books/${bookId}/annotations/page/${pageNum}`)
+}
+
+export function getBookAnnotations(bookId, params) {
+  return request.get(`/admin/books/${bookId}/annotations`, { params })
+}
+
+export function deleteAnnotation(id) {
+  return request.delete(`/admin/annotations/${id}`, {
+    headers: { 'X-Sensitive-Operation': 'delete_annotation' }
+  })
+}
+
+export function getBookDetail(id) {
+  return request.get(`/admin/books/${id}`)
+}

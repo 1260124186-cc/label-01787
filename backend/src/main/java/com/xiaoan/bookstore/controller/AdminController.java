@@ -11,7 +11,10 @@ import com.xiaoan.bookstore.dto.AdminLoginDTO;
 import com.xiaoan.bookstore.entity.OperationLog;
 import com.xiaoan.bookstore.entity.Permission;
 import com.xiaoan.bookstore.entity.Role;
+import com.xiaoan.bookstore.entity.Book;
 import com.xiaoan.bookstore.service.AdminService;
+import com.xiaoan.bookstore.service.AnnotationService;
+import com.xiaoan.bookstore.mapper.BookMapper;
 import com.xiaoan.bookstore.service.ContentComplianceService;
 import com.xiaoan.bookstore.service.RbacService;
 import com.xiaoan.bookstore.service.ReadingPlanService;
@@ -37,6 +40,8 @@ public class AdminController {
     private final ContentComplianceService contentComplianceService;
     private final ReadingPlanService readingPlanService;
     private final SysConfigService sysConfigService;
+    private final AnnotationService annotationService;
+    private final BookMapper bookMapper;
 
     @PostMapping("/login")
     @RateLimit(type = RateLimit.RateLimitType.IP, limit = 10, windowSeconds = 60)
@@ -86,6 +91,16 @@ public class AdminController {
     @RequirePermission("book:view")
     public Result<Map<String, Object>> bookFormatStats() {
         return Result.success(adminService.bookFormatStats());
+    }
+
+    @GetMapping("/books/{id}")
+    @RequirePermission("book:view")
+    public Result<Book> getBookDetail(@PathVariable Long id) {
+        Book book = bookMapper.selectById(id);
+        if (book == null) {
+            return Result.error("书籍不存在");
+        }
+        return Result.success(book);
     }
 
     @DeleteMapping("/books/{id}")
@@ -416,6 +431,57 @@ public class AdminController {
     @RequirePermission("config:update")
     public Result<Void> refreshConfigCache() {
         sysConfigService.refreshCache();
+        return Result.success();
+    }
+
+    @GetMapping("/annotations")
+    @Log("查看批注列表")
+    @RequirePermission("book:view")
+    public Result<?> annotationList(
+            @RequestParam(required = false) Long bookId,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) Integer userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return Result.success(annotationService.adminList(bookId, type, userId, page, size));
+    }
+
+    @GetMapping("/books/{id}/annotations/distribution")
+    @Log("查看书籍批注分布")
+    @RequirePermission("book:view")
+    public Result<java.util.List<java.util.Map<String, Object>>> getAnnotationDistribution(@PathVariable Long id) {
+        return Result.success(annotationService.getAnnotationDistribution(id));
+    }
+
+    @GetMapping("/books/{id}/annotations/page/{pageNum}")
+    @Log("查看书籍某页批注详情")
+    @RequirePermission("book:view")
+    public Result<java.util.List<java.util.Map<String, Object>>> getAnnotationsByPage(
+            @PathVariable Long id,
+            @PathVariable Integer pageNum) {
+        return Result.success(annotationService.getAnnotationsByBookAndPage(id, pageNum));
+    }
+
+    @GetMapping("/books/{id}/annotations")
+    @Log("查看书籍所有批注")
+    @RequirePermission("book:view")
+    public Result<?> getBookAnnotations(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return Result.success(annotationService.adminList(id, null, null, page, size));
+    }
+
+    @DeleteMapping("/annotations/{id}")
+    @Log("删除批注")
+    @RequirePermission("book:delete")
+    @SensitiveOperation("delete_annotation")
+    public Result<Void> deleteAnnotation(@PathVariable Long id) {
+        com.xiaoan.bookstore.entity.Annotation ann = annotationService.getById(id);
+        if (ann == null) {
+            throw new com.xiaoan.bookstore.exception.BusinessException("批注不存在");
+        }
+        annotationService.delete(ann.getUserId(), id);
         return Result.success();
     }
 }

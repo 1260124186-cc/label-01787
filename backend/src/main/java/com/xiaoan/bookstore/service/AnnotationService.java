@@ -64,7 +64,7 @@ public class AnnotationService {
         return ann;
     }
 
-    public Page<Annotation> list(Long userId, Long bookId, Integer type, String tag, int page, int size) {
+    public Page<Annotation> list(Long userId, Long bookId, Integer type, String tag, String keyword, int page, int size) {
         LambdaQueryWrapper<Annotation> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Annotation::getUserId, userId);
         if (bookId != null) {
@@ -76,7 +76,34 @@ public class AnnotationService {
         if (tag != null && !tag.isEmpty()) {
             wrapper.apply("FIND_IN_SET({0}, tags) > 0", tag);
         }
+        if (keyword != null && !keyword.isBlank()) {
+            String kw = "%" + keyword.trim() + "%";
+            wrapper.and(w -> w.like(Annotation::getSelectedText, kw).or().like(Annotation::getContent, kw).or().like(Annotation::getTags, kw));
+        }
         wrapper.orderByDesc(Annotation::getIsPinned);
+        wrapper.orderByDesc(Annotation::getCreatedAt);
+        return annotationMapper.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    public List<Map<String, Object>> getAnnotationDistribution(Long bookId) {
+        return annotationMapper.getAnnotationDistributionByBook(bookId);
+    }
+
+    public List<Map<String, Object>> getAnnotationsByBookAndPage(Long bookId, Integer pageNum) {
+        return annotationMapper.getAnnotationsByBookAndPage(bookId, pageNum);
+    }
+
+    public Page<Annotation> adminList(Long bookId, Integer type, Integer userId, int page, int size) {
+        LambdaQueryWrapper<Annotation> wrapper = new LambdaQueryWrapper<>();
+        if (bookId != null) {
+            wrapper.eq(Annotation::getBookId, bookId);
+        }
+        if (type != null) {
+            wrapper.eq(Annotation::getType, type);
+        }
+        if (userId != null) {
+            wrapper.eq(Annotation::getUserId, userId);
+        }
         wrapper.orderByDesc(Annotation::getCreatedAt);
         return annotationMapper.selectPage(new Page<>(page, size), wrapper);
     }
@@ -217,5 +244,9 @@ public class AnnotationService {
                 .orderByAsc(Annotation::getPageNum)
                 .orderByDesc(Annotation::getCreatedAt);
         return annotationMapper.selectList(wrapper);
+    }
+
+    public Annotation getById(Long id) {
+        return annotationMapper.selectById(id);
     }
 }
