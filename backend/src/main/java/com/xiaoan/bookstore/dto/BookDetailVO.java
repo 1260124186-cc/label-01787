@@ -1,6 +1,7 @@
 package com.xiaoan.bookstore.dto;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class BookDetailVO {
@@ -28,4 +29,16 @@ public class BookDetailVO {
     private String createdAt;
     private String updatedAt;
     private String lastReadAt;
+
+    private String isbn;
+    private String coverUrl;
+    private String description;
+    private Double rating;
+    private Integer ratingCount;
+    private List<String> tags;
+    private String publisher;
+    private String publishDate;
+    private String language;
+    private String metadataSource;
+    private String metadataFetchedAt;
 }

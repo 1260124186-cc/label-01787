@@ -44,6 +44,7 @@ public class AdminController {
     private final SysConfigService sysConfigService;
     private final AnnotationService annotationService;
     private final BookMapper bookMapper;
+    private final com.xiaoan.bookstore.service.BookMetadataAggregationService metadataAggregationService;
 
     @PostMapping("/login")
     @RateLimit(type = RateLimit.RateLimitType.IP, limit = 10, windowSeconds = 60)
@@ -399,7 +400,7 @@ public class AdminController {
     @Log("查看系统配置分类")
     @RequirePermission("config:view")
     public Result<List<String>> configCategories() {
-        return Result.success(List.of("pdf", "reader", "general"));
+        return Result.success(List.of("pdf", "reader", "general", "metadata"));
     }
 
     @PutMapping("/configs")
@@ -504,5 +505,83 @@ public class AdminController {
             @RequestParam(required = false) String reportType,
             @RequestParam(required = false) Long userId) {
         return Result.success(readingReportService.adminReportList(page, size, reportType, userId));
+    }
+
+    @GetMapping("/metadata/sources")
+    @Log("查看元数据源状态")
+    @RequirePermission("config:view")
+    public Result<java.util.List<com.xiaoan.bookstore.dto.MetadataSourceStatusVO>> metadataSourceStatus() {
+        return Result.success(metadataAggregationService.getAllSourceStatus());
+    }
+
+    @GetMapping("/metadata/configs")
+    @Log("查看元数据配置")
+    @RequirePermission("config:view")
+    public Result<?> metadataConfigs() {
+        return Result.success(sysConfigService.listByCategory("metadata"));
+    }
+
+    @PutMapping("/metadata/configs")
+    @Log("更新元数据配置")
+    @RequirePermission("config:update")
+    @SensitiveOperation("update_metadata_config")
+    public Result<Void> updateMetadataConfig(@RequestBody Map<String, String> body) {
+        String key = body.get("key");
+        String value = body.get("value");
+        if (key == null || key.isBlank() || !key.startsWith("metadata.")) {
+            return Result.error(400, "配置键无效，必须以metadata.开头");
+        }
+        sysConfigService.updateConfig(key, value);
+        return Result.success();
+    }
+
+    @PutMapping("/metadata/configs/batch")
+    @Log("批量更新元数据配置")
+    @RequirePermission("config:update")
+    @SensitiveOperation("batch_update_metadata_config")
+    public Result<Void> batchUpdateMetadataConfigs(@RequestBody Map<String, String> updates) {
+        if (updates == null || updates.isEmpty()) {
+            return Result.error(400, "配置项不能为空");
+        }
+        for (String key : updates.keySet()) {
+            if (!key.startsWith("metadata.")) {
+                return Result.error(400, "配置键无效，必须以metadata.开头: " + key);
+            }
+        }
+        sysConfigService.batchUpdateConfigs(updates);
+        return Result.success();
+    }
+
+    @GetMapping("/metadata/search")
+    @Log("管理员测试元数据搜索")
+    @RequirePermission("config:view")
+    public Result<com.xiaoan.bookstore.dto.BookMetadataVO> testMetadataSearch(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String isbn) {
+        if ((title == null || title.isBlank())
+                && (author == null || author.isBlank())
+                && (isbn == null || isbn.isBlank())) {
+            return Result.error(400, "请至少提供书名、作者或ISBN中的一项");
+        }
+        return Result.success(metadataAggregationService.searchBestMatch(title, author, isbn));
+    }
+
+    @GetMapping("/metadata/search-list")
+    @Log("管理员测试元数据批量搜索")
+    @RequirePermission("config:view")
+    public Result<java.util.List<com.xiaoan.bookstore.dto.BookMetadataVO>> testMetadataSearchList(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String isbn,
+            @RequestParam(defaultValue = "10") int limit) {
+        if ((title == null || title.isBlank())
+                && (author == null || author.isBlank())
+                && (isbn == null || isbn.isBlank())) {
+            return Result.error(400, "请至少提供书名、作者或ISBN中的一项");
+        }
+        limit = Math.min(Math.max(limit, 1), 50);
+        return Result.success(metadataAggregationService.searchAll(
+                com.xiaoan.bookstore.dto.MetadataSearchQuery.of(title, author, isbn), limit));
     }
 }

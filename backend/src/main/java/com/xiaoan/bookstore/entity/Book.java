@@ -29,6 +29,19 @@ public class Book {
     private Integer status;
     private LocalDateTime lastReadAt;
     private LocalDateTime deletedAt;
+
+    private String isbn;
+    private String coverUrl;
+    private String description;
+    private Double rating;
+    private Integer ratingCount;
+    private String tags;
+    private String publisher;
+    private String publishDate;
+    private String language;
+    private String metadataSource;
+    private LocalDateTime metadataFetchedAt;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)

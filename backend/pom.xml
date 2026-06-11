@@ -114,6 +114,12 @@
             <version>2.16.1</version>
         </dependency>
 
+        <!-- Caffeine local cache -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

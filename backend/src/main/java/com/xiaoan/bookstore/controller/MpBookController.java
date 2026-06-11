@@ -33,6 +33,7 @@ public class MpBookController {
     private final CategoryService categoryService;
     private final PdfPreRenderService pdfPreRenderService;
     private final SysConfigService sysConfigService;
+    private final com.xiaoan.bookstore.service.BookMetadataAggregationService metadataAggregationService;
 
     @PostMapping("/books/upload")
     @Log("上传书籍")
@@ -243,6 +244,54 @@ public class MpBookController {
                                         @RequestParam(required = false, defaultValue = "false") boolean moveToUncategorized) {
         Long userId = TenantContext.getTenantId();
         categoryService.delete(userId, id, moveToUncategorized);
+        return Result.success();
+    }
+
+    @GetMapping("/books/metadata/search")
+    @RateLimit(type = RateLimit.RateLimitType.USER, limit = 30, windowSeconds = 60)
+    public Result<com.xiaoan.bookstore.dto.BookMetadataVO> searchMetadata(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String isbn) {
+        if ((title == null || title.isBlank())
+                && (author == null || author.isBlank())
+                && (isbn == null || isbn.isBlank())) {
+            return Result.error(400, "请至少提供书名、作者或ISBN中的一项");
+        }
+        return Result.success(bookService.searchMetadata(title, author, isbn));
+    }
+
+    @GetMapping("/books/metadata/search-list")
+    @RateLimit(type = RateLimit.RateLimitType.USER, limit = 20, windowSeconds = 60)
+    public Result<java.util.List<com.xiaoan.bookstore.dto.BookMetadataVO>> searchMetadataList(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String isbn,
+            @RequestParam(defaultValue = "10") int limit) {
+        if ((title == null || title.isBlank())
+                && (author == null || author.isBlank())
+                && (isbn == null || isbn.isBlank())) {
+            return Result.error(400, "请至少提供书名、作者或ISBN中的一项");
+        }
+        limit = Math.min(Math.max(limit, 1), 50);
+        return Result.success(bookService.searchMetadataList(title, author, isbn, limit));
+    }
+
+    @PostMapping("/books/{id}/metadata/apply")
+    @Log("应用书籍元数据")
+    public Result<Book> applyMetadata(@PathVariable Long id,
+                                       @RequestBody com.xiaoan.bookstore.dto.BookMetadataVO dto) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(bookService.applyMetadataToBook(userId, id, dto));
+    }
+
+    @PostMapping("/books/{id}/metadata/refresh")
+    @Log("刷新书籍元数据")
+    @RateLimit(type = RateLimit.RateLimitType.USER, limit = 5, windowSeconds = 60)
+    public Result<Void> refreshMetadata(@PathVariable Long id) {
+        Long userId = TenantContext.getTenantId();
+        Book book = bookService.getBookById(userId, id);
+        bookService.fetchAndApplyMetadata(book.getId(), book.getTitle(), book.getAuthor(), book.getIsbn());
         return Result.success();
     }
 }

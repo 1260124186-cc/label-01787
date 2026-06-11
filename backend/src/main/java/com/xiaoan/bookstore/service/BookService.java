@@ -52,6 +52,7 @@ public class BookService {
     private final PdfPreRenderService pdfPreRenderService;
     private final SysConfigService sysConfigService;
     private final com.xiaoan.bookstore.service.reader.PdfReaderAdapter pdfReaderAdapter;
+    private final BookMetadataAggregationService metadataAggregationService;
 
     @Value("${app.upload.path}")
     private String uploadPath;
@@ -138,10 +139,25 @@ public class BookService {
             book.setUpdatedAt(LocalDateTime.now());
             bookMapper.insert(book);
 
+            final String finalTitle = bookTitle;
+            final String finalAuthor = bookAuthor;
+            final Long bookId = book.getId();
             try {
                 contentComplianceService.auditText(Constants.AUDIT_TARGET_BOOK_TITLE, book.getId(), bookTitle);
             } catch (Exception e) {
                 log.warn("书名审核失败，不影响上传: {}", e.getMessage());
+            }
+
+            try {
+                java.util.concurrent.CompletableFuture.runAsync(() -> {
+                    try {
+                        fetchAndApplyMetadata(bookId, finalTitle, finalAuthor, meta.get("isbn"));
+                    } catch (Exception e) {
+                        log.warn("异步拉取元数据失败: bookId={}", bookId, e);
+                    }
+                });
+            } catch (Exception e) {
+                log.warn("提交元数据拉取任务失败: bookId={}", book.getId(), e);
             }
 
             log.info("书籍上传成功: userId={}, title={}, author={}, format={}, pages={}, chapters={}, copyrightDeclared={}",
@@ -471,6 +487,22 @@ public class BookService {
         vo.setCopyrightDeclared(book.getCopyrightDeclared());
         vo.setStatus(book.getStatus());
 
+        vo.setIsbn(book.getIsbn());
+        vo.setCoverUrl(book.getCoverUrl());
+        vo.setDescription(book.getDescription());
+        vo.setRating(book.getRating());
+        vo.setRatingCount(book.getRatingCount());
+        if (book.getTags() != null && !book.getTags().isBlank()) {
+            vo.setTags(java.util.Arrays.asList(book.getTags().split(",")));
+        }
+        vo.setPublisher(book.getPublisher());
+        vo.setPublishDate(book.getPublishDate());
+        vo.setLanguage(book.getLanguage());
+        vo.setMetadataSource(book.getMetadataSource());
+        if (book.getMetadataFetchedAt() != null) {
+            vo.setMetadataFetchedAt(book.getMetadataFetchedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+
         if (book.getCategoryId() != null) {
             Category cat = categoryService.getById(book.getUserId(), book.getCategoryId());
             if (cat != null) {
@@ -547,5 +579,46 @@ public class BookService {
             case Constants.FORMAT_MOBI -> Constants.MAX_SIZE_MOBI;
             default -> Constants.MAX_SIZE_PDF;
         };
+    }
+
+    public void fetchAndApplyMetadata(Long bookId, String title, String author, String isbn) {
+        boolean enabled = sysConfigService.getBoolean("metadata.auto_fetch.enabled", true);
+        if (!enabled) {
+            return;
+        }
+        try {
+            com.xiaoan.bookstore.dto.BookMetadataVO meta = metadataAggregationService.searchBestMatch(title, author, isbn);
+            if (meta != null) {
+                Book book = bookMapper.selectById(bookId);
+                if (book != null) {
+                    metadataAggregationService.applyMetadataToBook(book, meta);
+                    book.setUpdatedAt(LocalDateTime.now());
+                    bookMapper.updateById(book);
+                    log.info("书籍元数据已更新: bookId={}, source={}", bookId, meta.getSource());
+                }
+            } else {
+                log.debug("未找到匹配的元数据: title={}, author={}", title, author);
+            }
+        } catch (Exception e) {
+            log.error("拉取并应用元数据失败: bookId={}", bookId, e);
+        }
+    }
+
+    public com.xiaoan.bookstore.dto.BookMetadataVO searchMetadata(String title, String author, String isbn) {
+        return metadataAggregationService.searchBestMatch(title, author, isbn);
+    }
+
+    public java.util.List<com.xiaoan.bookstore.dto.BookMetadataVO> searchMetadataList(String title, String author, String isbn, int limit) {
+        return metadataAggregationService.searchAll(
+                com.xiaoan.bookstore.dto.MetadataSearchQuery.of(title, author, isbn), limit);
+    }
+
+    public Book applyMetadataToBook(Long userId, Long bookId, com.xiaoan.bookstore.dto.BookMetadataVO meta) {
+        Book book = detailInternal(userId, bookId);
+        metadataAggregationService.applyMetadataToBook(book, meta);
+        book.setUpdatedAt(LocalDateTime.now());
+        bookMapper.updateById(book);
+        log.info("书籍元数据已手动更新: bookId={}, source={}", bookId, meta.getSource());
+        return book;
     }
 }
