@@ -21,6 +21,12 @@ public class SensitiveOperationAspect {
 
     private final SensitiveOperationService sensitiveOperationService;
 
+    private static final java.util.Set<String> FORCE_CONFIRM_OPERATIONS = java.util.Set.of(
+            "batch_delete_books",
+            "update_admin_role",
+            "update_role_permissions"
+    );
+
     @Before("@annotation(sensitiveOp)")
     public void verifyConfirmation(JoinPoint joinPoint, SensitiveOperation sensitiveOp) {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -30,10 +36,6 @@ public class SensitiveOperationAspect {
         Long userId = (Long) request.getAttribute(Constants.CONTEXT_USER_ID);
         String roleCode = (String) request.getAttribute(Constants.CONTEXT_ROLE_CODE);
 
-        if (Constants.ROLE_SUPER_ADMIN.equals(roleCode)) {
-            return;
-        }
-
         String confirmToken = request.getHeader("X-Confirm-Token");
         String operation = sensitiveOp.value();
         if (operation.isEmpty()) {
@@ -41,8 +43,18 @@ public class SensitiveOperationAspect {
             operation = signature.getDeclaringTypeName() + "." + signature.getName();
         }
 
+        boolean isSuperAdmin = Constants.ROLE_SUPER_ADMIN.equals(roleCode);
+        boolean needForceConfirm = FORCE_CONFIRM_OPERATIONS.contains(operation);
+
+        if (isSuperAdmin && !needForceConfirm) {
+            return;
+        }
+
         if (!sensitiveOperationService.validateAndConsumeConfirmToken(userId, operation, confirmToken)) {
-            throw new BusinessException(403, "敏感操作需二次确认，请先获取确认令牌");
+            String msg = needForceConfirm
+                    ? "此高风险操作需二次确认（超级管理员也不例外），请先获取确认令牌"
+                    : "敏感操作需二次确认，请先获取确认令牌";
+            throw new BusinessException(403, msg);
         }
     }
 }

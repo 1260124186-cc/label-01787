@@ -8,6 +8,7 @@ import com.xiaoan.bookstore.common.Constants;
 import com.xiaoan.bookstore.common.Result;
 import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.dto.AdminLoginDTO;
+import com.xiaoan.bookstore.entity.OperationLog;
 import com.xiaoan.bookstore.entity.Permission;
 import com.xiaoan.bookstore.entity.Role;
 import com.xiaoan.bookstore.service.AdminService;
@@ -16,6 +17,7 @@ import com.xiaoan.bookstore.service.RbacService;
 import com.xiaoan.bookstore.service.ReadingPlanService;
 import com.xiaoan.bookstore.service.SensitiveOperationService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -93,13 +95,69 @@ public class AdminController {
         return Result.success();
     }
 
+    @DeleteMapping("/books/batch")
+    @Log("批量删除书籍")
+    @RequirePermission("book:delete")
+    @SensitiveOperation("batch_delete_books")
+    public Result<Map<String, Object>> batchDeleteBooks(@RequestBody Map<String, List<Long>> body) {
+        List<Long> ids = body.get("ids");
+        return Result.success(adminService.batchDeleteBooks(ids));
+    }
+
+    @PutMapping("/books/batch/take-down")
+    @Log("批量下架书籍")
+    @RequirePermission("book:update")
+    @SensitiveOperation("batch_take_down_books")
+    public Result<Map<String, Object>> batchTakeDownBooks(@RequestBody Map<String, List<Long>> body) {
+        List<Long> ids = body.get("ids");
+        return Result.success(adminService.batchTakeDownBooks(ids));
+    }
+
+    @GetMapping("/books/{id}/uploader")
+    @RequirePermission("book:view")
+    public Result<Map<String, Object>> getBookUploader(@PathVariable Long id) {
+        return Result.success(adminService.getBookUploader(id));
+    }
+
+    @GetMapping("/books/{id}/preview")
+    @RequirePermission("book:view")
+    public Result<Map<String, Object>> previewBookPdf(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "3") int pages) {
+        return Result.success(adminService.previewBookPdf(id, pages));
+    }
+
     @GetMapping("/logs")
     @Log("查看日志")
     @RequirePermission("log:view")
     public Result<?> logList(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return Result.success(adminService.logList(page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String ip,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startTime,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endTime,
+            @RequestParam(required = false) Integer userType) {
+        return Result.success(adminService.logList(page, size, action, ip, startTime, endTime, userType));
+    }
+
+    @GetMapping("/logs/export")
+    @Log("导出操作日志CSV")
+    @RequirePermission("log:export")
+    public void exportLogsCsv(
+            HttpServletResponse response,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String ip,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime startTime,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime endTime,
+            @RequestParam(required = false) Integer userType) throws java.io.IOException {
+        adminService.exportLogsCsv(response, action, ip, startTime, endTime, userType);
+    }
+
+    @GetMapping("/logs/{id}")
+    @RequirePermission("log:view")
+    public Result<OperationLog> logDetail(@PathVariable Long id) {
+        return Result.success(adminService.logDetail(id));
     }
 
     @GetMapping("/download-logs")
@@ -123,11 +181,50 @@ public class AdminController {
         return Result.success(adminService.adminList(page, size, keyword));
     }
 
+    @PostMapping("/admins")
+    @Log("创建管理员")
+    @RequirePermission("admin:create")
+    @SensitiveOperation("create_admin")
+    public Result<Map<String, Object>> createAdmin(@RequestBody Map<String, Object> body) {
+        String username = (String) body.get("username");
+        String nickname = (String) body.get("nickname");
+        Long roleId = body.get("roleId") != null ? ((Number) body.get("roleId")).longValue() : null;
+        String initPassword = (String) body.get("initPassword");
+        return Result.success(adminService.createAdmin(username, nickname, roleId, initPassword));
+    }
+
     @PutMapping("/admins/{id}/nickname")
     @Log("修改管理员昵称")
     @RequirePermission("admin:update")
     public Result<Void> updateAdminNickname(@PathVariable Long id, @RequestBody Map<String, String> body) {
         adminService.updateAdminNickname(id, body.get("nickname"));
+        return Result.success();
+    }
+
+    @PutMapping("/admins/{id}/role")
+    @Log("修改管理员角色")
+    @RequirePermission("admin:update")
+    @SensitiveOperation("update_admin_role")
+    public Result<Void> updateAdminRole(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Long roleId = body.get("roleId") != null ? ((Number) body.get("roleId")).longValue() : null;
+        adminService.updateAdminRole(id, roleId);
+        return Result.success();
+    }
+
+    @PutMapping("/admins/{id}/password")
+    @Log("重置管理员密码")
+    @RequirePermission("admin:update")
+    @SensitiveOperation("reset_admin_password")
+    public Result<Map<String, String>> resetAdminPassword(@PathVariable Long id) {
+        return Result.success(adminService.resetAdminPassword(id));
+    }
+
+    @PutMapping("/admins/{id}/status")
+    @Log("启用/禁用管理员")
+    @RequirePermission("admin:update")
+    public Result<Void> toggleAdminStatus(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Integer status = body.get("status") != null ? ((Number) body.get("status")).intValue() : null;
+        adminService.toggleAdminStatus(id, status);
         return Result.success();
     }
 

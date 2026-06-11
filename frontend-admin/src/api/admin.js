@@ -32,8 +32,39 @@ export function deleteBook(id) {
   })
 }
 
+export function batchDeleteBooks(ids) {
+  return request.delete('/admin/books/batch', { ids }, {
+    headers: { 'X-Sensitive-Operation': 'batch_delete_books' }
+  })
+}
+
+export function batchTakeDownBooks(ids) {
+  return request.put('/admin/books/batch/take-down', { ids }, {
+    headers: { 'X-Sensitive-Operation': 'batch_take_down_books' }
+  })
+}
+
+export function getBookUploader(id) {
+  return request.get(`/admin/books/${id}/uploader`)
+}
+
+export function previewBookPdf(id, pages = 3) {
+  return request.get(`/admin/books/${id}/preview`, { params: { pages } })
+}
+
 export function getLogList(params) {
   return request.get('/admin/logs', { params })
+}
+
+export function getLogDetail(id) {
+  return request.get(`/admin/logs/${id}`)
+}
+
+export function exportLogsCsv(params) {
+  return request.get('/admin/logs/export', {
+    params,
+    responseType: 'blob'
+  })
 }
 
 export function getDownloadLogList(params) {
@@ -44,8 +75,30 @@ export function getAdminList(params) {
   return request.get('/admin/admins', { params })
 }
 
+export function createAdmin(data) {
+  return request.post('/admin/admins', data, {
+    headers: { 'X-Sensitive-Operation': 'create_admin' }
+  })
+}
+
 export function updateAdminNickname(id, nickname) {
   return request.put(`/admin/admins/${id}/nickname`, { nickname })
+}
+
+export function updateAdminRole(id, roleId) {
+  return request.put(`/admin/admins/${id}/role`, { roleId }, {
+    headers: { 'X-Sensitive-Operation': 'update_admin_role' }
+  })
+}
+
+export function resetAdminPassword(id) {
+  return request.put(`/admin/admins/${id}/password`, null, {
+    headers: { 'X-Sensitive-Operation': 'reset_admin_password' }
+  })
+}
+
+export function toggleAdminStatus(id, status) {
+  return request.put(`/admin/admins/${id}/status`, { status })
 }
 
 export function deleteAdmin(id) {
