@@ -147,6 +147,22 @@ Page({
     wx.navigateTo({ url: '/pages/points/points' })
   },
 
+  goPlaza() {
+    if (!this.data.isLogin) {
+      this.doLogin()
+      return
+    }
+    wx.navigateTo({ url: '/pages/plaza/plaza' })
+  },
+
+  goMyExcerpts() {
+    if (!this.data.isLogin) {
+      this.doLogin()
+      return
+    }
+    wx.navigateTo({ url: '/pages/my-excerpts/my-excerpts' })
+  },
+
   showThemePicker() {
     this.setData({ showTheme: true })
   },

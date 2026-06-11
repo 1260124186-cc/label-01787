@@ -1,0 +1,168 @@
+.page-my-excerpts {
+  min-height: 100vh;
+  background: #F5F0EB;
+  padding-bottom: 60rpx;
+}
+
+.filter-tabs {
+  display: flex;
+  background: #fff;
+  padding: 20rpx 24rpx;
+  gap: 16rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  color: #666;
+  background: #F5F0EB;
+}
+
+.tab.active {
+  background: #6B4226;
+  color: #fff;
+}
+
+.excerpt-list {
+  padding: 24rpx;
+}
+
+.excerpt-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+}
+
+.excerpt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.book-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.book-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.book-author {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.status-tag {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.status-normal {
+  background: #E8F5E9;
+  color: #4CAF50;
+}
+
+.status-withdrawn {
+  background: #F5F0EB;
+  color: #999;
+}
+
+.status-removed {
+  background: #FFEBEE;
+  color: #F56C6C;
+}
+
+.excerpt-text {
+  background: #F5F0EB;
+  padding: 16rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.7;
+  border-left: 6rpx solid #D4A574;
+  margin-bottom: 12rpx;
+}
+
+.quote-mark {
+  color: #D4A574;
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-right: 4rpx;
+  vertical-align: top;
+  line-height: 1;
+}
+
+.comment-text {
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.7;
+  margin-bottom: 12rpx;
+}
+
+.excerpt-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.time {
+  font-size: 22rpx;
+  color: #bbb;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.action-item {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.action-btn {
+  font-size: 24rpx;
+  color: #6B4226;
+}
+
+.action-btn.danger {
+  color: #F56C6C;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.loading-more {
+  text-align: center;
+  padding: 24rpx;
+  font-size: 24rpx;
+  color: #999;
+}

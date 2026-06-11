@@ -75,6 +75,14 @@
           <el-icon><MagicStick /></el-icon>
           <template #title><span>AI摘要</span></template>
         </el-menu-item>
+        <el-sub-menu v-if="userStore.hasPermission('plaza:view') || userStore.hasPermission('plaza:report_view')" index="/plaza">
+          <template #title>
+            <el-icon><Share /></el-icon>
+            <span>书摘广场</span>
+          </template>
+          <el-menu-item v-if="userStore.hasPermission('plaza:view')" index="/plaza/excerpts">书摘管理</el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('plaza:report_view')" index="/plaza/reports">举报管理</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
 

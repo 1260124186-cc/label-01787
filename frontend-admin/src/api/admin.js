@@ -97,3 +97,23 @@ export function getComplianceReport(params) {
 export function getReadingStats(params) {
   return request.get('/admin/reading-stats', { params })
 }
+
+export function getPlazaExcerptList(params) {
+  return request.get('/admin/plaza/excerpts', { params })
+}
+
+export function auditPlazaExcerpt(id, data) {
+  return request.post(`/admin/plaza/excerpts/${id}/audit`, data)
+}
+
+export function removePlazaExcerpt(id) {
+  return request.post(`/admin/plaza/excerpts/${id}/remove`)
+}
+
+export function getPlazaReportList(params) {
+  return request.get('/admin/plaza/reports', { params })
+}
+
+export function handlePlazaReport(id, data) {
+  return request.post(`/admin/plaza/reports/${id}/handle`, null, { params: data })
+}

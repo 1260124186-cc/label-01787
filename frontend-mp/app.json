@@ -13,7 +13,10 @@
     "pages/membership/membership",
     "pages/points/points",
     "pages/ai-summary/ai-summary",
-    "pages/ai-assistant/ai-assistant"
+    "pages/ai-assistant/ai-assistant",
+    "pages/plaza/plaza",
+    "pages/plaza-detail/plaza-detail",
+    "pages/my-excerpts/my-excerpts"
   ],
   "window": {
     "backgroundTextStyle": "dark",

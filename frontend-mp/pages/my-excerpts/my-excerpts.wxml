@@ -1,0 +1,47 @@
+<view class="page-my-excerpts">
+  <view class="filter-tabs">
+    <view class="tab {{tab === 'published' ? 'active' : ''}}" bindtap="switchTab" data-tab="published">已发布</view>
+    <view class="tab {{tab === 'favorites' ? 'active' : ''}}" bindtap="switchTab" data-tab="favorites">我的收藏</view>
+  </view>
+
+  <view class="excerpt-list">
+    <view class="excerpt-card" wx:for="{{excerpts}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="excerpt-header">
+        <view class="book-info">
+          <text class="book-title">《{{item.bookTitle}}》</text>
+          <text class="book-author">{{item.bookAuthor || '佚名'}}</text>
+        </view>
+        <view class="status-tag {{item.status === 1 ? 'status-normal' : item.status === 0 ? 'status-withdrawn' : 'status-removed'}}">
+          {{item.status === 1 ? '已发布' : item.status === 0 ? '已撤回' : '已下架'}}
+        </view>
+      </view>
+
+      <view class="excerpt-text">
+        <text class="quote-mark">"</text>
+        <text>{{item.excerptText}}</text>
+      </view>
+
+      <view class="comment-text" wx:if="{{item.commentText}}">
+        <text>{{item.commentText}}</text>
+      </view>
+
+      <view class="excerpt-footer">
+        <text class="time">{{item.createdAt}}</text>
+        <view class="actions">
+          <text class="action-item">❤ {{item.likes || 0}}</text>
+          <text class="action-item">★ {{item.favorites || 0}}</text>
+          <text class="action-btn danger" wx:if="{{tab === 'published' && item.status === 1}}" catchtap="withdraw" data-id="{{item.id}}">撤回</text>
+          <text class="action-btn" wx:if="{{tab === 'favorites'}}" catchtap="cancelFavorite" data-id="{{item.id}}" data-index="{{index}}">取消收藏</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{excerpts.length === 0 && !loading}}">
+    <text class="empty-text">{{tab === 'published' ? '还没有发布过书摘' : '还没有收藏的书摘'}}</text>
+  </view>
+
+  <view class="loading-more" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view>

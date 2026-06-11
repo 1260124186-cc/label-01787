@@ -119,14 +119,27 @@ Page({
       wx.showToast({ title: '无书摘内容', icon: 'none' })
       return
     }
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline']
+    if (note.type !== 1) {
+      wx.showToast({ title: '仅评语类型可发布到广场', icon: 'none' })
+      return
+    }
+    wx.showActionSheet({
+      itemList: ['发布到广场', '复制分享'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          this.publishToPlaza(note)
+        } else if (res.tapIndex === 1) {
+          this.copyExcerpt(note)
+        }
+      }
     })
+  },
+
+  copyExcerpt(note) {
     wx.showModal({
       title: '分享书摘',
       content: `"${note.selectedText}"\n\n——来自小安的书店`,
-      confirmText: '复制并分享',
+      confirmText: '复制文字',
       success: (res) => {
         if (res.confirm) {
           wx.setClipboardData({
@@ -135,6 +148,33 @@ Page({
               wx.showToast({ title: '已复制到剪贴板', icon: 'success' })
             }
           })
+        }
+      }
+    })
+  },
+
+  publishToPlaza(note) {
+    wx.showModal({
+      title: '发布到广场',
+      content: '发布前请确认：\n\n1. 您分享的书摘内容拥有合法版权或属于合理使用范围\n2. 请勿分享完整章节或大量原文内容\n3. 分享内容将对所有用户公开可见\n\n是否确认发布？',
+      confirmText: '确认发布',
+      cancelText: '再想想',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await request({
+              url: '/plaza/publish',
+              method: 'POST',
+              data: {
+                annotationId: note.id,
+                commentText: note.content
+              }
+            })
+            wx.showToast({ title: '发布成功', icon: 'success' })
+          } catch (e) {
+            console.error('发布失败', e)
+            wx.showToast({ title: e.message || '发布失败', icon: 'none' })
+          }
         }
       }
     })

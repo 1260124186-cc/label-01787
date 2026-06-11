@@ -45,6 +45,18 @@
       <view class="menu-arrow"><view class="icon icon-arrow-right"></view></view>
     </view>
     <view class="menu-divider"></view>
+    <view class="menu-item" bindtap="goPlaza">
+      <view class="menu-icon"><view class="icon icon-book"></view></view>
+      <text class="menu-text">书摘广场</text>
+      <view class="menu-arrow"><view class="icon icon-arrow-right"></view></view>
+    </view>
+    <view class="menu-divider"></view>
+    <view class="menu-item" bindtap="goMyExcerpts">
+      <view class="menu-icon"><view class="icon icon-note"></view></view>
+      <text class="menu-text">我的发布</text>
+      <view class="menu-arrow"><view class="icon icon-arrow-right"></view></view>
+    </view>
+    <view class="menu-divider"></view>
     <view class="menu-item" bindtap="goBackup">
       <view class="menu-icon"><view class="icon icon-cloud"></view></view>
       <text class="menu-text">数据备份与恢复</text>

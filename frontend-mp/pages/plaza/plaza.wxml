@@ -1,0 +1,53 @@
+<view class="page-plaza">
+  <view class="sort-tabs">
+    <view class="tab {{sortBy === 'latest' ? 'active' : ''}}" bindtap="setSort" data-sort="latest">最新</view>
+    <view class="tab {{sortBy === 'hot' ? 'active' : ''}}" bindtap="setSort" data-sort="hot">最热</view>
+  </view>
+
+  <view class="excerpt-list">
+    <view class="excerpt-card" wx:for="{{excerpts}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="excerpt-header">
+        <image class="avatar" src="{{item.avatar || '/assets/icon-user.png'}}" mode="aspectFill" />
+        <view class="user-info">
+          <text class="nickname">{{item.nickname || '书友'}}</text>
+          <text class="book-info">《{{item.bookTitle}}》· {{item.bookAuthor || '佚名'}}</text>
+        </view>
+      </view>
+
+      <view class="excerpt-text">
+        <text class="quote-mark">"</text>
+        <text>{{item.excerptText}}</text>
+      </view>
+
+      <view class="comment-text" wx:if="{{item.commentText}}">
+        <text>{{item.commentText}}</text>
+      </view>
+
+      <view class="excerpt-footer">
+        <text class="time">{{item.createdAt}}</text>
+        <view class="actions">
+          <view class="action-item {{item.liked ? 'active' : ''}}" catchtap="toggleLike" data-id="{{item.id}}" data-index="{{index}}">
+            <text class="iconfont">♥</text>
+            <text class="count">{{item.likes || 0}}</text>
+          </view>
+          <view class="action-item {{item.favorited ? 'active' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}" data-index="{{index}}">
+            <text class="iconfont">★</text>
+            <text class="count">{{item.favorites || 0}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{excerpts.length === 0 && !loading}}">
+    <text class="empty-text">还没有书摘，去发布第一条吧~</text>
+  </view>
+
+  <view class="loading-more" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="no-more" wx:if="{{!hasMore && excerpts.length > 0}}">
+    <text>没有更多了</text>
+  </view>
+</view>

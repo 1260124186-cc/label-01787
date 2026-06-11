@@ -113,5 +113,31 @@ public class Constants {
     public static final long MAX_SIZE_EPUB = 104857600L;
     public static final long MAX_SIZE_MOBI = 104857600L;
 
+    /** 公开书摘状态：已撤回 */
+    public static final int EXCERPT_STATUS_WITHDRAWN = 0;
+    /** 公开书摘状态：正常 */
+    public static final int EXCERPT_STATUS_NORMAL = 1;
+    /** 公开书摘状态：已下架 */
+    public static final int EXCERPT_STATUS_TAKEN_DOWN = 2;
+
+    /** 书摘审核状态：待审核 */
+    public static final int EXCERPT_AUDIT_PENDING = 0;
+    /** 书摘审核状态：审核通过 */
+    public static final int EXCERPT_AUDIT_PASS = 1;
+    /** 书摘审核状态：审核不通过 */
+    public static final int EXCERPT_AUDIT_REJECT = 2;
+
+    /** 书摘举报状态：待处理 */
+    public static final int EXCERPT_REPORT_PENDING = 0;
+    /** 书摘举报状态：已处理 */
+    public static final int EXCERPT_REPORT_HANDLED = 1;
+    /** 书摘举报状态：已驳回 */
+    public static final int EXCERPT_REPORT_REJECTED = 2;
+
+    /** 排序方式：最新 */
+    public static final String SORT_BY_LATEST = "latest";
+    /** 排序方式：最热 */
+    public static final String SORT_BY_HOT = "hot";
+
     private Constants() {}
 }

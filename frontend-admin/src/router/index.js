@@ -113,6 +113,18 @@ const routes = [
         name: 'AiSummaries',
         component: () => import('@/views/AiSummaryList.vue'),
         meta: { title: 'AI摘要', permission: 'ai_summary:view' }
+      },
+      {
+        path: 'plaza/excerpts',
+        name: 'PlazaExcerpts',
+        component: () => import('@/views/PlazaExcerptList.vue'),
+        meta: { title: '书摘管理', permission: 'plaza:view' }
+      },
+      {
+        path: 'plaza/reports',
+        name: 'PlazaReports',
+        component: () => import('@/views/PlazaReportList.vue'),
+        meta: { title: '举报管理', permission: 'plaza:report_view' }
       }
     ]
   }

@@ -1,0 +1,233 @@
+.page-detail {
+  min-height: 100vh;
+  background: #F5F0EB;
+  padding-bottom: 160rpx;
+}
+
+.detail-card {
+  background: #fff;
+  margin: 24rpx;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+}
+
+.excerpt-header {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #F5F0EB;
+}
+
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.nickname {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.book-info {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.excerpt-text {
+  background: #F5F0EB;
+  padding: 24rpx 28rpx;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  color: #555;
+  line-height: 1.9;
+  border-left: 8rpx solid #D4A574;
+  margin-bottom: 20rpx;
+}
+
+.quote-mark {
+  color: #D4A574;
+  font-size: 48rpx;
+  font-weight: 700;
+  margin-right: 8rpx;
+  vertical-align: top;
+  line-height: 1;
+}
+
+.comment-text {
+  font-size: 30rpx;
+  color: #333;
+  line-height: 1.8;
+  margin-bottom: 24rpx;
+  padding: 0 8rpx;
+}
+
+.excerpt-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.time {
+  font-size: 24rpx;
+  color: #bbb;
+}
+
+.stats {
+  display: flex;
+  gap: 24rpx;
+}
+
+.stat-item {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: #fff;
+  padding: 20rpx 24rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.05);
+  z-index: 100;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+  padding: 12rpx 0;
+  color: #666;
+}
+
+.action-btn .icon {
+  font-size: 36rpx;
+}
+
+.action-btn .label {
+  font-size: 22rpx;
+}
+
+.action-btn.active {
+  color: #E8734A;
+}
+
+.action-btn.primary {
+  color: #6B4226;
+}
+
+.withdraw-btn {
+  margin: 24rpx;
+  padding: 24rpx;
+  text-align: center;
+  background: #fff;
+  border-radius: 12rpx;
+  color: #F56C6C;
+  font-size: 28rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+}
+
+.report-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.report-content {
+  width: 600rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+}
+
+.report-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+.report-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.reason-item {
+  padding: 12rpx 24rpx;
+  border-radius: 32rpx;
+  background: #F5F0EB;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.reason-item.selected {
+  background: #6B4226;
+  color: #fff;
+}
+
+.report-detail {
+  width: 100%;
+  height: 160rpx;
+  background: #F5F0EB;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  font-size: 26rpx;
+  box-sizing: border-box;
+  margin-bottom: 24rpx;
+}
+
+.report-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.cancel-btn,
+.confirm-btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+.cancel-btn {
+  background: #F5F0EB;
+  color: #666;
+}
+
+.confirm-btn {
+  background: #6B4226;
+  color: #fff;
+}
+
+.confirm-btn[disabled] {
+  opacity: 0.5;
+}
