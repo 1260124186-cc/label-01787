@@ -767,3 +767,24 @@ CREATE TABLE IF NOT EXISTS bookmark (
     INDEX idx_user_book (user_id, book_id),
     INDEX idx_book_page (book_id, page_num)
 ) ENGINE=InnoDB COMMENT='书签/阅读锚点表';
+
+-- 新增文件下载审计权限
+INSERT INTO permission (id, code, name, type, parent_id, path, sort_order) VALUES
+(120, 'download_log_mgmt', '文件下载审计', 1, NULL, '/download-logs', 13),
+(121, 'download_log:view', '查看下载日志', 2, 120, '/api/admin/download-logs', 1)
+ON DUPLICATE KEY UPDATE code = VALUES(code);
+
+-- 超级管理员：文件下载审计权限
+INSERT INTO role_permission (role_id, permission_id)
+SELECT 1, id FROM permission WHERE id >= 120
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 运营：文件下载审计权限
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(2, 120), (2, 121)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);
+
+-- 只读审计：文件下载审计权限
+INSERT INTO role_permission (role_id, permission_id) VALUES
+(3, 120), (3, 121)
+ON DUPLICATE KEY UPDATE role_id = VALUES(role_id);

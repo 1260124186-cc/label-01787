@@ -1,6 +1,7 @@
 package com.xiaoan.bookstore.controller;
 
 import com.xiaoan.bookstore.annotation.Log;
+import com.xiaoan.bookstore.annotation.RateLimit;
 import com.xiaoan.bookstore.common.Result;
 import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.dto.MpLoginDTO;
@@ -21,6 +22,7 @@ public class MpUserController {
     private final UserService userService;
 
     @PostMapping("/login")
+    @RateLimit(type = RateLimit.RateLimitType.IP, limit = 20, windowSeconds = 60)
     public Result<Map<String, Object>> login(@Valid @RequestBody MpLoginDTO dto) {
         return Result.success(userService.login(dto));
     }

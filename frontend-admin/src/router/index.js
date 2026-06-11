@@ -37,6 +37,12 @@ const routes = [
         meta: { title: '操作日志', permission: 'log:view' }
       },
       {
+        path: 'download-logs',
+        name: 'DownloadLogs',
+        component: () => import('@/views/DownloadLogList.vue'),
+        meta: { title: '文件下载审计', permission: 'download_log:view' }
+      },
+      {
         path: 'admins',
         name: 'Admins',
         component: () => import('@/views/AdminList.vue'),

@@ -34,6 +34,7 @@ public class AdminService {
     private final BookMapper bookMapper;
     private final ReadingRecordMapper readingRecordMapper;
     private final OperationLogMapper operationLogMapper;
+    private final FileDownloadLogMapper fileDownloadLogMapper;
     private final JwtUtil jwtUtil;
     private final RbacService rbacService;
     private final GroupService groupService;
@@ -158,6 +159,18 @@ public class AdminService {
         LambdaQueryWrapper<OperationLog> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(OperationLog::getCreatedAt);
         return operationLogMapper.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    public Page<FileDownloadLog> downloadLogList(int page, int size, Long userId, Integer userType) {
+        LambdaQueryWrapper<FileDownloadLog> wrapper = new LambdaQueryWrapper<>();
+        if (userId != null) {
+            wrapper.eq(FileDownloadLog::getUserId, userId);
+        }
+        if (userType != null) {
+            wrapper.eq(FileDownloadLog::getUserType, userType);
+        }
+        wrapper.orderByDesc(FileDownloadLog::getCreatedAt);
+        return fileDownloadLogMapper.selectPage(new Page<>(page, size), wrapper);
     }
 
     public Page<AdminUser> adminList(int page, int size, String keyword) {

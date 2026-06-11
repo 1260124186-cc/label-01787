@@ -31,6 +31,10 @@
           <el-icon><Notebook /></el-icon>
           <template #title><span>操作日志</span></template>
         </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('download_log:view')" index="/download-logs">
+          <el-icon><Download /></el-icon>
+          <template #title><span>文件下载审计</span></template>
+        </el-menu-item>
         <el-menu-item v-if="userStore.hasPermission('complaint:view')" index="/complaints">
           <el-icon><Warning /></el-icon>
           <template #title><span>版权申诉</span></template>

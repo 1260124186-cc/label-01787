@@ -1,6 +1,7 @@
 package com.xiaoan.bookstore.controller;
 
 import com.xiaoan.bookstore.annotation.Log;
+import com.xiaoan.bookstore.annotation.RateLimit;
 import com.xiaoan.bookstore.annotation.RequirePermission;
 import com.xiaoan.bookstore.annotation.SensitiveOperation;
 import com.xiaoan.bookstore.common.Constants;
@@ -34,6 +35,7 @@ public class AdminController {
     private final ReadingPlanService readingPlanService;
 
     @PostMapping("/login")
+    @RateLimit(type = RateLimit.RateLimitType.IP, limit = 10, windowSeconds = 60)
     public Result<Map<String, Object>> login(@Valid @RequestBody AdminLoginDTO dto) {
         return Result.success(adminService.login(dto));
     }
@@ -98,6 +100,17 @@ public class AdminController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         return Result.success(adminService.logList(page, size));
+    }
+
+    @GetMapping("/download-logs")
+    @Log("查看文件下载日志")
+    @RequirePermission("download_log:view")
+    public Result<?> downloadLogList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Integer userType) {
+        return Result.success(adminService.downloadLogList(page, size, userId, userType));
     }
 
     @GetMapping("/admins")

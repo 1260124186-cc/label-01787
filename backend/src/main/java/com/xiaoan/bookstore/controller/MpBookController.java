@@ -1,6 +1,7 @@
 package com.xiaoan.bookstore.controller;
 
 import com.xiaoan.bookstore.annotation.Log;
+import com.xiaoan.bookstore.annotation.RateLimit;
 import com.xiaoan.bookstore.common.Result;
 import com.xiaoan.bookstore.common.TenantContext;
 import com.xiaoan.bookstore.dto.CategoryDTO;
@@ -28,6 +29,7 @@ public class MpBookController {
 
     @PostMapping("/books/upload")
     @Log("上传书籍")
+    @RateLimit(type = RateLimit.RateLimitType.USER, limit = 10, windowSeconds = 3600)
     public Result<Book> upload(@RequestParam("file") MultipartFile file,
                                 @RequestParam(required = false) String title,
                                 @RequestParam(required = false) String author,
@@ -60,6 +62,7 @@ public class MpBookController {
     }
 
     @GetMapping("/books/{id}/page/{pageNum}")
+    @RateLimit(type = RateLimit.RateLimitType.USER, limit = 120, windowSeconds = 60)
     public ResponseEntity<byte[]> getPageImage(@PathVariable Long id,
                                                 @PathVariable int pageNum) {
         Long userId = TenantContext.getTenantId();

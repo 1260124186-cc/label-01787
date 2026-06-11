@@ -36,6 +36,10 @@ export function getLogList(params) {
   return request.get('/admin/logs', { params })
 }
 
+export function getDownloadLogList(params) {
+  return request.get('/admin/download-logs', { params })
+}
+
 export function getAdminList(params) {
   return request.get('/admin/admins', { params })
 }
