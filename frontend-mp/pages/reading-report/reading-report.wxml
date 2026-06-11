@@ -1,0 +1,191 @@
+<view class="page-report">
+  <view class="loading-overlay" wx:if="{{generating || loading}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">{{generating ? '正在生成报告...' : '加载中...'}}</text>
+    </view>
+  </view>
+
+  <view class="report-header card">
+    <view class="report-period">{{report.periodStart}} ~ {{report.periodEnd}}</view>
+    <view class="report-main-stat">
+      <text class="main-stat-value">{{report.totalDurationText || '0分钟'}}</text>
+      <text class="main-stat-label">总阅读时长</text>
+    </view>
+    <view class="report-compare" wx:if="{{report.compareData}}">
+      <text class="compare-text {{report.compareData.totalDurationChange >= 0 ? 'up' : 'down'}}">
+        {{report.compareData.totalDurationChangeText}}
+      </text>
+      <text class="compare-label">较上期</text>
+    </view>
+  </view>
+
+  <view class="stats-grid card">
+    <view class="stats-grid-item">
+      <text class="stats-value">{{report.readingDays || 0}}</text>
+      <text class="stats-label">阅读天数</text>
+      <text class="stats-change" wx:if="{{report.compareData}}">{{report.compareData.readingDaysChangeText}}</text>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-grid-item">
+      <text class="stats-value">{{report.bookCount || 0}}</text>
+      <text class="stats-label">阅读书籍</text>
+      <text class="stats-change" wx:if="{{report.compareData}}">{{report.compareData.bookCountChangeText}}</text>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-grid-item">
+      <text class="stats-value">{{report.annotationCount || 0}}</text>
+      <text class="stats-label">批注数</text>
+      <text class="stats-change" wx:if="{{report.compareData}}">{{report.compareData.annotationCountChangeText}}</text>
+    </view>
+  </view>
+
+  <view class="streak-card card">
+    <view class="streak-header">
+      <text class="streak-title">🔥 连续阅读</text>
+      <text class="streak-max">最长 {{report.maxStreakDays || 0}} 天</text>
+    </view>
+    <view class="streak-content">
+      <text class="streak-days">{{report.currentStreakDays || 0}}</text>
+      <text class="streak-unit">天</text>
+    </view>
+    <view class="streak-tip">坚持阅读，养成好习惯</view>
+  </view>
+
+  <view class="daily-card card">
+    <view class="section-header">
+      <text class="section-title">每日阅读</text>
+      <text class="section-extra" wx:if="{{report.avgDailyDuration}}">日均 {{report.avgDailyDuration}}</text>
+    </view>
+    <view class="daily-chart">
+      <view class="chart-bar-wrap" wx:for="{{dailyData}}" wx:key="date">
+        <view class="chart-bar" style="height: {{item.height}}rpx;">
+          <text class="bar-value" wx:if="{{item.minutes > 0}}">{{item.minutes}}分</text>
+        </view>
+        <text class="bar-label">{{item.label}}</text>
+      </view>
+    </view>
+    <view class="empty-state" wx:if="{{dailyData.length === 0}}" style="padding: 40rpx 0;">
+      <text class="empty-text">暂无阅读数据</text>
+    </view>
+  </view>
+
+  <view class="rank-card card" wx:if="{{report.bookRank && report.bookRank.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">📚 Top 书籍</text>
+      <text class="vip-badge" wx:if="{{!isVip}}">VIP</text>
+    </view>
+    <view class="rank-list">
+      <view class="rank-item" wx:for="{{report.bookRank}}" wx:key="bookId" wx:for-index="idx">
+        <view class="rank-index {{idx < 3 ? 'top' : ''}}">{{idx + 1}}</view>
+        <view class="rank-info">
+          <text class="rank-title">{{item.bookTitle}}</text>
+          <text class="rank-desc">{{item.readCount}}次阅读</text>
+        </view>
+        <text class="rank-duration">{{item.totalDurationText}}</text>
+      </view>
+    </view>
+    <view class="vip-mask" wx:if="{{!isVip}}" bindtap="goMembership">
+      <view class="vip-mask-content">
+        <text class="vip-mask-icon">✨</text>
+        <text class="vip-mask-text">升级会员查看完整榜单</text>
+        <text class="vip-mask-btn">立即升级</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="insight-card card" wx:if="{{isVip}}">
+    <text class="section-title">📊 阅读洞察</text>
+    <view class="insight-grid">
+      <view class="insight-item">
+        <text class="insight-label">日均阅读</text>
+        <text class="insight-value">{{report.avgDailyDuration || '0分钟'}}</text>
+      </view>
+      <view class="insight-item">
+        <text class="insight-label">阅读天数</text>
+        <text class="insight-value">{{report.readingDays || 0}}天</text>
+      </view>
+      <view class="insight-item">
+        <text class="insight-label">最长单日</text>
+        <text class="insight-value">{{report.maxDayDuration || '0分钟'}}</text>
+      </view>
+      <view class="insight-item">
+        <text class="insight-label">峰值日期</text>
+        <text class="insight-value">{{report.maxDayDate || '-'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="category-card card" wx:if="{{isVip && report.categoryStats && report.categoryStats.length > 0}}">
+    <text class="section-title">🏷️ 分类汇总</text>
+    <view class="category-list">
+      <view class="category-item" wx:for="{{report.categoryStats}}" wx:key="categoryId">
+        <text class="category-name">{{item.categoryName || '未分类'}}</text>
+        <view class="category-info">
+          <text class="category-books">{{item.bookCount}}本</text>
+          <text class="category-duration">{{item.totalDurationText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="finished-card card" wx:if="{{isVip && report.finishedBookCount > 0}}">
+    <text class="section-title">✅ 读完书籍</text>
+    <view class="finished-count">
+      <text class="finished-number">{{report.finishedBookCount}}</text>
+      <text class="finished-unit">本</text>
+    </view>
+  </view>
+
+  <view class="action-buttons">
+    <button class="action-btn primary" bindtap="showSharePoster">
+      <text class="btn-icon">📤</text>
+      <text>生成分享海报</text>
+    </button>
+    <button class="action-btn secondary" bindtap="goHistory">
+      <text class="btn-icon">📋</text>
+      <text>历史报告</text>
+    </button>
+  </view>
+
+  <view class="delete-btn-wrap" wx:if="{{reportId}}">
+    <text class="delete-btn" bindtap="showDeleteDialog">删除此报告</text>
+  </view>
+
+  <view class="share-modal-mask" wx:if="{{showShareModal}}" bindtap="closeShareModal"></view>
+  <view class="share-modal {{showShareModal ? 'show' : ''}}">
+    <view class="share-modal-header">
+      <text class="share-modal-title">分享海报</text>
+      <text class="share-modal-close" bindtap="closeShareModal">×</text>
+    </view>
+    <view class="share-modal-body">
+      <view class="poster-container">
+        <canvas canvas-id="posterCanvasFallback" id="posterCanvas" class="poster-canvas"
+          style="width: 300px; height: 500px;"></canvas>
+        <image wx:if="{{posterImage}}" src="{{posterImage}}" class="poster-image" mode="aspectFit" />
+        <view class="poster-loading" wx:if="{{generatingPoster}}">
+          <view class="loading-spinner small"></view>
+          <text>生成海报中...</text>
+        </view>
+      </view>
+    </view>
+    <view class="share-modal-footer">
+      <button class="share-btn save" bindtap="savePoster">
+        <text>保存到相册</text>
+      </button>
+      <button class="share-btn share" open-type="share">
+        <text>分享给好友</text>
+      </button>
+    </view>
+  </view>
+
+  <view class="confirm-modal-mask" wx:if="{{showDeleteConfirm}}" bindtap="hideDeleteDialog"></view>
+  <view class="confirm-modal {{showDeleteConfirm ? 'show' : ''}}">
+    <view class="confirm-modal-title">确认删除</view>
+    <view class="confirm-modal-content">确定要删除这份阅读报告吗？删除后无法恢复。</view>
+    <view class="confirm-modal-footer">
+      <button class="confirm-btn cancel" bindtap="hideDeleteDialog">取消</button>
+      <button class="confirm-btn confirm" bindtap="confirmDelete">删除</button>
+    </view>
+  </view>
+</view>

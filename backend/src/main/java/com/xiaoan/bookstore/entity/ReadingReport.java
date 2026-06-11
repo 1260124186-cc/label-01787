@@ -20,7 +20,10 @@ public class ReadingReport {
     private Integer maxStreakDays;
     private Integer readingDays;
     private String reportData;
+    private Integer shareCount;
     private Integer status;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
 }

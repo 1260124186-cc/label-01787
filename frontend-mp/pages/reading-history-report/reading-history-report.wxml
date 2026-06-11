@@ -1,0 +1,73 @@
+<view class="page-history">
+  <view class="filter-tabs">
+    <view class="filter-tab {{filterType === 'all' ? 'active' : ''}}" bindtap="setFilterType" data-type="all">全部</view>
+    <view class="filter-tab {{filterType === 'weekly' ? 'active' : ''}}" bindtap="setFilterType" data-type="weekly">周报</view>
+    <view class="filter-tab {{filterType === 'monthly' ? 'active' : ''}}" bindtap="setFilterType" data-type="monthly">月报</view>
+    <view class="filter-tab {{filterType === 'yearly' ? 'active' : ''}}" bindtap="setFilterType" data-type="yearly">年报</view>
+  </view>
+
+  <view class="report-list" wx:if="{{reportList.length > 0}}">
+    <view class="report-item card" wx:for="{{reportList}}" wx:key="id" bindtap="openReport" data-id="{{item.id}}">
+      <view class="report-item-header">
+        <view class="report-type-badge">
+          <text class="type-icon">{{item.typeIcon}}</text>
+          <text class="type-label">{{item.typeLabel}}</text>
+        </view>
+        <text class="report-date">{{item.createdText}}</text>
+      </view>
+      <view class="report-item-period">{{item.periodText}}</view>
+      <view class="report-item-stats">
+        <view class="report-stat">
+          <text class="report-stat-value">{{item.totalDurationText}}</text>
+          <text class="report-stat-label">总时长</text>
+        </view>
+        <view class="report-stat">
+          <text class="report-stat-value">{{item.bookCount || 0}}</text>
+          <text class="report-stat-label">书籍</text>
+        </view>
+        <view class="report-stat">
+          <text class="report-stat-value">{{item.readingDays || 0}}</text>
+          <text class="report-stat-label">天数</text>
+        </view>
+        <view class="report-stat">
+          <text class="report-stat-value">{{item.annotationCount || 0}}</text>
+          <text class="report-stat-label">批注</text>
+        </view>
+      </view>
+      <view class="report-item-actions">
+        <button class="action-btn share" catchtap="shareReport" data-id="{{item.id}}" open-type="share">
+          <text>分享</text>
+        </button>
+        <button class="action-btn delete" catchtap="showDeleteDialog" data-id="{{item.id}}">
+          <text>删除</text>
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!loading && reportList.length === 0}}">
+    <text class="empty-icon">📊</text>
+    <text class="empty-title">暂无阅读报告</text>
+    <text class="empty-desc">生成你的第一份阅读报告吧</text>
+    <button class="generate-btn" bindtap="goGenerateReport">生成报告</button>
+  </view>
+
+  <view class="load-more" wx:if="{{loading && reportList.length > 0}}">
+    <view class="loading-spinner small"></view>
+    <text class="load-more-text">加载中...</text>
+  </view>
+
+  <view class="no-more" wx:if="{{!hasMore && reportList.length > 0}}">
+    <text>没有更多了</text>
+  </view>
+
+  <view class="confirm-modal-mask" wx:if="{{showDeleteDialog}}" bindtap="hideDeleteDialog"></view>
+  <view class="confirm-modal {{showDeleteDialog ? 'show' : ''}}">
+    <view class="confirm-modal-title">确认删除</view>
+    <view class="confirm-modal-content">确定要删除这份阅读报告吗？删除后无法恢复。</view>
+    <view class="confirm-modal-footer">
+      <button class="confirm-btn cancel" bindtap="hideDeleteDialog">取消</button>
+      <button class="confirm-btn confirm" bindtap="confirmDelete">删除</button>
+    </view>
+  </view>
+</view>

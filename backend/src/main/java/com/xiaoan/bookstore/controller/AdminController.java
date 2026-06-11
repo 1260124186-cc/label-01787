@@ -18,6 +18,7 @@ import com.xiaoan.bookstore.mapper.BookMapper;
 import com.xiaoan.bookstore.service.ContentComplianceService;
 import com.xiaoan.bookstore.service.RbacService;
 import com.xiaoan.bookstore.service.ReadingPlanService;
+import com.xiaoan.bookstore.service.ReadingReportService;
 import com.xiaoan.bookstore.service.SensitiveOperationService;
 import com.xiaoan.bookstore.service.SysConfigService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,6 +40,7 @@ public class AdminController {
     private final SensitiveOperationService sensitiveOperationService;
     private final ContentComplianceService contentComplianceService;
     private final ReadingPlanService readingPlanService;
+    private final ReadingReportService readingReportService;
     private final SysConfigService sysConfigService;
     private final AnnotationService annotationService;
     private final BookMapper bookMapper;
@@ -483,5 +485,24 @@ public class AdminController {
         }
         annotationService.delete(ann.getUserId(), id);
         return Result.success();
+    }
+
+    @GetMapping("/reading-reports/stats")
+    @Log("查看阅读报告统计")
+    @RequirePermission("reading_report:view")
+    public Result<Map<String, Object>> readingReportStats(
+            @RequestParam(defaultValue = "30") Integer days) {
+        return Result.success(readingReportService.adminStats(days));
+    }
+
+    @GetMapping("/reading-reports")
+    @Log("查看阅读报告列表")
+    @RequirePermission("reading_report:view")
+    public Result<?> readingReportList(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(required = false) String reportType,
+            @RequestParam(required = false) Long userId) {
+        return Result.success(readingReportService.adminReportList(page, size, reportType, userId));
     }
 }

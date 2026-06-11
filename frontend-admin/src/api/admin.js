@@ -230,3 +230,11 @@ export function deleteAnnotation(id) {
 export function getBookDetail(id) {
   return request.get(`/admin/books/${id}`)
 }
+
+export function getReadingReportStats(days = 30) {
+  return request.get('/admin/reading-reports/stats', { params: { days } })
+}
+
+export function getReadingReportList(params) {
+  return request.get('/admin/reading-reports', { params })
+}

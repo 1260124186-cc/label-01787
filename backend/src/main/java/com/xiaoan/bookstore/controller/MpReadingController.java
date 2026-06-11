@@ -105,4 +105,26 @@ public class MpReadingController {
         Long userId = TenantContext.getTenantId();
         return Result.success(readingReportService.getReportList(userId, page, size));
     }
+
+    @GetMapping("/report/{id}")
+    public Result<ReadingReportVO> getReportDetail(@PathVariable Long id) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(readingReportService.getReportDetail(userId, id));
+    }
+
+    @DeleteMapping("/report/{id}")
+    @Log("删除阅读报告")
+    public Result<Void> deleteReport(@PathVariable Long id) {
+        Long userId = TenantContext.getTenantId();
+        readingReportService.deleteReport(userId, id);
+        return Result.success();
+    }
+
+    @PostMapping("/report/{id}/share")
+    @Log("分享阅读报告")
+    public Result<Void> shareReport(@PathVariable Long id) {
+        Long userId = TenantContext.getTenantId();
+        readingReportService.incrementShareCount(userId, id);
+        return Result.success();
+    }
 }

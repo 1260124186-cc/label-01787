@@ -6,6 +6,7 @@ import java.util.Map;
 
 @Data
 public class ReadingReportVO {
+    private Long id;
     private String reportType;
     private String periodStart;
     private String periodEnd;
@@ -17,10 +18,12 @@ public class ReadingReportVO {
     private Integer maxStreakDays;
     private Integer readingDays;
     private Integer currentStreakDays;
+    private Integer shareCount;
     private List<Map<String, Object>> bookRank;
     private List<Map<String, Object>> categoryStats;
     private List<Map<String, Object>> dailyData;
     private String avgDailyDuration;
     private String maxDayDuration;
     private String maxDayDate;
+    private Map<String, Object> compareData;
 }

@@ -145,6 +145,12 @@ const routes = [
         meta: { title: '阅读计划统计', permission: 'reading_plan:view' }
       },
       {
+        path: 'reading-reports',
+        name: 'ReadingReportStats',
+        component: () => import('@/views/ReadingReportStats.vue'),
+        meta: { title: '阅读报告统计', permission: 'reading_report:view' }
+      },
+      {
         path: 'search-index',
         name: 'SearchIndex',
         component: () => import('@/views/IndexList.vue'),

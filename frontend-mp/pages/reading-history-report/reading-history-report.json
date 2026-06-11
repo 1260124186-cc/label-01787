@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "历史报告",
+  "navigationBarBackgroundColor": "#6B4226",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}
