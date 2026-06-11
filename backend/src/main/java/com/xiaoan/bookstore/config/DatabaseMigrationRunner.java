@@ -22,9 +22,168 @@ public class DatabaseMigrationRunner implements CommandLineRunner {
         try {
             migrateBackupTaskTable();
             migrateBackupPermissions();
+            migrateBookPerformanceFields();
+            migrateSysConfigTable();
+            migrateConfigPermissions();
             log.info("数据库迁移检查完成");
         } catch (Exception e) {
             log.error("数据库迁移失败: {}", e.getMessage(), e);
+        }
+    }
+
+    private void migrateBookPerformanceFields() {
+        try {
+            Integer colCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.columns " +
+                    "WHERE table_schema = DATABASE() AND table_name = 'book' AND column_name = 'cover_thumbnail'",
+                    Integer.class
+            );
+            if (colCount == null || colCount == 0) {
+                log.info("添加书籍封面缩略图和预渲染相关字段...");
+                jdbcTemplate.execute("""
+                    ALTER TABLE book
+                    ADD COLUMN IF NOT EXISTS cover_thumbnail VARCHAR(500) DEFAULT '' COMMENT '封面缩略图路径' AFTER file_path,
+                    ADD COLUMN IF NOT EXISTS pre_render_status TINYINT DEFAULT 0 COMMENT '预渲染状态' AFTER page_count,
+                    ADD COLUMN IF NOT EXISTS pre_rendered_pages INT DEFAULT 0 COMMENT '已预渲染页数' AFTER pre_render_status,
+                    ADD COLUMN IF NOT EXISTS pre_render_error VARCHAR(500) DEFAULT '' COMMENT '预渲染错误信息' AFTER pre_rendered_pages
+                    """);
+                log.info("书籍字段添加成功");
+            } else {
+                log.info("书籍性能优化字段已存在，跳过");
+            }
+        } catch (Exception e) {
+            log.warn("添加书籍字段失败（可能已存在）: {}", e.getMessage());
+        }
+    }
+
+    private void migrateSysConfigTable() {
+        try {
+            Integer tableCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.tables " +
+                    "WHERE table_schema = DATABASE() AND table_name = 'sys_config'",
+                    Integer.class
+            );
+            if (tableCount == null || tableCount == 0) {
+                log.info("创建系统配置表...");
+                jdbcTemplate.execute("""
+                    CREATE TABLE IF NOT EXISTS sys_config (
+                        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                        config_key VARCHAR(100) NOT NULL UNIQUE COMMENT '配置键',
+                        config_value TEXT COMMENT '配置值',
+                        config_type VARCHAR(20) DEFAULT 'string' COMMENT '配置类型',
+                        description VARCHAR(500) DEFAULT '' COMMENT '配置描述',
+                        category VARCHAR(50) DEFAULT 'general' COMMENT '配置分类',
+                        is_editable TINYINT DEFAULT 1 COMMENT '是否可编辑',
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                    ) ENGINE=InnoDB COMMENT='系统配置表'
+                    """);
+                log.info("系统配置表创建成功");
+            } else {
+                log.info("系统配置表已存在，跳过创建");
+            }
+
+            log.info("初始化系统配置默认值...");
+            String[][] defaultConfigs = {
+                    {"pdf.render.dpi", "150", "number", "PDF渲染DPI", "pdf", "1"},
+                    {"pdf.thumbnail.dpi", "72", "number", "缩略图渲染DPI", "pdf", "1"},
+                    {"pdf.prerender.pages", "10", "number", "上传后预渲染页数", "pdf", "1"},
+                    {"pdf.prerender.enabled", "true", "boolean", "是否启用PDF上传后预渲染", "pdf", "1"},
+                    {"pdf.cache.enabled", "true", "boolean", "是否启用PDF页面缓存", "pdf", "1"},
+                    {"pdf.cache.expire_hours", "72", "number", "PDF缓存过期时间(小时)", "pdf", "1"},
+                    {"reader.preload.offset", "2", "number", "阅读器预加载偏移页数", "reader", "1"},
+                    {"reader.preload.enabled", "true", "boolean", "是否启用阅读器预加载", "reader", "1"},
+                    {"reader.skeleton.enabled", "true", "boolean", "弱网时是否显示骨架屏", "reader", "1"},
+                    {"reader.weaknetwork.threshold_kb", "50", "number", "弱网判断阈值(KB/s)", "reader", "1"}
+            };
+
+            for (String[] config : defaultConfigs) {
+                try {
+                    jdbcTemplate.update("""
+                        INSERT INTO sys_config (config_key, config_value, config_type, description, category, is_editable)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE
+                            config_value = VALUES(config_value),
+                            config_type = VALUES(config_type),
+                            description = VALUES(description),
+                            category = VALUES(category),
+                            is_editable = VALUES(is_editable)
+                        """,
+                        config[0],
+                        config[1],
+                        config[2],
+                        config[3],
+                        config[4],
+                        Integer.parseInt(config[5])
+                    );
+                } catch (Exception e) {
+                    log.warn("配置项初始化失败（可能已存在）: {} - {}", config[0], e.getMessage());
+                }
+            }
+            log.info("系统配置默认值初始化完成");
+        } catch (Exception e) {
+            log.error("迁移系统配置表失败: {}", e.getMessage());
+        }
+    }
+
+    private void migrateConfigPermissions() {
+        String[] permissions = {
+                "(90, 'config_mgmt', '系统配置', 1, NULL, '/configs', 12)",
+                "(91, 'config:view', '查看系统配置', 2, 90, '/api/admin/configs', 1)",
+                "(92, 'config:update', '修改系统配置', 2, 90, '/api/admin/configs', 2)"
+        };
+
+        for (String perm : permissions) {
+            try {
+                jdbcTemplate.execute("""
+                    INSERT INTO permission (id, code, name, type, parent_id, path, sort_order)
+                    VALUES
+                    """ + perm + """
+                    ON DUPLICATE KEY UPDATE
+                        code = VALUES(code),
+                        name = VALUES(name),
+                        type = VALUES(type),
+                        parent_id = VALUES(parent_id),
+                        path = VALUES(path),
+                        sort_order = VALUES(sort_order)
+                    """);
+            } catch (Exception e) {
+                log.warn("权限插入失败（可能已存在）: {}", e.getMessage());
+            }
+        }
+        log.info("系统配置权限初始化完成");
+
+        try {
+            jdbcTemplate.execute("""
+                INSERT INTO role_permission (role_id, permission_id)
+                SELECT 1, id FROM permission WHERE id >= 90 AND id <= 92
+                ON DUPLICATE KEY UPDATE role_id = VALUES(role_id)
+                """);
+            log.info("超级管理员系统配置权限分配完成");
+        } catch (Exception e) {
+            log.warn("超级管理员权限分配失败: {}", e.getMessage());
+        }
+
+        try {
+            jdbcTemplate.execute("""
+                INSERT INTO role_permission (role_id, permission_id) VALUES
+                (2, 90), (2, 91), (2, 92)
+                ON DUPLICATE KEY UPDATE role_id = VALUES(role_id)
+                """);
+            log.info("运营角色系统配置权限分配完成");
+        } catch (Exception e) {
+            log.warn("运营角色权限分配失败: {}", e.getMessage());
+        }
+
+        try {
+            jdbcTemplate.execute("""
+                INSERT INTO role_permission (role_id, permission_id) VALUES
+                (3, 90), (3, 91)
+                ON DUPLICATE KEY UPDATE role_id = VALUES(role_id)
+                """);
+            log.info("只读审计角色系统配置权限分配完成");
+        } catch (Exception e) {
+            log.warn("只读审计角色权限分配失败: {}", e.getMessage());
         }
     }
 

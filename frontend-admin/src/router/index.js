@@ -143,6 +143,12 @@ const routes = [
         name: 'SearchIndex',
         component: () => import('@/views/IndexList.vue'),
         meta: { title: '搜索索引管理', permission: 'search:view' }
+      },
+      {
+        path: 'system-config',
+        name: 'SystemConfig',
+        component: () => import('@/views/SystemConfig.vue'),
+        meta: { title: '系统配置', permission: 'config:view' }
       }
     ]
   }

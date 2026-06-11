@@ -2,6 +2,19 @@ const { request } = require('../../utils/request')
 const { formatSize } = require('../../utils/util')
 const { THEMES, THEME_LIST, isValidTheme, getThemeConfig } = require('../../utils/theme')
 
+const READER_CONFIG = {
+  preloadOffset: 2,
+  preloadEnabled: true,
+  skeletonEnabled: true,
+  weakNetworkThresholdKb: 50
+}
+
+const NETWORK_STATUS = {
+  STRONG: 'strong',
+  WEAK: 'weak',
+  OFFLINE: 'offline'
+}
+
 const THEME_CONFIG = {
   white: { bgColor: '#FFFFFF', textColor: '#333333' },
   green: { bgColor: '#EBF9ED', textColor: '#2D4A2D' },
@@ -122,7 +135,16 @@ Page({
     highlightKeyword: '',
     highlightMatchStart: 0,
     highlightMatchEnd: 0,
-    pageMatches: []
+    pageMatches: [],
+    networkStatus: NETWORK_STATUS.STRONG,
+    showSkeleton: false,
+    preloadOffset: 2,
+    preloadEnabled: true,
+    skeletonEnabled: true,
+    _pageImageCache: {},
+    _preloadTimer: null,
+    _requestTimestamps: [],
+    weakNetworkThresholdKb: 50
   },
 
   onLoad(options) {
@@ -208,12 +230,87 @@ Page({
   },
 
   async initReader() {
+    await this.loadReaderConfig()
+    this.setupNetworkListener()
     await this.loadBook()
     await this.determineStreamType()
     await this.loadToc()
     await this.loadBookmarks()
     await this.loadStartContent()
     this.startReading()
+  },
+
+  async loadReaderConfig() {
+    try {
+      const res = await request({ url: '/reader/config' })
+      const config = res.data || {}
+      const newConfig = {
+        preloadOffset: typeof config['reader.preload.offset'] === 'number' ? config['reader.preload.offset'] : READER_CONFIG.preloadOffset,
+        preloadEnabled: typeof config['reader.preload.enabled'] === 'boolean' ? config['reader.preload.enabled'] : READER_CONFIG.preloadEnabled,
+        skeletonEnabled: typeof config['reader.skeleton.enabled'] === 'boolean' ? config['reader.skeleton.enabled'] : READER_CONFIG.skeletonEnabled,
+        weakNetworkThresholdKb: typeof config['reader.weaknetwork.threshold_kb'] === 'number' ? config['reader.weaknetwork.threshold_kb'] : READER_CONFIG.weakNetworkThresholdKb
+      }
+      this.setData(newConfig)
+      console.log('阅读器配置已加载:', newConfig)
+    } catch (e) {
+      console.warn('加载阅读器配置失败，使用默认配置', e)
+    }
+  },
+
+  setupNetworkListener() {
+    try {
+      wx.onNetworkStatusChange((res) => {
+        const isConnected = res.isConnected
+        const networkType = res.networkType
+        let networkStatus = NETWORK_STATUS.STRONG
+
+        if (!isConnected) {
+          networkStatus = NETWORK_STATUS.OFFLINE
+        } else if (networkType === '2g' || networkType === 'slow-2g') {
+          networkStatus = NETWORK_STATUS.WEAK
+        }
+
+        this.setData({ networkStatus })
+        console.log('网络状态变化:', networkType, networkStatus)
+      })
+
+      wx.getNetworkType({
+        success: (res) => {
+          const networkType = res.networkType
+          let networkStatus = NETWORK_STATUS.STRONG
+          if (networkType === '2g' || networkType === 'none') {
+            networkStatus = networkType === 'none' ? NETWORK_STATUS.OFFLINE : NETWORK_STATUS.WEAK
+          }
+          this.setData({ networkStatus })
+        }
+      })
+    } catch (e) {
+      console.warn('设置网络监听失败', e)
+    }
+  },
+
+  recordRequestSpeed(bytes, durationMs) {
+    if (durationMs <= 0) return
+    const speedKbps = (bytes * 8) / (durationMs / 1000) / 1024
+    const timestamps = [...this.data._requestTimestamps, { speed: speedKbps, time: Date.now() }]
+    const recent = timestamps.filter(t => Date.now() - t.time < 10000)
+    this.setData({ _requestTimestamps: recent })
+
+    if (recent.length >= 3) {
+      const avgSpeed = recent.reduce((sum, t) => sum + t.speed, 0) / recent.length
+      if (avgSpeed < this.data.weakNetworkThresholdKb) {
+        if (this.data.networkStatus !== NETWORK_STATUS.WEAK) {
+          console.log('检测到弱网，平均速度:', avgSpeed.toFixed(1), 'KB/s')
+          this.setData({ networkStatus: NETWORK_STATUS.WEAK })
+        }
+      } else if (this.data.networkStatus === NETWORK_STATUS.WEAK && avgSpeed > this.data.weakNetworkThresholdKb * 2) {
+        this.setData({ networkStatus: NETWORK_STATUS.STRONG })
+      }
+    }
+  },
+
+  shouldShowSkeleton() {
+    return this.data.skeletonEnabled && this.data.networkStatus === NETWORK_STATUS.WEAK
   },
 
   async loadBookmarks() {
@@ -461,29 +558,167 @@ Page({
     }
   },
 
-  loadPageImages(from, to) {
+  async loadPageImages(from, to) {
     if (from > to) return
     const app = getApp()
-    const pages = []
-    for (let i = from; i <= to; i++) {
-      pages.push(`${app.globalData.baseUrl}/books/${this.data.bookId}/page/${i}?token=${app.globalData.token}`)
+    const showSkeleton = this.shouldShowSkeleton()
+
+    if (showSkeleton) {
+      const skeletonPages = []
+      for (let i = from; i <= to; i++) {
+        skeletonPages.push('')
+      }
+      const startUnitNum = this.data.startUnitNum || from
+      this.setData({
+        loadedPages: [...this.data.loadedPages, ...skeletonPages],
+        currentUnit: to,
+        startUnitNum
+      })
     }
-    const startUnitNum = this.data.startUnitNum || from
-    this.setData({
-      loadedPages: [...this.data.loadedPages, ...pages],
-      currentUnit: to,
-      startUnitNum
+
+    const pages = []
+    const cache = this.data._pageImageCache
+
+    for (let i = from; i <= to; i++) {
+      const cacheKey = `page_${i}`
+      if (cache[cacheKey]) {
+        pages.push(cache[cacheKey])
+      } else {
+        const startTime = Date.now()
+        const url = `${app.globalData.baseUrl}/books/${this.data.bookId}/page/${i}?token=${app.globalData.token}`
+
+        try {
+          const res = await this.downloadPageImage(url)
+          const duration = Date.now() - startTime
+          if (res && res.tempFilePath) {
+            this.recordRequestSpeed(res.size || 100000, duration)
+            cache[cacheKey] = res.tempFilePath
+            pages.push(res.tempFilePath)
+
+            if (showSkeleton) {
+              const idx = this.data.loadedPages.findIndex((p, idx) => {
+                const pageNum = this.data.startUnitNum + idx
+                return pageNum === i && p === ''
+              })
+              if (idx >= 0) {
+                const newLoadedPages = [...this.data.loadedPages]
+                newLoadedPages[idx] = res.tempFilePath
+                this.setData({ loadedPages: newLoadedPages, _pageImageCache: cache })
+              }
+            }
+          } else {
+            pages.push(url)
+          }
+        } catch (e) {
+          console.error('下载页面图片失败', i, e)
+          pages.push(url)
+        }
+      }
+    }
+
+    if (!showSkeleton) {
+      const startUnitNum = this.data.startUnitNum || from
+      this.setData({
+        loadedPages: [...this.data.loadedPages, ...pages],
+        currentUnit: to,
+        startUnitNum,
+        _pageImageCache: cache
+      })
+    }
+
+    this.schedulePreload(to)
+  },
+
+  async downloadPageImage(url) {
+    return new Promise((resolve, reject) => {
+      wx.downloadFile({
+        url,
+        success: (res) => {
+          if (res.statusCode === 200) {
+            resolve(res)
+          } else {
+            reject(new Error(`HTTP ${res.statusCode}`))
+          }
+        },
+        fail: reject
+      })
     })
   },
 
-  loadMorePages() {
+  schedulePreload(currentPage) {
+    if (!this.data.preloadEnabled) return
+
+    if (this.data._preloadTimer) {
+      clearTimeout(this.data._preloadTimer)
+    }
+
+    this.setData({
+      _preloadTimer: setTimeout(() => {
+        this.preloadAdjacentPages(currentPage)
+      }, 300)
+    })
+  },
+
+  async preloadAdjacentPages(currentPage) {
+    if (!this.data.preloadEnabled || this.data.loading) return
+
+    const offset = this.data.preloadOffset
+    const startPage = Math.max(1, currentPage + 1)
+    const endPage = Math.min(currentPage + offset, this.data.totalUnits)
+
+    if (startPage > endPage) return
+
+    const cache = this.data._pageImageCache
+    const pagesToLoad = []
+
+    for (let i = startPage; i <= endPage; i++) {
+      const cacheKey = `page_${i}`
+      if (!cache[cacheKey]) {
+        pagesToLoad.push(i)
+      }
+    }
+
+    if (pagesToLoad.length === 0) {
+      const backwardStart = Math.max(1, currentPage - offset)
+      const backwardEnd = Math.max(1, currentPage - 1)
+      for (let i = backwardStart; i <= backwardEnd; i++) {
+        const cacheKey = `page_${i}`
+        if (!cache[cacheKey]) {
+          pagesToLoad.push(i)
+        }
+      }
+    }
+
+    if (pagesToLoad.length > 0) {
+      console.log('后台预加载页面:', pagesToLoad)
+      for (const pageNum of pagesToLoad) {
+        try {
+          const cacheKey = `page_${pageNum}`
+          const app = getApp()
+          const url = `${app.globalData.baseUrl}/books/${this.data.bookId}/page/${pageNum}?token=${app.globalData.token}`
+          const res = await this.downloadPageImage(url)
+          if (res && res.tempFilePath) {
+            cache[cacheKey] = res.tempFilePath
+            this.setData({ _pageImageCache: cache })
+          }
+        } catch (e) {
+          console.warn('预加载页面失败', pageNum, e)
+        }
+      }
+    }
+  },
+
+  async loadMorePages() {
     if (this.data.loading) return
     const next = this.data.currentUnit + 1
     if (next > this.data.totalUnits) return
-    const end = Math.min(next + 2, this.data.totalUnits)
-    this.setData({ loading: true })
-    this.loadPageImages(next, end)
-    this.setData({ loading: false })
+    const end = Math.min(next + this.data.preloadOffset, this.data.totalUnits)
+    this.setData({ loading: true, showSkeleton: this.shouldShowSkeleton() })
+    try {
+      await this.loadPageImages(next, end)
+    } finally {
+      this.setData({ loading: false, showSkeleton: false })
+    }
   },
 
   async loadChapters(from, to) {

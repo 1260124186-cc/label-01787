@@ -261,6 +261,13 @@
   margin-top: 8rpx;
 }
 
+.continue-cover-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
 .continue-progress-badge {
   position: absolute;
   bottom: 0;
@@ -473,6 +480,13 @@
   color: rgba(255,255,255,0.7);
   font-size: 20rpx;
   margin-top: 8rpx;
+}
+
+.cover-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .progress-bar {

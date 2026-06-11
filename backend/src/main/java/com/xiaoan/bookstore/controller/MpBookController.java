@@ -12,6 +12,8 @@ import com.xiaoan.bookstore.entity.Book;
 import com.xiaoan.bookstore.entity.Category;
 import com.xiaoan.bookstore.service.BookService;
 import com.xiaoan.bookstore.service.CategoryService;
+import com.xiaoan.bookstore.service.PdfPreRenderService;
+import com.xiaoan.bookstore.service.SysConfigService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -29,6 +31,8 @@ public class MpBookController {
 
     private final BookService bookService;
     private final CategoryService categoryService;
+    private final PdfPreRenderService pdfPreRenderService;
+    private final SysConfigService sysConfigService;
 
     @PostMapping("/books/upload")
     @Log("上传书籍")
@@ -157,6 +161,36 @@ public class MpBookController {
     public Result<String> getStreamType(@PathVariable Long id) {
         Long userId = TenantContext.getTenantId();
         return Result.success(bookService.getStreamType(userId, id));
+    }
+
+    @GetMapping("/books/{id}/cover-thumbnail")
+    public ResponseEntity<byte[]> getCoverThumbnail(@PathVariable Long id) {
+        byte[] image = pdfPreRenderService.getCoverThumbnail(id);
+        if (image == null || image.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(image);
+    }
+
+    @GetMapping("/books/{id}/cover-thumbnail/generate")
+    public ResponseEntity<byte[]> generateAndGetThumbnail(@PathVariable Long id) {
+        Long userId = TenantContext.getTenantId();
+        byte[] image = pdfPreRenderService.generateAndGetThumbnail(userId, id);
+        if (image == null || image.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(image);
+    }
+
+    @GetMapping("/reader/config")
+    public Result<Map<String, Object>> getReaderConfig() {
+        Map<String, Object> config = sysConfigService.getConfigMapByCategory("reader");
+        config.putAll(sysConfigService.getConfigMapByCategory("pdf"));
+        return Result.success(config);
     }
 
     @GetMapping("/books/{id}/unit/{unitIndex}")

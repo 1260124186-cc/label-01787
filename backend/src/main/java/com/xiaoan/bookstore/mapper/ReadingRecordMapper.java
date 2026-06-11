@@ -47,7 +47,7 @@ public interface ReadingRecordMapper extends BaseMapper<ReadingRecord> {
     Map<String, Object> maxDayDuration(@Param("userId") Long userId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Select("SELECT b.id as bookId, b.title as bookTitle, b.author as bookAuthor, " +
-            "b.book_format as bookFormat, " +
+            "b.book_format as bookFormat, b.cover_thumbnail as coverThumbnail, " +
             "b.page_count as pageCount, b.chapter_count as chapterCount, " +
             "b.last_page as lastPage, b.last_chapter as lastChapter, " +
             "MAX(r.start_time) as lastReadTime, " +
@@ -55,6 +55,7 @@ public interface ReadingRecordMapper extends BaseMapper<ReadingRecord> {
             "FROM book b " +
             "LEFT JOIN reading_record r ON b.id = r.book_id AND r.user_id = #{userId} " +
             "WHERE b.user_id = #{userId} AND b.status = 1 " +
+            "AND b.deleted_at IS NULL " +
             "AND ((b.book_format = 'epub' AND b.last_chapter < GREATEST(b.chapter_count, 1)) " +
             "     OR (b.book_format != 'epub' AND b.last_page < GREATEST(b.page_count, 1))) " +
             "GROUP BY b.id " +

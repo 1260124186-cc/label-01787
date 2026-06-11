@@ -97,4 +97,8 @@ function uploadFile(filePath, formData = {}) {
   })
 }
 
-module.exports = { request, uploadFile }
+function getBaseUrl() {
+  return app.globalData.baseUrl || ''
+}
+
+module.exports = { request, uploadFile, getBaseUrl }

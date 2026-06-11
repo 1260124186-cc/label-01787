@@ -49,6 +49,9 @@ public class BookService {
     private final ReaderAdapterFactory readerAdapterFactory;
     private final BookIndexService bookIndexService;
     private final CategoryService categoryService;
+    private final PdfPreRenderService pdfPreRenderService;
+    private final SysConfigService sysConfigService;
+    private final com.xiaoan.bookstore.service.reader.PdfReaderAdapter pdfReaderAdapter;
 
     @Value("${app.upload.path}")
     private String uploadPath;
@@ -156,6 +159,14 @@ public class BookService {
                     bookIndexService.processIndexTask();
                 } catch (Exception e) {
                     log.warn("创建索引任务失败，不影响上传: {}", e.getMessage());
+                }
+            }
+
+            if (Constants.FORMAT_PDF.equals(format)) {
+                try {
+                    pdfPreRenderService.asyncPreRenderBook(book.getId());
+                } catch (Exception e) {
+                    log.warn("触发PDF预渲染失败，不影响上传: {}", e.getMessage());
                 }
             }
 
@@ -356,7 +367,23 @@ public class BookService {
 
     public byte[] getPageImage(Long userId, Long bookId, int pageNum) {
         Book book = detailInternal(userId, bookId);
+
+        byte[] cachedImage = pdfPreRenderService.getCachedPageImage(userId, bookId, pageNum);
+        if (cachedImage != null && cachedImage.length > 0) {
+            return cachedImage;
+        }
+
         Path filePath = Paths.get(uploadPath, book.getFilePath()).toAbsolutePath().normalize();
+
+        if (Constants.FORMAT_PDF.equals(book.getBookFormat())) {
+            int dpi = sysConfigService.getPdfRenderDpi();
+            byte[] result = pdfReaderAdapter.getUnitImageWithDpi(filePath.toString(), pageNum, dpi);
+            if (result == null || result.length == 0) {
+                throw new BusinessException("该格式不支持图片渲染");
+            }
+            return result;
+        }
+
         ReaderAdapter adapter = readerAdapterFactory.getAdapter(book.getBookFormat());
         byte[] result = adapter.getUnitImage(filePath.toString(), pageNum);
         if (result == null || result.length == 0) {

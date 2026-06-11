@@ -13,9 +13,13 @@ public class Book {
     private String title;
     private String author;
     private String filePath;
+    private String coverThumbnail;
     private Long fileSize;
     private String bookFormat;
     private Integer pageCount;
+    private Integer preRenderStatus;
+    private Integer preRenderedPages;
+    private String preRenderError;
     private Integer chapterCount;
     private Long categoryId;
     private Integer lastPage;

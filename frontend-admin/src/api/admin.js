@@ -178,3 +178,29 @@ export function handlePlazaReport(id, data) {
 export function getReadingPlanStats() {
   return request.get('/admin/reading-plans/stats')
 }
+
+export function getConfigList(params) {
+  return request.get('/admin/configs', { params })
+}
+
+export function getConfigCategories() {
+  return request.get('/admin/configs/categories')
+}
+
+export function updateConfig(data) {
+  return request.put('/admin/configs', data, {
+    headers: { 'X-Sensitive-Operation': 'update_config' }
+  })
+}
+
+export function batchUpdateConfigs(data) {
+  return request.put('/admin/configs/batch', data, {
+    headers: { 'X-Sensitive-Operation': 'batch_update_config' }
+  })
+}
+
+export function refreshConfigCache() {
+  return request.post('/admin/configs/refresh', null, {
+    headers: { 'X-Sensitive-Operation': 'update_config' }
+  })
+}

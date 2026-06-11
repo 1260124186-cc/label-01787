@@ -16,6 +16,7 @@ import com.xiaoan.bookstore.service.ContentComplianceService;
 import com.xiaoan.bookstore.service.RbacService;
 import com.xiaoan.bookstore.service.ReadingPlanService;
 import com.xiaoan.bookstore.service.SensitiveOperationService;
+import com.xiaoan.bookstore.service.SysConfigService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -35,6 +36,7 @@ public class AdminController {
     private final SensitiveOperationService sensitiveOperationService;
     private final ContentComplianceService contentComplianceService;
     private final ReadingPlanService readingPlanService;
+    private final SysConfigService sysConfigService;
 
     @PostMapping("/login")
     @RateLimit(type = RateLimit.RateLimitType.IP, limit = 10, windowSeconds = 60)
@@ -364,5 +366,56 @@ public class AdminController {
     @RequirePermission("reading_plan:view")
     public Result<Map<String, Object>> readingPlanStats() {
         return Result.success(readingPlanService.adminStats());
+    }
+
+    @GetMapping("/configs")
+    @Log("查看系统配置列表")
+    @RequirePermission("config:view")
+    public Result<?> configList(
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return Result.success(sysConfigService.listByCategory(category));
+    }
+
+    @GetMapping("/configs/categories")
+    @Log("查看系统配置分类")
+    @RequirePermission("config:view")
+    public Result<List<String>> configCategories() {
+        return Result.success(List.of("pdf", "reader", "general"));
+    }
+
+    @PutMapping("/configs")
+    @Log("更新系统配置")
+    @RequirePermission("config:update")
+    @SensitiveOperation("update_config")
+    public Result<Void> updateConfig(@RequestBody Map<String, String> body) {
+        String key = body.get("key");
+        String value = body.get("value");
+        if (key == null || key.isBlank()) {
+            return Result.error(400, "配置键不能为空");
+        }
+        sysConfigService.updateConfig(key, value);
+        return Result.success();
+    }
+
+    @PutMapping("/configs/batch")
+    @Log("批量更新系统配置")
+    @RequirePermission("config:update")
+    @SensitiveOperation("batch_update_config")
+    public Result<Void> batchUpdateConfigs(@RequestBody Map<String, String> updates) {
+        if (updates == null || updates.isEmpty()) {
+            return Result.error(400, "配置项不能为空");
+        }
+        sysConfigService.batchUpdateConfigs(updates);
+        return Result.success();
+    }
+
+    @PostMapping("/configs/refresh")
+    @Log("刷新系统配置缓存")
+    @RequirePermission("config:update")
+    public Result<Void> refreshConfigCache() {
+        sysConfigService.refreshCache();
+        return Result.success();
     }
 }

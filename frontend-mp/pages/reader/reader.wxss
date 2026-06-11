@@ -89,6 +89,149 @@ page {
   display: block;
 }
 
+.skeleton-page {
+  width: 100%;
+  min-height: 800rpx;
+  padding: 40rpx 32rpx;
+  box-sizing: border-box;
+  background: var(--bg-color, #fff);
+}
+
+.skeleton-header {
+  width: 60%;
+  height: 48rpx;
+  background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+  background-size: 400% 100%;
+  border-radius: 8rpx;
+  margin-bottom: 40rpx;
+  animation: skeletonShimmer 1.4s ease infinite;
+}
+
+.skeleton-line {
+  height: 24rpx;
+  background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+  background-size: 400% 100%;
+  border-radius: 6rpx;
+  margin-bottom: 24rpx;
+  animation: skeletonShimmer 1.4s ease infinite;
+}
+
+.skeleton-line-1 { width: 100%; }
+.skeleton-line-2 { width: 95%; }
+.skeleton-line-3 { width: 90%; }
+.skeleton-line-4 { width: 98%; }
+.skeleton-line-5 { width: 85%; }
+.skeleton-line-6 { width: 92%; }
+.skeleton-line-7 { width: 88%; }
+.skeleton-line-8 { width: 70%; }
+
+.skeleton-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  margin-top: 60rpx;
+  padding: 20rpx;
+}
+
+.skeleton-loading-spinner {
+  width: 32rpx;
+  height: 32rpx;
+  border: 4rpx solid #e0e0e0;
+  border-top-color: #6B4226;
+  border-radius: 50%;
+  animation: skeletonSpin 0.8s linear infinite;
+}
+
+.skeleton-loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@keyframes skeletonSpin {
+  to { transform: rotate(360deg); }
+}
+
+.theme-dark .skeleton-header,
+.theme-dark .skeleton-line {
+  background: linear-gradient(90deg, #2a2a40 25%, #3a3a55 50%, #2a2a40 75%);
+  background-size: 400% 100%;
+}
+
+.theme-dark .skeleton-loading-text {
+  color: #888;
+}
+
+.theme-dark .skeleton-loading-spinner {
+  border-color: #3a3a55;
+  border-top-color: #a0a0c0;
+}
+
+.network-status-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 12rpx 24rpx;
+  font-size: 24rpx;
+  padding-top: calc(12rpx + env(safe-area-inset-top));
+}
+
+.network-status-bar.network-weak {
+  background: linear-gradient(90deg, #FFF8E1, #FFECB3);
+  color: #F57C00;
+}
+
+.network-status-bar.network-offline {
+  background: linear-gradient(90deg, #FFEBEE, #FFCDD2);
+  color: #D32F2F;
+}
+
+.network-icon {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.network-icon-weak {
+  background: #FF9800;
+  position: relative;
+}
+
+.network-icon-weak::after {
+  content: '!';
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: bold;
+  line-height: 28rpx;
+}
+
+.network-icon-offline {
+  background: #F44336;
+  position: relative;
+}
+
+.network-icon-offline::after {
+  content: '×';
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: bold;
+  line-height: 26rpx;
+}
+
 /* 护眼模式 - 用真实遮罩层覆盖图片，统一绿色背景 */
 /* 遮罩 rgba(199,237,204,0.35) 盖在白底上混合色约为 #EBF9ED */
 .theme-green .page-image-wrap {

@@ -42,7 +42,24 @@
     <view wx:for="{{loadedPages}}" wx:key="index" class="page-image-wrap" id="unit-{{index}}"
       bindlongpress="onPageLongPress"
       style="transform: scale({{imageScale}}); transform-origin: top center;">
-      <image src="{{item}}" mode="widthFix" class="page-image" lazy-load show-menu-by-longpress="{{false}}" />
+      <block wx:if="{{item}}">
+        <image src="{{item}}" mode="widthFix" class="page-image" lazy-load show-menu-by-longpress="{{false}}" />
+      </block>
+      <view wx:else class="skeleton-page">
+        <view class="skeleton-header"></view>
+        <view class="skeleton-line skeleton-line-1"></view>
+        <view class="skeleton-line skeleton-line-2"></view>
+        <view class="skeleton-line skeleton-line-3"></view>
+        <view class="skeleton-line skeleton-line-4"></view>
+        <view class="skeleton-line skeleton-line-5"></view>
+        <view class="skeleton-line skeleton-line-6"></view>
+        <view class="skeleton-line skeleton-line-7"></view>
+        <view class="skeleton-line skeleton-line-8"></view>
+        <view class="skeleton-loading">
+          <view class="skeleton-loading-spinner"></view>
+          <text class="skeleton-loading-text">弱网加载中...</text>
+        </view>
+      </view>
       <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
       <view class="sepia-overlay" wx:if="{{theme === 'sepia'}}"></view>
       <view class="bookmark-badge" wx:if="{{currentBookmarked && index === displayUnit - startUnitNum}}">
@@ -65,7 +82,24 @@
       <scroll-view scroll-y class="swiper-page-scroll" style="background-color: {{bgColor}};">
         <view class="page-image-wrap" bindlongpress="onPageLongPress"
           style="transform: scale({{imageScale}}); transform-origin: top center;">
-          <image src="{{item}}" mode="widthFix" class="page-image" show-menu-by-longpress="{{false}}" />
+          <block wx:if="{{item}}">
+            <image src="{{item}}" mode="widthFix" class="page-image" show-menu-by-longpress="{{false}}" />
+          </block>
+          <view wx:else class="skeleton-page">
+            <view class="skeleton-header"></view>
+            <view class="skeleton-line skeleton-line-1"></view>
+            <view class="skeleton-line skeleton-line-2"></view>
+            <view class="skeleton-line skeleton-line-3"></view>
+            <view class="skeleton-line skeleton-line-4"></view>
+            <view class="skeleton-line skeleton-line-5"></view>
+            <view class="skeleton-line skeleton-line-6"></view>
+            <view class="skeleton-line skeleton-line-7"></view>
+            <view class="skeleton-line skeleton-line-8"></view>
+            <view class="skeleton-loading">
+              <view class="skeleton-loading-spinner"></view>
+              <text class="skeleton-loading-text">弱网加载中...</text>
+            </view>
+          </view>
           <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
           <view class="sepia-overlay" wx:if="{{theme === 'sepia'}}"></view>
           <view class="bookmark-badge" wx:if="{{currentBookmarked && index === displayUnit - startUnitNum}}">
@@ -123,6 +157,14 @@
       </scroll-view>
     </swiper-item>
   </swiper>
+
+  <!-- 弱网提示 -->
+  <view class="network-status-bar network-{{networkStatus}}" wx:if="{{networkStatus !== 'strong' && !showUI}}">
+    <view class="network-icon network-icon-{{networkStatus}}"></view>
+    <text class="network-text">
+      {{networkStatus === 'weak' ? '弱网模式：已启用骨架屏占位' : '网络连接异常'}}
+    </text>
+  </view>
 
   <!-- 底部工具栏 -->
   <view class="bottom-bar" wx:if="{{showUI && streamType !== 'unsupported'}}">

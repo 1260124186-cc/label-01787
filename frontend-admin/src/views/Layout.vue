@@ -95,6 +95,10 @@
           <el-icon><Search /></el-icon>
           <template #title><span>搜索索引管理</span></template>
         </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('config:view') || userStore.isSuperAdmin" index="/system-config">
+          <el-icon><Setting /></el-icon>
+          <template #title><span>系统配置</span></template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

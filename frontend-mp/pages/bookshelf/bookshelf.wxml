@@ -56,10 +56,17 @@
     </view>
     <scroll-view scroll-x class="continue-scroll" enhanced show-scrollbar="{{false}}">
       <view class="continue-scroll-inner">
-        <view class="continue-card" wx:for="{{continueList}}" wx:key="bookId"
+        <view class="continue-card" wx:for="{{continueList}}" wx:key="bookId" wx:for-index="idx"
           bindtap="openContinueBook" data-id="{{item.bookId}}" data-page="{{item.lastPage}}" data-chapter="{{item.lastChapter}}" data-format="{{item.bookFormat}}">
           <view class="continue-cover">
-            <view class="continue-cover-placeholder">
+            <image wx:if="{{item.coverThumbnail && item.coverThumbnailUrl && !item.coverLoadFailed}}"
+                   class="continue-cover-image"
+                   src="{{item.coverThumbnailUrl}}"
+                   mode="aspectFill"
+                   lazy-load="true"
+                   binderror="onContinueCoverError"
+                   data-index="{{idx}}" />
+            <view wx:else class="continue-cover-placeholder">
               <text class="continue-cover-title">{{item.bookTitle}}</text>
               <text class="continue-cover-author">{{item.bookAuthor || '未知作者'}}</text>
             </view>
@@ -86,16 +93,23 @@
 
   <view class="book-grid {{viewMode === 'list' ? 'book-list' : ''}}" wx:if="{{books.length > 0}}">
     <view class="book-card {{item.selected ? 'book-card-selected' : ''}} {{viewMode === 'list' ? 'book-card-list' : ''}}"
-      wx:for="{{books}}" wx:key="id"
+      wx:for="{{books}}" wx:key="id" wx:for-index="idx"
       bindtap="openBook" data-id="{{item.id}}"
-      bindlongpress="showBookAction" data-index="{{index}}">
+      bindlongpress="showBookAction" data-index="{{idx}}">
       <view class="checkbox-wrap" wx:if="{{batchMode}}">
         <view class="checkbox {{item.selected ? 'checkbox-checked' : ''}}">
           <text class="checkbox-check" wx:if="{{item.selected}}">✓</text>
         </view>
       </view>
       <view class="book-cover {{viewMode === 'list' ? 'book-cover-list' : ''}}" catchtap="goReader" data-id="{{item.id}}" data-format="{{item.bookFormat}}">
-        <view class="cover-placeholder">
+        <image wx:if="{{item.coverThumbnail && item.coverThumbnailUrl && !item.coverLoadFailed}}"
+               class="cover-image"
+               src="{{item.coverThumbnailUrl}}"
+               mode="aspectFill"
+               lazy-load="true"
+               binderror="onBookCoverError"
+               data-index="{{idx}}" />
+        <view wx:else class="cover-placeholder">
           <text class="cover-title">{{item.title}}</text>
           <text class="cover-author">{{item.author || '未知作者'}}</text>
         </view>

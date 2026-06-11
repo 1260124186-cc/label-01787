@@ -1,5 +1,16 @@
-const { request, uploadFile } = require('../../utils/request')
+const { request, uploadFile, getBaseUrl } = require('../../utils/request')
 const { formatSize, formatDuration } = require('../../utils/util')
+
+function getCoverThumbnailUrl(bookId, coverThumbnail) {
+  if (!coverThumbnail || !bookId) {
+    return ''
+  }
+  const baseUrl = getBaseUrl()
+  if (coverThumbnail.startsWith('http://') || coverThumbnail.startsWith('https://')) {
+    return coverThumbnail
+  }
+  return `${baseUrl}/api/mp/books/${bookId}/cover-thumbnail`
+}
 
 const CATEGORY_STORAGE_KEY = 'bookshelf_last_category'
 const VIEW_STORAGE_KEY = 'bookshelf_view_mode'
@@ -104,7 +115,9 @@ Page({
         return {
           ...item,
           progress,
-          durationText: formatDuration(item.totalDuration)
+          durationText: formatDuration(item.totalDuration),
+          coverThumbnailUrl: getCoverThumbnailUrl(item.bookId, item.coverThumbnail),
+          coverLoadFailed: false
         }
       })
       this.setData({ continueList: list })
@@ -204,7 +217,9 @@ Page({
           categoryColor: cat ? cat.color : '',
           categoryName: cat ? cat.name : '',
           progress,
-          selected: this.data.selectedIds.indexOf(b.id) >= 0
+          selected: this.data.selectedIds.indexOf(b.id) >= 0,
+          coverThumbnailUrl: getCoverThumbnailUrl(b.id, b.coverThumbnail),
+          coverLoadFailed: false
         }
       })
       this.setData({
@@ -640,5 +655,23 @@ Page({
     this.pendingFilePath = ''
     this.pendingFileName = ''
     this.setData({ showCopyrightModal: false, pendingFilePath: '', pendingFileName: '', copyrightDeclared: false })
+  },
+
+  onContinueCoverError(e) {
+    const index = e.currentTarget.dataset.index
+    const list = [...this.data.continueList]
+    if (list[index]) {
+      list[index].coverLoadFailed = true
+      this.setData({ continueList: list })
+    }
+  },
+
+  onBookCoverError(e) {
+    const index = e.currentTarget.dataset.index
+    const books = [...this.data.books]
+    if (books[index]) {
+      books[index].coverLoadFailed = true
+      this.setData({ books })
+    }
   }
 })
