@@ -145,11 +145,27 @@ public class MpBookController {
         return Result.success();
     }
 
+    @GetMapping("/categories/{id}/book-count")
+    public Result<Map<String, Object>> categoryBookCount(@PathVariable Long id) {
+        Long userId = TenantContext.getTenantId();
+        long count = categoryService.countBooks(userId, id);
+        return Result.success(Map.of("count", count));
+    }
+
+    @PutMapping("/categories/sort")
+    @Log("分类排序")
+    public Result<Void> sortCategories(@RequestBody List<Map<String, Object>> sortList) {
+        Long userId = TenantContext.getTenantId();
+        categoryService.batchSort(userId, sortList);
+        return Result.success();
+    }
+
     @DeleteMapping("/categories/{id}")
     @Log("删除分类")
-    public Result<Void> deleteCategory(@PathVariable Long id) {
+    public Result<Void> deleteCategory(@PathVariable Long id,
+                                        @RequestParam(required = false, defaultValue = "false") boolean moveToUncategorized) {
         Long userId = TenantContext.getTenantId();
-        categoryService.delete(userId, id);
+        categoryService.delete(userId, id, moveToUncategorized);
         return Result.success();
     }
 }

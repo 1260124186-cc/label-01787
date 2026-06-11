@@ -212,10 +212,10 @@
   color: #999;
 }
 
-/* 分类筛选 */
+/* 分类筛选 chips */
 .filter-bar {
   background: #fff;
-  padding: 20rpx 24rpx;
+  padding: 16rpx 0;
   box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
 }
 
@@ -223,22 +223,52 @@
   white-space: nowrap;
 }
 
-.category-item {
-  display: inline-block;
-  padding: 12rpx 28rpx;
-  margin-right: 16rpx;
-  border-radius: 32rpx;
-  font-size: 26rpx;
-  background: #F5F0EB;
-  color: #666;
+.category-chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 0 24rpx;
 }
 
-.category-item.active {
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 24rpx;
+  border-radius: 32rpx;
+  font-size: 24rpx;
+  background: #F5F0EB;
+  color: #666;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.chip:active {
+  transform: scale(0.96);
+}
+
+.chip-active {
   background: #6B4226;
   color: #fff;
 }
 
-.category-item.add-btn {
+.chip-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chip-active .chip-dot {
+  background: #fff !important;
+}
+
+.chip-text {
+  font-size: 24rpx;
+  white-space: nowrap;
+}
+
+.chip-manage {
   background: transparent;
   color: #6B4226;
   border: 2rpx dashed #D4A574;
@@ -329,7 +359,44 @@
   font-size: 20rpx;
   color: #999;
   margin-top: 4rpx;
-  display: block;
+}
+
+.book-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4rpx;
+  gap: 8rpx;
+}
+
+.book-category-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+}
+
+.book-category-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+}
+
+.book-category-text {
+  font-size: 18rpx;
+  white-space: nowrap;
+}
+
+.category-color-badge {
+  position: absolute;
+  top: 8rpx;
+  left: 8rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  z-index: 10;
 }
 
 /* 空状态 */

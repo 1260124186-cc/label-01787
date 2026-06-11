@@ -7,5 +7,7 @@ import lombok.Data;
 public class CategoryDTO {
     @NotBlank(message = "分类名称不能为空")
     private String name;
+    private String color;
+    private String icon;
     private Integer sortOrder;
 }

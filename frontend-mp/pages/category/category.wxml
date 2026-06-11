@@ -1,29 +1,70 @@
 <view class="page-category">
   <view class="header-bar">
     <text class="header-title">我的分类</text>
-    <view class="add-btn" bindtap="addCategory">+ 新建</view>
+    <view class="header-actions">
+      <view class="sort-toggle" wx:if="{{!isSortMode && categories.length > 1}}" bindtap="toggleSortMode">
+        <view class="icon icon-sort"></view>
+        <text class="sort-toggle-text">排序</text>
+      </view>
+      <view class="add-btn" bindtap="addCategory">+ 新建</view>
+    </view>
   </view>
 
-  <view class="category-list">
-    <view class="category-card" wx:for="{{categories}}" wx:key="id">
-      <view class="category-info">
-        <view class="category-icon">
-          <view class="icon icon-folder"></view>
+  <block wx:if="{{isSortMode}}">
+    <view class="sort-tip">长按拖拽或使用箭头调整顺序</view>
+    <view class="category-list">
+      <view class="category-card sort-card {{movedIndex === index ? 'moved' : ''}}" wx:for="{{sortList}}" wx:key="id"
+        bindlongpress="onSortLongPress">
+        <view class="sort-drag-handle">
+          <view class="icon icon-drag"></view>
         </view>
-        <text class="category-name">{{item.name}}</text>
-      </view>
-      <view class="category-actions">
-        <text class="action-btn" bindtap="editCategory" data-id="{{item.id}}" data-name="{{item.name}}">编辑</text>
-        <text class="action-btn danger" bindtap="deleteCategory" data-id="{{item.id}}" data-name="{{item.name}}">删除</text>
+        <view class="category-info">
+          <view class="category-color-dot" style="background: {{item.color || '#6B4226'}}"></view>
+          <view class="category-icon-badge" style="background: {{item.color || '#6B4226'}}20">
+            <text class="icon-emoji">{{item.icon === 'book' ? '📖' : item.icon === 'heart' ? '❤️' : item.icon === 'star' ? '⭐' : item.icon === 'bookmark' ? '🔖' : item.icon === 'note' ? '📝' : item.icon === 'palette' ? '🎨' : item.icon === 'lamp' ? '💡' : item.icon === 'globe' ? '🌍' : item.icon === 'code' ? '💻' : item.icon === 'music' ? '🎵' : item.icon === 'camera' ? '📷' : item.icon === 'travel' ? '✈️' : item.icon === 'food' ? '🍔' : item.icon === 'sport' ? '⚽' : item.icon === 'work' ? '💼' : '📁'}}</text>
+          </view>
+          <text class="category-name">{{item.name}}</text>
+        </view>
+        <view class="sort-arrows">
+          <view class="sort-arrow {{index === 0 ? 'disabled' : ''}}" bindtap="moveUp" data-index="{{index}}">
+            <view class="icon icon-up"></view>
+          </view>
+          <view class="sort-arrow {{index === sortList.length - 1 ? 'disabled' : ''}}" bindtap="moveDown" data-index="{{index}}">
+            <view class="icon icon-down"></view>
+          </view>
+        </view>
       </view>
     </view>
-  </view>
+    <view class="sort-actions">
+      <view class="sort-btn cancel" bindtap="cancelSort">取消</view>
+      <view class="sort-btn confirm" bindtap="saveSort">保存排序</view>
+    </view>
+  </block>
 
-  <view class="empty-state" wx:if="{{categories.length === 0}}">
-    <view class="empty-icon-wrap">
-      <view class="icon icon-folder"></view>
+  <block wx:if="{{!isSortMode}}">
+    <view class="category-list">
+      <view class="category-card" wx:for="{{categories}}" wx:key="id"
+        bindlongpress="onSortLongPress">
+        <view class="category-info">
+          <view class="category-color-dot" style="background: {{item.color || '#6B4226'}}"></view>
+          <view class="category-icon-badge" style="background: {{item.color || '#6B4226'}}20">
+            <text class="icon-emoji">{{item.icon === 'book' ? '📖' : item.icon === 'heart' ? '❤️' : item.icon === 'star' ? '⭐' : item.icon === 'bookmark' ? '🔖' : item.icon === 'note' ? '📝' : item.icon === 'palette' ? '🎨' : item.icon === 'lamp' ? '💡' : item.icon === 'globe' ? '🌍' : item.icon === 'code' ? '💻' : item.icon === 'music' ? '🎵' : item.icon === 'camera' ? '📷' : item.icon === 'travel' ? '✈️' : item.icon === 'food' ? '🍔' : item.icon === 'sport' ? '⚽' : item.icon === 'work' ? '💼' : '📁'}}</text>
+          </view>
+          <text class="category-name">{{item.name}}</text>
+        </view>
+        <view class="category-actions">
+          <text class="action-btn" bindtap="editCategory" data-id="{{item.id}}" data-name="{{item.name}}" data-color="{{item.color}}" data-icon="{{item.icon}}">编辑</text>
+          <text class="action-btn danger" bindtap="deleteCategory" data-id="{{item.id}}" data-name="{{item.name}}">删除</text>
+        </view>
+      </view>
     </view>
-    <text class="empty-text">暂无分类</text>
-    <text class="empty-sub">点击右上角新建分类</text>
-  </view>
+
+    <view class="empty-state" wx:if="{{categories.length === 0}}">
+      <view class="empty-icon-wrap">
+        <view class="icon icon-folder"></view>
+      </view>
+      <text class="empty-text">暂无分类</text>
+      <text class="empty-sub">点击右上角新建分类</text>
+    </view>
+  </block>
 </view>

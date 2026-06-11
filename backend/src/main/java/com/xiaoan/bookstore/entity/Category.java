@@ -11,6 +11,8 @@ public class Category {
     private Long id;
     private Long userId;
     private String name;
+    private String color;
+    private String icon;
     private Integer sortOrder;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

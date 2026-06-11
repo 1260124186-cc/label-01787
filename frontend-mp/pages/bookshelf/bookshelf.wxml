@@ -7,15 +7,23 @@
     </view>
   </view>
 
-  <!-- 顶部分类筛选 -->
+  <!-- 顶部分类筛选 chips -->
   <view class="filter-bar">
-    <scroll-view scroll-x class="category-scroll">
-      <view class="category-item {{!currentCategory ? 'active' : ''}}" bindtap="filterCategory" data-id="">全部</view>
-      <view class="category-item {{currentCategory === item.id ? 'active' : ''}}"
-        wx:for="{{categories}}" wx:key="id" bindtap="filterCategory" data-id="{{item.id}}">
-        {{item.name}}
+    <scroll-view scroll-x class="category-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="category-chips">
+        <view class="chip {{!currentCategory ? 'chip-active' : ''}}" bindtap="filterCategory" data-id="">
+          <view class="chip-dot" style="background: #6B4226"></view>
+          <text class="chip-text">全部</text>
+        </view>
+        <view class="chip {{currentCategory === item.id ? 'chip-active' : ''}}"
+          wx:for="{{categories}}" wx:key="id" bindtap="filterCategory" data-id="{{item.id}}">
+          <view class="chip-dot" style="background: {{item.color || '#6B4226'}}"></view>
+          <text class="chip-text">{{item.name}}</text>
+        </view>
+        <view class="chip chip-manage" bindtap="goCategory">
+          <text class="chip-text">+ 管理</text>
+        </view>
       </view>
-      <view class="category-item add-btn" bindtap="goCategory">+ 管理</view>
     </scroll-view>
   </view>
 
@@ -65,13 +73,20 @@
           <text class="cover-author">{{item.author || '未知作者'}}</text>
         </view>
         <view class="format-badge format-{{item.bookFormat || 'pdf'}}">{{(item.bookFormat || 'pdf').toUpperCase()}}</view>
+        <view class="category-color-badge" wx:if="{{item.categoryColor}}" style="background: {{item.categoryColor}}"></view>
         <view class="progress-bar" wx:if="{{(item.bookFormat === 'epub' ? item.chapterCount : item.pageCount) > 0}}">
           <view class="progress-fill" style="width: {{(item.bookFormat === 'epub' ? (item.lastChapter / (item.chapterCount || 1) * 100) : (item.lastPage / (item.pageCount || 1) * 100))}}%"></view>
         </view>
       </view>
       <view class="book-info">
         <text class="book-title">{{item.title}}</text>
-        <text class="book-meta">{{item.bookFormat === 'epub' ? (item.chapterCount || 0) + '章' : (item.pageCount || 0) + '页'}} · {{item.fileSizeText}}</text>
+        <view class="book-meta-row">
+          <text class="book-meta">{{item.bookFormat === 'epub' ? (item.chapterCount || 0) + '章' : (item.pageCount || 0) + '页'}} · {{item.fileSizeText}}</text>
+          <view class="book-category-tag" wx:if="{{item.categoryName}}" style="background: {{item.categoryColor || '#6B4226'}}20; color: {{item.categoryColor || '#6B4226'}}">
+            <view class="book-category-dot" style="background: {{item.categoryColor || '#6B4226'}}"></view>
+            <text class="book-category-text">{{item.categoryName}}</text>
+          </view>
+        </view>
       </view>
     </view>
   </view>

@@ -1,11 +1,14 @@
 const { request, uploadFile } = require('../../utils/request')
 const { formatSize, formatDuration } = require('../../utils/util')
 
+const CATEGORY_STORAGE_KEY = 'bookshelf_last_category'
+
 Page({
   data: {
     books: [],
     categories: [],
     currentCategory: '',
+    categoryMap: {},
     continueList: [],
     loading: false,
     page: 1,
@@ -26,6 +29,8 @@ Page({
     const app = getApp()
     if (app.globalData.token) {
       this.setData({ isLogin: true })
+      const savedCategory = wx.getStorageSync(CATEGORY_STORAGE_KEY) || ''
+      this.setData({ currentCategory: savedCategory })
       this.loadCategories()
       this.loadContinueReading()
       if (!this.data.showCopyrightModal) {
@@ -100,10 +105,16 @@ Page({
         params.categoryId = this.data.currentCategory
       }
       const res = await request({ url: '/books', data: params })
-      const records = (res.data.records || []).map(b => ({
-        ...b,
-        fileSizeText: formatSize(b.fileSize)
-      }))
+      const categoryMap = this.data.categoryMap
+      const records = (res.data.records || []).map(b => {
+        const cat = categoryMap[b.categoryId]
+        return {
+          ...b,
+          fileSizeText: formatSize(b.fileSize),
+          categoryColor: cat ? cat.color : '',
+          categoryName: cat ? cat.name : ''
+        }
+      })
       this.setData({
         books: this.data.page === 1 ? records : [...this.data.books, ...records],
         page: this.data.page + 1,
@@ -120,15 +131,42 @@ Page({
     if (!this.data.isLogin) return
     try {
       const res = await request({ url: '/categories' })
-      this.setData({ categories: res.data || [] })
+      const categories = res.data || []
+      const categoryMap = {}
+      categories.forEach(c => {
+        categoryMap[c.id] = c
+      })
+      this.setData({ categories, categoryMap })
+
+      const savedCategory = this.data.currentCategory
+      if (savedCategory) {
+        const exists = categories.some(c => String(c.id) === String(savedCategory))
+        if (!exists) {
+          this.setData({ currentCategory: '' })
+          wx.setStorageSync(CATEGORY_STORAGE_KEY, '')
+        }
+      }
+
+      if (this.data.books.length > 0) {
+        const books = this.data.books.map(b => {
+          const cat = categoryMap[b.categoryId]
+          return {
+            ...b,
+            categoryColor: cat ? cat.color : '',
+            categoryName: cat ? cat.name : ''
+          }
+        })
+        this.setData({ books })
+      }
     } catch (e) {
       console.error('加载分类失败', e)
     }
   },
 
   filterCategory(e) {
-    const id = e.currentTarget.dataset.id
-    this.setData({ currentCategory: id || '' })
+    const id = e.currentTarget.dataset.id || ''
+    this.setData({ currentCategory: id })
+    wx.setStorageSync(CATEGORY_STORAGE_KEY, id)
     this.refreshBooks()
   },
 

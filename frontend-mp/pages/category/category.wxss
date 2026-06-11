@@ -1,6 +1,7 @@
 .page-category {
   min-height: 100vh;
   padding: 24rpx;
+  padding-bottom: 160rpx;
 }
 
 .header-bar {
@@ -14,6 +15,26 @@
   font-size: 32rpx;
   font-weight: 600;
   color: #333;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 12rpx 20rpx;
+  background: #F5F0EB;
+  border-radius: 8rpx;
+  color: #6B4226;
+}
+
+.sort-toggle-text {
+  font-size: 24rpx;
 }
 
 .add-btn {
@@ -42,32 +63,61 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
+  transition: transform 0.2s ease;
+}
+
+.category-card.sort-card {
+  border-left: 6rpx solid #6B4226;
+}
+
+.category-card.sort-card.moved {
+  transform: scale(1.02);
+  box-shadow: 0 8rpx 24rpx rgba(107, 66, 38, 0.15);
 }
 
 .category-info {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
+  flex: 1;
+  min-width: 0;
 }
 
-.category-icon {
-  width: 44rpx;
-  height: 44rpx;
+.category-color-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.category-icon-badge {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 12rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6B4226;
+  flex-shrink: 0;
+}
+
+.icon-emoji {
+  font-size: 30rpx;
+  line-height: 1;
 }
 
 .category-name {
   font-size: 30rpx;
   color: #333;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .category-actions {
   display: flex;
   gap: 24rpx;
+  flex-shrink: 0;
 }
 
 .action-btn {
@@ -78,6 +128,98 @@
 
 .action-btn.danger {
   color: #F56C6C;
+}
+
+.sort-drag-handle {
+  color: #bbb;
+  margin-right: 12rpx;
+  display: flex;
+  align-items: center;
+}
+
+.sort-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  margin-left: 16rpx;
+}
+
+.sort-arrow {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5F0EB;
+  border-radius: 8rpx;
+  color: #6B4226;
+}
+
+.sort-arrow.disabled {
+  color: #ccc;
+  background: #fafafa;
+}
+
+.sort-arrow:active:not(.disabled) {
+  background: #E8DFD4;
+}
+
+.sort-tip {
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+  margin-bottom: 20rpx;
+  padding: 12rpx;
+  background: #FFF9F0;
+  border-radius: 8rpx;
+}
+
+.sort-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 24rpx;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.06);
+  z-index: 100;
+}
+
+.sort-btn {
+  flex: 1;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.sort-btn.cancel {
+  background: #F5F0EB;
+  color: #666;
+}
+
+.sort-btn.confirm {
+  background: #6B4226;
+  color: #fff;
+}
+
+.sort-btn.confirm:active {
+  background: #8b5e3c;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+  color: #999;
 }
 
 .empty-sub {
@@ -98,4 +240,60 @@
 
 .empty-icon-wrap .icon {
   transform: scale(2.5);
+}
+
+.icon-drag {
+  width: 28rpx;
+  height: 20rpx;
+  position: relative;
+}
+
+.icon-drag::before,
+.icon-drag::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 28rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+}
+
+.icon-drag::before {
+  top: 2rpx;
+  box-shadow: 0 8rpx 0 currentColor;
+}
+
+.icon-drag::after {
+  bottom: 2rpx;
+}
+
+.icon-sort {
+  width: 28rpx;
+  height: 28rpx;
+  position: relative;
+}
+
+.icon-sort::before {
+  content: '';
+  position: absolute;
+  width: 3rpx;
+  height: 20rpx;
+  background: currentColor;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.icon-sort::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 6rpx solid transparent;
+  border-right: 6rpx solid transparent;
+  border-top: 8rpx solid currentColor;
+  bottom: 1rpx;
+  left: 50%;
+  transform: translateX(-50%);
 }
