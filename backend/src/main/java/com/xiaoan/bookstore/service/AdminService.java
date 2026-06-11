@@ -632,4 +632,69 @@ public class AdminService {
         log.info("管理端阅读统计: days={}, activeUsers={}, avgDuration={}s", days, activeUsers, avgDuration);
         return data;
     }
+
+    public Map<String, Object> readingBehaviorAnalysis(Integer days) {
+        if (days == null || days <= 0) {
+            days = 30;
+        }
+        LocalDateTime start = LocalDate.now().minusDays(days).atStartOfDay();
+        LocalDateTime end = LocalDateTime.now();
+
+        Map<String, Object> data = new HashMap<>();
+
+        java.util.List<Map<String, Object>> dauTrend = readingRecordMapper.dauTrend(start, end);
+        data.put("dauTrend", dauTrend);
+
+        java.util.List<Map<String, Object>> readingTrend = readingRecordMapper.readingTrend(start, end);
+        data.put("readingTrend", readingTrend);
+
+        java.util.List<Map<String, Object>> uploadTrend = bookMapper.uploadTrend(start, end);
+        data.put("uploadTrend", uploadTrend);
+
+        java.util.List<Map<String, Object>> uploadUserTrend = bookMapper.uploadUserTrend(start, end);
+        data.put("uploadUserTrend", uploadUserTrend);
+
+        Map<String, Object> retention = calculateRetention();
+        data.put("retention", retention);
+
+        long totalUsers = userMapper.selectCount(null);
+        data.put("totalUsers", totalUsers);
+
+        Long activeUsers = readingRecordMapper.countActiveUsers(start, end);
+        data.put("activeUsers", activeUsers != null ? activeUsers : 0L);
+        data.put("activeRate", totalUsers > 0 ? String.format("%.2f", (double) (activeUsers != null ? activeUsers : 0L) / totalUsers * 100) + "%" : "0%");
+
+        log.info("管理端阅读行为分析: days={}", days);
+        return data;
+    }
+
+    private Map<String, Object> calculateRetention() {
+        Map<String, Object> retention = new HashMap<>();
+
+        Long day1Active = readingRecordMapper.countActiveUsersByDay(1);
+        Long day1Retention = readingRecordMapper.countRetentionUsers(1);
+        retention.put("day1", day1Active != null && day1Active > 0
+                ? String.format("%.2f", (double) (day1Retention != null ? day1Retention : 0L) / day1Active * 100) + "%"
+                : "0%");
+        retention.put("day1Value", day1Retention != null ? day1Retention : 0L);
+        retention.put("day1Base", day1Active != null ? day1Active : 0L);
+
+        Long day7Active = readingRecordMapper.countActiveUsersByDay(7);
+        Long day7Retention = readingRecordMapper.countRetentionUsers(7);
+        retention.put("day7", day7Active != null && day7Active > 0
+                ? String.format("%.2f", (double) (day7Retention != null ? day7Retention : 0L) / day7Active * 100) + "%"
+                : "0%");
+        retention.put("day7Value", day7Retention != null ? day7Retention : 0L);
+        retention.put("day7Base", day7Active != null ? day7Active : 0L);
+
+        Long day30Active = readingRecordMapper.countActiveUsersByDay(30);
+        Long day30Retention = readingRecordMapper.countRetentionUsers(30);
+        retention.put("day30", day30Active != null && day30Active > 0
+                ? String.format("%.2f", (double) (day30Retention != null ? day30Retention : 0L) / day30Active * 100) + "%"
+                : "0%");
+        retention.put("day30Value", day30Retention != null ? day30Retention : 0L);
+        retention.put("day30Base", day30Active != null ? day30Active : 0L);
+
+        return retention;
+    }
 }

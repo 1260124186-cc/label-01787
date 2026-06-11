@@ -8,6 +8,46 @@
     </view>
   </view>
 
+  <view class="goal-card card" wx:if="{{goalProgress}}">
+    <view class="goal-header">
+      <text class="goal-title">📖 今日阅读目标</text>
+      <text class="goal-setting" bindtap="openGoalSetting">设置</text>
+    </view>
+    <view class="goal-content">
+      <view class="progress-ring-wrap">
+        <canvas canvas-id="progressCanvas" class="progress-canvas" style="width: {{canvasSize}}px; height: {{canvasSize}}px;"></canvas>
+        <view class="progress-ring-inner">
+          <text class="progress-value">{{goalProgress.dailyProgress.toFixed(1)}}%</text>
+          <text class="progress-label">今日完成度</text>
+        </view>
+      </view>
+      <view class="goal-stats">
+        <view class="goal-stat-item">
+          <text class="goal-stat-value">{{todayDurationText}}</text>
+          <text class="goal-stat-label">已读时长</text>
+        </view>
+        <view class="goal-stat-item">
+          <text class="goal-stat-value">{{dailyGoalMinutes}}分钟</text>
+          <text class="goal-stat-label">目标时长</text>
+        </view>
+        <view class="goal-stat-item">
+          <text class="goal-stat-value streak">{{streakDays}}天</text>
+          <text class="goal-stat-label">连续阅读</text>
+        </view>
+      </view>
+    </view>
+    <view class="weekly-goal-row">
+      <text class="weekly-label">本周目标</text>
+      <view class="weekly-bar-wrap">
+        <view class="weekly-bar" style="width: {{goalProgress.weeklyProgress > 100 ? 100 : goalProgress.weeklyProgress}}%;"></view>
+      </view>
+      <text class="weekly-text">{{weekDurationText}} / {{weeklyGoalMinutes}}分钟</text>
+    </view>
+    <view class="max-streak-row">
+      <text class="max-streak-text">🏆 最长连续阅读：{{maxStreakDays}}天</text>
+    </view>
+  </view>
+
   <view class="overview-card card">
     <view class="period-range">{{summary.periodStart}} ~ {{summary.periodEnd}}</view>
     <view class="stat-row">
@@ -19,6 +59,11 @@
       <view class="stat-item">
         <text class="stat-number">{{summary.bookCount || 0}}</text>
         <text class="stat-label">阅读书籍</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-number">{{summary.readingDays || 0}}</text>
+        <text class="stat-label">阅读天数</text>
       </view>
     </view>
 
@@ -44,6 +89,66 @@
     </view>
     <view class="empty-state" wx:if="{{dailyData.length === 0}}" style="padding: 60rpx 0;">
       <text class="empty-text">暂无阅读数据</text>
+    </view>
+  </view>
+
+  <view class="report-entry card" bindtap="goReport">
+    <view class="report-entry-left">
+      <text class="report-icon">📊</text>
+      <view class="report-entry-info">
+        <text class="report-entry-title">生成阅读报告</text>
+        <text class="report-entry-desc">总时长、读完书籍、批注数、最长连续日</text>
+      </view>
+    </view>
+    <text class="report-arrow">›</text>
+  </view>
+
+  <view class="advanced-section card" wx:if="{{isVip && summary.bookRank && summary.bookRank.length > 0}}">
+    <text class="section-title">📚 书籍排行 Top5</text>
+    <view class="rank-list">
+      <view class="rank-item" wx:for="{{summary.bookRank}}" wx:key="bookId" wx:for-index="idx">
+        <view class="rank-index {{idx < 3 ? 'top' : ''}}">{{idx + 1}}</view>
+        <view class="rank-info">
+          <text class="rank-title">{{item.bookTitle}}</text>
+          <text class="rank-desc">{{item.readCount}}次阅读</text>
+        </view>
+        <text class="rank-duration">{{item.totalDurationText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="advanced-section card" wx:if="{{isVip && summary.categoryStats && summary.categoryStats.length > 0}}">
+    <text class="section-title">🏷️ 分类汇总</text>
+    <view class="category-list">
+      <view class="category-item" wx:for="{{summary.categoryStats}}" wx:key="categoryId">
+        <text class="category-name">{{item.categoryName || '未分类'}}</text>
+        <view class="category-info">
+          <text class="category-books">{{item.bookCount}}本</text>
+          <text class="category-duration">{{item.totalDurationText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="advanced-section card" wx:if="{{isVip}}">
+    <text class="section-title">📊 阅读洞察</text>
+    <view class="insight-grid">
+      <view class="insight-item">
+        <text class="insight-label">日均阅读</text>
+        <text class="insight-value">{{summary.avgDailyDuration || '0分钟'}}</text>
+      </view>
+      <view class="insight-item">
+        <text class="insight-label">阅读天数</text>
+        <text class="insight-value">{{summary.readingDays || 0}}天</text>
+      </view>
+      <view class="insight-item">
+        <text class="insight-label">最长单日</text>
+        <text class="insight-value">{{summary.maxDayDuration || '0分钟'}}</text>
+      </view>
+      <view class="insight-item">
+        <text class="insight-label">峰值日期</text>
+        <text class="insight-value">{{summary.maxDayDate || '-'}}</text>
+      </view>
     </view>
   </view>
 
@@ -78,50 +183,32 @@
     </view>
   </view>
 
-  <view class="advanced-section card" wx:if="{{isVip && summary.bookRank && summary.bookRank.length > 0}}">
-    <text class="section-title">📚 书籍排行</text>
-    <view class="rank-list">
-      <view class="rank-item" wx:for="{{summary.bookRank}}" wx:key="bookId" wx:for-index="idx">
-        <view class="rank-index {{idx < 3 ? 'top' : ''}}">{{idx + 1}}</view>
-        <view class="rank-info">
-          <text class="rank-title">{{item.bookTitle}}</text>
-          <text class="rank-desc">{{item.readCount}}次阅读</text>
+  <view class="goal-setting-mask" wx:if="{{showGoalSetting}}" bindtap="closeGoalSetting"></view>
+  <view class="goal-setting-panel {{showGoalSetting ? 'show' : ''}}">
+    <view class="goal-setting-header">
+      <text class="goal-setting-title">设置阅读目标</text>
+      <text class="goal-setting-close" bindtap="closeGoalSetting">×</text>
+    </view>
+    <view class="goal-setting-content">
+      <view class="setting-section">
+        <text class="setting-label">每日目标（分钟）</text>
+        <slider class="setting-slider" min="5" max="300" step="5" value="{{tempDailyGoal}}" show-value bindchange="onDailyGoalChange" activeColor="#6B4226" backgroundColor="#e0e0e0" block-color="#6B4226" block-size="20"/>
+      </view>
+      <view class="setting-section">
+        <text class="setting-label">每周目标（分钟）</text>
+        <slider class="setting-slider" min="30" max="2100" step="30" value="{{tempWeeklyGoal}}" show-value bindchange="onWeeklyGoalChange" activeColor="#6B4226" backgroundColor="#e0e0e0" block-color="#6B4226" block-size="20"/>
+      </view>
+      <view class="setting-section">
+        <text class="setting-label">目标类型</text>
+        <view class="goal-type-selector">
+          <view class="goal-type-option {{goalType === 1 ? 'active' : ''}}" bindtap="onGoalTypeChange" data-type="1">每日目标</view>
+          <view class="goal-type-option {{goalType === 2 ? 'active' : ''}}" bindtap="onGoalTypeChange" data-type="2">每周目标</view>
+          <view class="goal-type-option {{goalType === 3 ? 'active' : ''}}" bindtap="onGoalTypeChange" data-type="3">两者都有</view>
         </view>
-        <text class="rank-duration">{{item.totalDuration}}分钟</text>
       </view>
     </view>
-  </view>
-
-  <view class="advanced-section card" wx:if="{{isVip && summary.categoryStats && summary.categoryStats.length > 0}}">
-    <text class="section-title">🏷️ 分类统计</text>
-    <view class="category-list">
-      <view class="category-item" wx:for="{{summary.categoryStats}}" wx:key="categoryId">
-        <text class="category-name">{{item.categoryName || '未分类'}}</text>
-        <text class="category-books">{{item.bookCount}}本</text>
-        <text class="category-duration">{{item.totalDuration}}分钟</text>
-      </view>
-    </view>
-  </view>
-
-  <view class="advanced-section card" wx:if="{{isVip}}">
-    <text class="section-title">📊 阅读洞察</text>
-    <view class="insight-list">
-      <view class="insight-item">
-        <text class="insight-label">日均阅读</text>
-        <text class="insight-value">{{summary.avgDailyDuration || '0分钟'}}</text>
-      </view>
-      <view class="insight-item">
-        <text class="insight-label">阅读天数</text>
-        <text class="insight-value">{{summary.readingDays || 0}}天</text>
-      </view>
-      <view class="insight-item">
-        <text class="insight-label">最长单日</text>
-        <text class="insight-value">{{summary.maxDayDuration || '0分钟'}}</text>
-      </view>
-      <view class="insight-item">
-        <text class="insight-label">峰值日期</text>
-        <text class="insight-value">{{summary.maxDayDate || '-'}}</text>
-      </view>
+    <view class="goal-setting-footer">
+      <button class="save-goal-btn" bindtap="saveGoal">保存设置</button>
     </view>
   </view>
 </view>

@@ -351,6 +351,14 @@ public class AdminController {
         return Result.success(adminService.readingStats(days));
     }
 
+    @GetMapping("/reading-behavior")
+    @Log("查看阅读行为分析")
+    @RequirePermission("dashboard:view")
+    public Result<Map<String, Object>> readingBehaviorAnalysis(
+            @RequestParam(defaultValue = "30") Integer days) {
+        return Result.success(adminService.readingBehaviorAnalysis(days));
+    }
+
     @GetMapping("/reading-plans/stats")
     @Log("查看阅读计划统计")
     @RequirePermission("reading_plan:view")

@@ -28,6 +28,7 @@ public class ReadingService {
     private static final Logger log = LoggerFactory.getLogger(ReadingService.class);
     private final ReadingRecordMapper readingRecordMapper;
     private final MembershipService membershipService;
+    private final ReadingGoalService readingGoalService;
 
     public ReadingRecord startReading(Long userId, Long bookId) {
         ReadingRecord record = new ReadingRecord();
@@ -54,6 +55,10 @@ public class ReadingService {
         }
         readingRecordMapper.updateById(record);
         log.info("结束阅读: recordId={}, duration={}s", recordId, seconds);
+
+        if (seconds > 60) {
+            readingGoalService.updateStreak(userId, record.getStartTime().toLocalDate());
+        }
     }
 
     public ReadingSummaryVO summary(Long userId, String period) {
@@ -178,7 +183,7 @@ public class ReadingService {
         }
 
         List<Map<String, Object>> flatList = readingRecordMapper.readingTimeline(userId, start, end);
-        
+
         java.util.LinkedHashMap<String, java.util.List<Map<String, Object>>> dayMap = new java.util.LinkedHashMap<>();
         for (Map<String, Object> item : flatList) {
             String date = String.valueOf(item.get("date"));
@@ -188,7 +193,7 @@ public class ReadingService {
             bookInfo.put("bookAuthor", item.get("bookAuthor"));
             bookInfo.put("duration", item.get("duration"));
             bookInfo.put("lastPage", item.get("lastPage"));
-            
+
             dayMap.computeIfAbsent(date, k -> new java.util.ArrayList<>()).add(bookInfo);
         }
 

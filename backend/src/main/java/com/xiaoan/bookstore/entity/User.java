@@ -2,6 +2,7 @@ package com.xiaoan.bookstore.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,6 +14,9 @@ public class User {
     private String nickname;
     private String avatar;
     private Integer status;
+    private Integer currentStreakDays;
+    private Integer maxStreakDays;
+    private LocalDate lastReadDate;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)

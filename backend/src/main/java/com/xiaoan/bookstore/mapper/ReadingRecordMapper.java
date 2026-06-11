@@ -93,4 +93,32 @@ public interface ReadingRecordMapper extends BaseMapper<ReadingRecord> {
             "GROUP BY DATE(start_time) " +
             "ORDER BY date DESC")
     List<Map<String, Object>> dailyReadingStats(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Select("SELECT COUNT(DISTINCT user_id) FROM reading_record " +
+            "WHERE DATE(start_time) = DATE_SUB(CURDATE(), INTERVAL #{days} DAY) AND duration > 0")
+    Long countActiveUsersByDay(@Param("days") int daysAgo);
+
+    @Select("SELECT COUNT(DISTINCT r1.user_id) FROM reading_record r1 " +
+            "INNER JOIN reading_record r2 ON r1.user_id = r2.user_id " +
+            "WHERE DATE(r1.start_time) = DATE_SUB(CURDATE(), INTERVAL #{days} DAY) " +
+            "AND DATE(r2.start_time) = CURDATE() " +
+            "AND r1.duration > 0 AND r2.duration > 0")
+    Long countRetentionUsers(@Param("days") int daysAgo);
+
+    @Select("SELECT DATE(start_time) as date, COUNT(DISTINCT user_id) as dau " +
+            "FROM reading_record " +
+            "WHERE start_time >= #{start} AND start_time < #{end} AND duration > 0 " +
+            "GROUP BY DATE(start_time) " +
+            "ORDER BY date ASC")
+    List<Map<String, Object>> dauTrend(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Select("SELECT DATE(start_time) as date, COUNT(*) as readCount, " +
+            "COUNT(DISTINCT user_id) as userCount, " +
+            "COUNT(DISTINCT book_id) as bookCount, " +
+            "SUM(duration) as totalDuration " +
+            "FROM reading_record " +
+            "WHERE start_time >= #{start} AND start_time < #{end} " +
+            "GROUP BY DATE(start_time) " +
+            "ORDER BY date ASC")
+    List<Map<String, Object>> readingTrend(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
