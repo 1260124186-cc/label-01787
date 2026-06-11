@@ -139,5 +139,24 @@ public class Constants {
     /** 排序方式：最热 */
     public static final String SORT_BY_HOT = "hot";
 
+    /** 索引任务状态：待处理 */
+    public static final int INDEX_STATUS_PENDING = 0;
+    /** 索引任务状态：处理中 */
+    public static final int INDEX_STATUS_PROCESSING = 1;
+    /** 索引任务状态：已完成 */
+    public static final int INDEX_STATUS_COMPLETED = 2;
+    /** 索引任务状态：失败 */
+    public static final int INDEX_STATUS_FAILED = 3;
+
+    /** 搜索范围：全书 */
+    public static final String SEARCH_SCOPE_ALL = "all";
+    /** 搜索范围：单本书 */
+    public static final String SEARCH_SCOPE_BOOK = "book";
+    /** 搜索范围：仅笔记与批注 */
+    public static final String SEARCH_SCOPE_NOTES = "notes";
+
+    /** 高亮上下文字数 */
+    public static final int SEARCH_HIGHLIGHT_CONTEXT = 30;
+
     private Constants() {}
 }

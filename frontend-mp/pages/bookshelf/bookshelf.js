@@ -297,5 +297,9 @@ Page({
     this.pendingFilePath = ''
     this.pendingFileName = ''
     this.setData({ showCopyrightModal: false, pendingFilePath: '', pendingFileName: '', copyrightDeclared: false })
+  },
+
+  goSearch() {
+    wx.navigateTo({ url: '/pages/search/search' })
   }
 })

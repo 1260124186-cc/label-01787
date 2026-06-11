@@ -3,6 +3,31 @@
   padding-bottom: 120rpx;
 }
 
+.search-bar-wrap {
+  background: #fff;
+  padding: 20rpx 24rpx 16rpx;
+  border-bottom: 1rpx solid #E8DFD4;
+}
+
+.search-entry {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  background: #F5F0EB;
+  border-radius: 40rpx;
+  padding: 16rpx 24rpx;
+}
+
+.search-entry-icon {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.search-entry-placeholder {
+  font-size: 28rpx;
+  color: #999;
+}
+
 /* 继续阅读 */
 .continue-section {
   padding: 24rpx 0 0;

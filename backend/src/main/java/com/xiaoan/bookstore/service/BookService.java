@@ -37,6 +37,7 @@ public class BookService {
     private final MembershipService membershipService;
     private final PointsService pointsService;
     private final ReaderAdapterFactory readerAdapterFactory;
+    private final BookIndexService bookIndexService;
 
     @Value("${app.upload.path}")
     private String uploadPath;
@@ -113,6 +114,15 @@ public class BookService {
                 pointsService.earnPoints(userId, Constants.POINTS_CATEGORY_UPLOAD_BOOK, 0, "上传书籍《" + bookTitle + "》", String.valueOf(book.getId()));
             } catch (Exception e) {
                 log.warn("积分发放失败，不影响上传: {}", e.getMessage());
+            }
+
+            if (Constants.FORMAT_PDF.equals(format) || Constants.FORMAT_EPUB.equals(format)) {
+                try {
+                    bookIndexService.createIndexTask(userId, book.getId());
+                    bookIndexService.processIndexTask();
+                } catch (Exception e) {
+                    log.warn("创建索引任务失败，不影响上传: {}", e.getMessage());
+                }
             }
 
             return book;

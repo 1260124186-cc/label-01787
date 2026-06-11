@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/bookshelf/bookshelf",
+    "pages/search/search",
     "pages/reader/reader",
     "pages/notes/notes",
     "pages/notifications/notifications",

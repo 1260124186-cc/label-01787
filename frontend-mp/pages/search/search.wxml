@@ -1,0 +1,76 @@
+<view class="page-search">
+  <view class="search-header">
+    <view class="search-bar">
+      <view class="search-icon">🔍</view>
+      <input class="search-input"
+        placeholder="搜索书籍内容、笔记..."
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+        bindconfirm="onSearch"
+        focus="{{autoFocus}}"
+        confirm-type="search" />
+      <view class="search-clear" wx:if="{{keyword}}" bindtap="clearKeyword">✕</view>
+    </view>
+    <view class="search-scope">
+      <view class="scope-item {{scope === 'all' ? 'active' : ''}}" bindtap="changeScope" data-scope="all">全书</view>
+      <view class="scope-item {{scope === 'book' ? 'active' : ''}}" bindtap="changeScope" data-scope="book" wx:if="{{bookId}}">本书</view>
+      <view class="scope-item {{scope === 'notes' ? 'active' : ''}}" bindtap="changeScope" data-scope="notes">仅笔记</view>
+    </view>
+  </view>
+
+  <view class="search-results" wx:if="{{results.length > 0}}">
+    <view class="result-summary">
+      <text>找到 {{totalResults}} 个匹配结果</text>
+    </view>
+
+    <view class="book-result" wx:for="{{results}}" wx:key="bookId">
+      <view class="book-header" bindtap="toggleBook" data-bookId="{{item.bookId}}">
+        <view class="book-cover-mini">
+          <text class="book-title-mini">{{item.bookTitle}}</text>
+        </view>
+        <view class="book-meta">
+          <text class="book-title">{{item.bookTitle}}</text>
+          <text class="book-match-count">{{item.totalMatches}} 处匹配</text>
+        </view>
+        <view class="toggle-icon {{expandedBooks[item.bookId] ? 'expanded' : ''}}">›</view>
+      </view>
+
+      <view class="match-list" wx:if="{{expandedBooks[item.bookId]}}">
+        <view class="match-item" wx:for="{{item.matches}}" wx:for-item="match" wx:key="id"
+          bindtap="jumpToMatch" data-bookId="{{item.bookId}}" data-page="{{match.pageNum}}"
+          data-start="{{match.matchStart}}" data-end="{{match.matchEnd}}"
+          data-format="{{item.bookFormat}}" data-keyword="{{keyword}}">
+          <view class="match-header">
+            <text class="match-page">第{{match.pageNum}}{{item.bookFormat === 'epub' ? '章' : '页'}}</text>
+            <text class="match-source" wx:if="{{match.sourceType === 'annotation'}}">
+              {{match.annotationType === 'note' ? '笔记' : '批注'}}
+            </text>
+          </view>
+          <view class="match-snippet">
+            <rich-text nodes="{{match.highlightSnippet}}"></rich-text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!loading && keyword && results.length === 0}}">
+    <view class="empty-icon">📚</view>
+    <text class="empty-text">未找到相关内容</text>
+    <text class="empty-sub">换个关键词试试，或检查书籍是否已完成索引</text>
+  </view>
+
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">搜索中...</text>
+  </view>
+
+  <view class="search-tips" wx:if="{{!keyword}}">
+    <view class="tips-title">搜索说明</view>
+    <view class="tips-item">• 支持搜索书籍全文内容</view>
+    <view class="tips-item">• 支持搜索个人笔记和批注</view>
+    <view class="tips-item">• 支持按书籍范围筛选</view>
+    <view class="tips-item">• 匹配结果高亮显示前后30字</view>
+    <view class="tips-item">• 点击结果可跳转至对应位置</view>
+  </view>
+</view>

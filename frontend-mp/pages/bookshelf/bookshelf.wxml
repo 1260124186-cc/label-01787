@@ -1,4 +1,12 @@
 <view class="page-bookshelf">
+  <!-- 顶部搜索框 -->
+  <view class="search-bar-wrap">
+    <view class="search-entry" bindtap="goSearch">
+      <view class="search-entry-icon">🔍</view>
+      <text class="search-entry-placeholder">搜索书籍内容、笔记...</text>
+    </view>
+  </view>
+
   <!-- 顶部分类筛选 -->
   <view class="filter-bar">
     <scroll-view scroll-x class="category-scroll">

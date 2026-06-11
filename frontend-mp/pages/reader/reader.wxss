@@ -1031,3 +1031,59 @@ page {
 .theme-dark .checkbox-label .checkbox-desc {
   color: #888;
 }
+
+/* ========== 搜索高亮样式 ========== */
+.html-reader .search-highlight,
+.chapter-body .search-highlight {
+  background-color: #FFF3CD !important;
+  color: #E74C3C !important;
+  font-weight: 600;
+  padding: 2rpx 6rpx;
+  border-radius: 4rpx;
+  box-shadow: 0 0 0 2rpx rgba(255, 193, 7, 0.4);
+}
+
+.theme-green .html-reader .search-highlight,
+.theme-green .chapter-body .search-highlight {
+  background-color: #FFEB99 !important;
+  color: #C0392B !important;
+}
+
+.theme-dark .html-reader .search-highlight,
+.theme-dark .chapter-body .search-highlight {
+  background-color: #5D4E37 !important;
+  color: #FFD54F !important;
+  box-shadow: 0 0 0 2rpx rgba(255, 213, 79, 0.3);
+}
+
+/* PDF图片模式下，当前匹配页标记 */
+.page-image-wrap.search-match-page {
+  box-shadow: 0 0 0 6rpx rgba(255, 193, 7, 0.6);
+  position: relative;
+}
+
+.page-image-wrap.search-match-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 4rpx solid #FFC107;
+  z-index: 5;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.search-highlight-toast {
+  position: fixed;
+  top: 200rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(107, 66, 38, 0.9);
+  color: #fff;
+  padding: 16rpx 32rpx;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  z-index: 999;
+}

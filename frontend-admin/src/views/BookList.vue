@@ -61,6 +61,19 @@
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="上传时间" min-width="180" />
+        <el-table-column label="索引状态" width="140">
+          <template #default="{ row }">
+            <el-tag v-if="indexStatusMap[row.id]" :type="getIndexTagType(indexStatusMap[row.id].status)" size="small">
+              {{ indexStatusMap[row.id].statusText }}
+            </el-tag>
+            <el-tag v-else type="info" size="small">未索引</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <el-button size="small" type="primary" link @click="handleRebuildIndex(row)">重建索引</el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div class="pagination-wrap">
@@ -73,7 +86,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBookList, getBookFormatStats } from '@/api/admin'
+import { getIndexStatus, rebuildIndex } from '@/api/search'
 
 const tableData = ref([])
 const loading = ref(false)
@@ -83,6 +98,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const formatStats = ref(null)
+const indexStatusMap = ref({})
 
 const fetchData = async () => {
   loading.value = true
@@ -95,11 +111,44 @@ const fetchData = async () => {
     const res = await getBookList(params)
     tableData.value = res.data.records || []
     total.value = Number(res.data.total) || 0
+    fetchIndexStatus()
   } finally {
     const elapsed = Date.now() - start
     if (elapsed < 300) await new Promise(r => setTimeout(r, 300 - elapsed))
     loading.value = false
   }
+}
+
+const fetchIndexStatus = async () => {
+  try {
+    const res = await getIndexStatus({ page: 1, size: 500 })
+    const statusList = res.data.records || []
+    const map = {}
+    statusList.forEach(item => {
+      map[item.bookId] = item
+    })
+    indexStatusMap.value = map
+  } catch (e) {
+    console.error('加载索引状态失败', e)
+  }
+}
+
+const handleRebuildIndex = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确定要重建《${row.title}》的全文索引吗？`, '提示', { type: 'warning' })
+    await rebuildIndex(row.id)
+    ElMessage.success('重建任务已提交')
+    fetchIndexStatus()
+  } catch (e) {
+    if (e !== 'cancel') {
+      console.error('重建索引失败', e)
+    }
+  }
+}
+
+const getIndexTagType = (status) => {
+  const map = { 0: 'warning', 1: 'primary', 2: 'success', 3: 'danger' }
+  return map[status] ?? 'info'
 }
 
 const fetchFormatStats = async () => {

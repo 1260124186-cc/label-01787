@@ -53,7 +53,11 @@ Page({
     startUnitNum: 1,
     _scrollTimer: null,
     _chapterHtmlCache: {},
-    _longPressTimer: null
+    _longPressTimer: null,
+    highlightKeyword: '',
+    highlightMatchStart: 0,
+    highlightMatchEnd: 0,
+    pageMatches: []
   },
 
   onLoad(options) {
@@ -62,6 +66,9 @@ Page({
     const startPage = Number(options.page) || 0
     const startChapter = Number(options.chapter) || 0
     const format = options.format || 'pdf'
+    const highlight = options.highlight ? decodeURIComponent(options.highlight) : ''
+    const matchStart = Number(options.matchStart) || 0
+    const matchEnd = Number(options.matchEnd) || 0
     this.setData({
       bookId: options.id,
       format,
@@ -69,10 +76,28 @@ Page({
       startChapterNum: startChapter,
       theme,
       themeClass: `theme-${theme}`,
-      bgColor: THEME_CONFIG[theme].bgColor
+      bgColor: THEME_CONFIG[theme].bgColor,
+      highlightKeyword: highlight,
+      highlightMatchStart: matchStart,
+      highlightMatchEnd: matchEnd
     })
     this.applyPageBgColor(theme)
     this.initReader()
+    if (highlight) {
+      this.loadPageMatches(highlight)
+    }
+  },
+
+  async loadPageMatches(keyword) {
+    try {
+      const res = await request({
+        url: '/search/page-matches',
+        data: { bookId: this.data.bookId, keyword }
+      })
+      this.setData({ pageMatches: res.data || [] })
+    } catch (e) {
+      console.error('加载页面匹配位置失败', e)
+    }
   },
 
   async initReader() {
@@ -191,6 +216,10 @@ Page({
       this.buildChapterTitleMap()
       this.loadChapters(startChapter, Math.min(startChapter + 1, this.data.totalUnits - 1))
     }
+
+    setTimeout(() => {
+      this.scrollToHighlight()
+    }, 800)
   },
 
   buildChapterTitleMap() {
@@ -270,13 +299,63 @@ Page({
     }
     try {
       const res = await request({ url: `/books/${this.data.bookId}/unit/${chapterIndex}` })
-      const html = res.data || ''
+      let html = res.data || ''
+      if (this.data.highlightKeyword) {
+        html = this.highlightKeywordInHtml(html, this.data.highlightKeyword)
+      }
       this.data._chapterHtmlCache[cacheKey] = html
       return html
     } catch (e) {
       console.error('加载章节失败', chapterIndex, e)
       return ''
     }
+  },
+
+  highlightKeywordInHtml(html, keyword) {
+    if (!html || !keyword) return html
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escapeRegExp(keyword)})`, 'gi')
+    const textParts = html.split(/(<[^>]+>)/g)
+    for (let i = 0; i < textParts.length; i++) {
+      if (!textParts[i].startsWith('<') && textParts[i].trim()) {
+        textParts[i] = textParts[i].replace(regex, '<span class="search-highlight">$1</span>')
+      }
+    }
+    return textParts.join('')
+  },
+
+  scrollToHighlight() {
+    const { highlightKeyword, streamType, format, displayUnit } = this.data
+    if (!highlightKeyword) return
+    setTimeout(() => {
+      if (streamType === STREAM_HTML) {
+        const query = this.createSelectorQuery()
+        query.select('.search-highlight').boundingClientRect()
+        query.selectViewport().scrollOffset()
+        query.exec((res) => {
+          if (res && res[0] && res[1]) {
+            const highlightTop = res[0].top
+            const scrollTop = res[1].scrollTop
+            const targetScroll = scrollTop + highlightTop - 200
+            wx.pageScrollTo({ scrollTop: targetScroll, duration: 300 })
+          }
+        })
+      } else if (streamType === STREAM_IMAGE) {
+        const query = this.createSelectorQuery()
+        query.selectAll('.page-image-wrap').boundingClientRect()
+        query.selectViewport().scrollOffset()
+        query.exec((res) => {
+          if (res && res[0] && res[1] && res[0].length > 0) {
+            const idx = displayUnit - this.data.startUnitNum
+            if (idx >= 0 && idx < res[0].length) {
+              const pageTop = res[0][idx].top
+              const scrollTop = res[1].scrollTop
+              wx.pageScrollTo({ scrollTop: scrollTop + pageTop - 100, duration: 300 })
+            }
+          }
+        })
+      }
+    }, 500)
   },
 
   async loadMoreChapters() {

@@ -87,6 +87,10 @@
           <el-icon><Calendar /></el-icon>
           <template #title><span>阅读计划统计</span></template>
         </el-menu-item>
+        <el-menu-item v-if="userStore.hasPermission('search:view')" index="/search-index">
+          <el-icon><Search /></el-icon>
+          <template #title><span>搜索索引管理</span></template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
