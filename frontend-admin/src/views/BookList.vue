@@ -166,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, markRaw } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, BottomRight } from '@element-plus/icons-vue'
 import {
@@ -174,9 +174,6 @@ import {
   getBookUploader, previewBookPdf
 } from '@/api/admin'
 import { getIndexStatus, rebuildIndex } from '@/api/search'
-
-const Delete = markRaw(Delete)
-const BottomRight = markRaw(BottomRight)
 
 const tableRef = ref(null)
 const tableData = ref([])

@@ -37,7 +37,7 @@
                 </el-tag>
               </div>
               <div class="role-header-right">
-                <el-button size="small" @click="expandAll(true)" :icon="ArrowsExpand">全部展开</el-button>
+                <el-button size="small" @click="expandAll(true)" :icon="Expand">全部展开</el-button>
                 <el-button size="small" @click="expandAll(false)" :icon="Fold">全部折叠</el-button>
                 <el-button type="primary" size="small" :loading="saveLoading" @click="handleSave" :icon="Check">
                   保存权限
@@ -104,16 +104,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, markRaw } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Check, ArrowsExpand, Fold, Menu, Key } from '@element-plus/icons-vue'
+import { Check, Expand, Fold, Menu, Key } from '@element-plus/icons-vue'
 import { getRoleList, getRoleDetail, getPermissionList, updateRolePermissions } from '@/api/admin'
-
-const Check = markRaw(Check)
-const ArrowsExpand = markRaw(ArrowsExpand)
-const Fold = markRaw(Fold)
-const Menu = markRaw(Menu)
-const Key = markRaw(Key)
 
 const roles = ref([])
 const roleLoading = ref(false)

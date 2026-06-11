@@ -189,17 +189,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, markRaw } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, InfoFilled, WarningFilled } from '@element-plus/icons-vue'
 import {
   getAdminList, updateAdminNickname, deleteAdmin, getRoleList,
   createAdmin, updateAdminRole, resetAdminPassword, toggleAdminStatus
 } from '@/api/admin'
-
-const Plus = markRaw(Plus)
-const InfoFilled = markRaw(InfoFilled)
-const WarningFilled = markRaw(WarningFilled)
 
 const tableData = ref([])
 const loading = ref(false)

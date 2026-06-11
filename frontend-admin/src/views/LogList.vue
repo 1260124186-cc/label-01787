@@ -103,15 +103,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick, markRaw } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, MagicStick, DocumentCopy } from '@element-plus/icons-vue'
 import { getLogList, getLogDetail, exportLogsCsv } from '@/api/admin'
 import request from '@/utils/request'
-
-const Download = markRaw(Download)
-const MagicStick = markRaw(MagicStick)
-const DocumentCopy = markRaw(DocumentCopy)
 
 const tableData = ref([])
 const loading = ref(false)
