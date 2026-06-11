@@ -21,6 +21,12 @@ page {
   background-color: #EBF9ED;
 }
 
+.reader-page.theme-sepia {
+  --bg-color: #F5F0EB;
+  --text-color: #5D4037;
+  background-color: #F5F0EB;
+}
+
 .reader-page.theme-dark {
   --bg-color: #1A1A2E;
   --text-color: #E0E0E0;
@@ -100,6 +106,17 @@ page {
   pointer-events: none;
 }
 
+/* 羊皮纸 - 温暖棕色调滤镜 */
+.sepia-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(212, 165, 116, 0.2);
+  pointer-events: none;
+}
+
 .theme-green .scroll-reader,
 .theme-green .swipe-reader,
 .theme-green .swiper-page-scroll {
@@ -109,6 +126,26 @@ page {
 .theme-green .load-more,
 .theme-green .load-end {
   color: #2D4A2D;
+}
+
+/* 羊皮纸主题 - 图片模式 */
+.theme-sepia .page-image-wrap {
+  background-color: #F5F0EB;
+}
+
+.theme-sepia .page-image {
+  filter: sepia(30%) contrast(95%) brightness(98%);
+}
+
+.theme-sepia .scroll-reader,
+.theme-sepia .swipe-reader,
+.theme-sepia .swiper-page-scroll {
+  background-color: #F5F0EB !important;
+}
+
+.theme-sepia .load-more,
+.theme-sepia .load-end {
+  color: #5D4037;
 }
 
 /* 夜间模式 - 反色+降低亮度 */
@@ -201,8 +238,70 @@ page {
   color: #2D4A2D;
 }
 
+.rich-text-sepia {
+  color: #5D4037;
+}
+
 .rich-text-dark {
   color: #E0E0E0;
+}
+
+/* ========== 字号 & 行间距样式 ========== */
+.font-size-xs .chapter-body,
+.font-size-xs .chapter-body p,
+.font-size-xs .chapter-body div,
+.font-size-xs .chapter-body span {
+  font-size: 24rpx !important;
+}
+.font-size-sm .chapter-body,
+.font-size-sm .chapter-body p,
+.font-size-sm .chapter-body div,
+.font-size-sm .chapter-body span {
+  font-size: 28rpx !important;
+}
+.font-size-md .chapter-body,
+.font-size-md .chapter-body p,
+.font-size-md .chapter-body div,
+.font-size-md .chapter-body span {
+  font-size: 32rpx !important;
+}
+.font-size-lg .chapter-body,
+.font-size-lg .chapter-body p,
+.font-size-lg .chapter-body div,
+.font-size-lg .chapter-body span {
+  font-size: 36rpx !important;
+}
+.font-size-xl .chapter-body,
+.font-size-xl .chapter-body p,
+.font-size-xl .chapter-body div,
+.font-size-xl .chapter-body span {
+  font-size: 42rpx !important;
+}
+
+/* 行间距 */
+.line-height-tight .chapter-body,
+.line-height-tight .chapter-body p,
+.line-height-tight .chapter-body div,
+.line-height-tight .chapter-body span {
+  line-height: 1.5 !important;
+}
+.line-height-normal .chapter-body,
+.line-height-normal .chapter-body p,
+.line-height-normal .chapter-body div,
+.line-height-normal .chapter-body span {
+  line-height: 1.8 !important;
+}
+.line-height-loose .chapter-body,
+.line-height-loose .chapter-body p,
+.line-height-loose .chapter-body div,
+.line-height-loose .chapter-body span {
+  line-height: 2.1 !important;
+}
+.line-height-very-loose .chapter-body,
+.line-height-very-loose .chapter-body p,
+.line-height-very-loose .chapter-body div,
+.line-height-very-loose .chapter-body span {
+  line-height: 2.4 !important;
 }
 
 /* 主题覆盖 rich-text 内部常见元素 */
@@ -269,6 +368,17 @@ page {
 .theme-green .chapter-title-bar { border-bottom-color: rgba(45, 74, 45, 0.2); }
 .theme-green blockquote { background: rgba(45, 74, 45, 0.08); border-left-color: #67C23A; }
 
+.theme-sepia .chapter-title-text { color: #5D4037; }
+.theme-sepia .chapter-body { color: #5D4037; }
+.theme-sepia .chapter-title-bar { border-bottom-color: rgba(93, 64, 55, 0.18); }
+.theme-sepia blockquote { background: rgba(212, 165, 116, 0.15); border-left-color: #8D6E63; }
+.theme-sepia .chapter-body a { color: #6B4226; }
+.theme-sepia .html-reader .search-highlight,
+.theme-sepia .chapter-body .search-highlight {
+  background-color: #FFE0B2 !important;
+  color: #5D4037 !important;
+}
+
 .theme-dark .chapter-title-text { color: #E0E0E0; }
 .theme-dark .chapter-body { color: #E0E0E0; }
 .theme-dark .chapter-title-bar { border-bottom-color: rgba(224, 224, 224, 0.15); }
@@ -295,6 +405,7 @@ page {
 }
 
 .theme-green .unsupported-card { background: #FFFFFF; }
+.theme-sepia .unsupported-card { background: #FAF6F1; }
 .theme-dark .unsupported-card { background: #2A2A44; }
 
 .unsupported-icon {
@@ -548,6 +659,193 @@ page {
 
 .theme-option.selected .theme-circle {
   box-shadow: 0 0 0 4rpx #6B4226;
+}
+
+/* 跟随系统深色模式 & 屏幕常亮 选项行 */
+.follow-system-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32rpx;
+  padding: 20rpx 8rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.follow-system-row .option-label {
+  font-size: 28rpx;
+  color: #333;
+}
+
+/* ========== 设置面板样式 ========== */
+.settings-panel {
+  /* 复用 theme-panel 基础样式 */
+}
+
+.settings-section {
+  margin-bottom: 32rpx;
+}
+
+.settings-section-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+/* 字号设置 */
+.font-size-options {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.font-size-btn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #F5F0EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.font-size-btn:active {
+  background: #E8DCC8;
+}
+
+.font-size-icon {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #6B4226;
+}
+
+.font-size-preset-row {
+  flex: 1;
+  display: flex;
+  gap: 12rpx;
+}
+
+.font-size-preset {
+  flex: 1;
+  padding: 16rpx 0;
+  border: 2rpx solid #eee;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #666;
+  background: #fff;
+}
+
+.font-size-preset.selected {
+  border-color: #6B4226;
+  color: #6B4226;
+  background: #FAF6F1;
+  font-weight: 500;
+}
+
+.font-size-preset:active {
+  opacity: 0.8;
+}
+
+/* 行间距设置 */
+.line-height-options {
+  display: flex;
+  gap: 12rpx;
+}
+
+.line-height-option {
+  flex: 1;
+  padding: 20rpx 0;
+  border: 2rpx solid #eee;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #666;
+  background: #fff;
+}
+
+.line-height-option.selected {
+  border-color: #6B4226;
+  color: #6B4226;
+  background: #FAF6F1;
+  font-weight: 500;
+}
+
+.line-height-option:active {
+  opacity: 0.8;
+}
+
+/* ========== 图标 CSS ========== */
+/* 字号缩小图标 */
+.icon-font-small {
+  width: 32rpx;
+  height: 32rpx;
+  position: relative;
+}
+.icon-font-small::before {
+  content: 'A';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24rpx;
+  font-weight: 600;
+  font-family: Georgia, serif;
+}
+
+/* 字号放大图标 */
+.icon-font-large {
+  width: 32rpx;
+  height: 32rpx;
+  position: relative;
+}
+.icon-font-large::before {
+  content: 'A';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32rpx;
+  font-weight: 600;
+  font-family: Georgia, serif;
+}
+
+/* 设置图标（齿轮） */
+.icon-settings {
+  width: 40rpx;
+  height: 40rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+  position: relative;
+}
+.icon-settings::before {
+  content: '';
+  position: absolute;
+  width: 14rpx;
+  height: 14rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.icon-settings::after {
+  content: '';
+  position: absolute;
+  width: 4rpx;
+  height: 6rpx;
+  background: currentColor;
+  top: -5rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow:
+    0 42rpx 0 currentColor,
+    -16rpx 8rpx 0 currentColor,
+    16rpx 8rpx 0 currentColor,
+    -16rpx 32rpx 0 currentColor,
+    16rpx 32rpx 0 currentColor;
 }
 
 /* 笔记弹窗 */
@@ -1108,6 +1406,139 @@ page {
 .theme-dark .checkbox {
   background: #2A2A44;
   border-color: rgba(255,255,255,0.2);
+}
+
+/* 深色模式 - 主题面板 / 设置面板 */
+.theme-dark .theme-panel,
+.theme-dark .settings-panel,
+.theme-dark .note-dialog {
+  background: #252542;
+}
+
+.theme-dark .theme-title,
+.theme-dark .note-title,
+.theme-dark .settings-section-title {
+  color: #E0E0E0;
+}
+
+.theme-dark .theme-option,
+.theme-dark .type-btn {
+  color: #aaa;
+}
+
+.theme-dark .theme-option.selected {
+  color: #E8734A;
+}
+
+.theme-dark .theme-option.selected .theme-circle {
+  box-shadow: 0 0 0 4rpx #E8734A;
+}
+
+.theme-dark .follow-system-row {
+  border-top-color: rgba(255,255,255,0.08);
+}
+
+.theme-dark .follow-system-row .option-label {
+  color: #E0E0E0;
+}
+
+.theme-dark .font-size-btn {
+  background: #3A3A5C;
+}
+
+.theme-dark .font-size-btn:active {
+  background: #4A4A70;
+}
+
+.theme-dark .font-size-icon {
+  color: #E8734A;
+}
+
+.theme-dark .font-size-preset,
+.theme-dark .line-height-option {
+  background: #2A2A44;
+  border-color: rgba(255,255,255,0.15);
+  color: #aaa;
+}
+
+.theme-dark .font-size-preset.selected,
+.theme-dark .line-height-option.selected {
+  background: rgba(232, 115, 74, 0.15);
+  border-color: #E8734A;
+  color: #E8734A;
+}
+
+/* 底部工具栏按钮数量增加后的适配 */
+.bottom-bar .actions {
+  flex-wrap: wrap;
+  gap: 8rpx 0;
+  row-gap: 4rpx;
+}
+
+.bottom-bar .tool-btn {
+  min-width: 13%;
+  padding: 8rpx 10rpx;
+  font-size: 20rpx;
+}
+
+.bottom-bar .tool-btn .icon {
+  font-size: 28rpx;
+  width: 36rpx;
+  height: 36rpx;
+}
+
+/* 羊皮纸主题 - 面板/对话框适配 */
+.theme-sepia .theme-panel,
+.theme-sepia .settings-panel,
+.theme-sepia .note-dialog {
+  background: #FAF6F1;
+}
+
+.theme-sepia .theme-title,
+.theme-sepia .note-title,
+.theme-sepia .settings-section-title,
+.theme-sepia .theme-option.selected,
+.theme-sepia .follow-system-row .option-label {
+  color: #5D4037;
+}
+
+.theme-sepia .theme-option,
+.theme-sepia .type-btn {
+  color: #8D6E63;
+}
+
+.theme-sepia .theme-option.selected .theme-circle {
+  box-shadow: 0 0 0 4rpx #6B4226;
+}
+
+.theme-sepia .follow-system-row {
+  border-top-color: rgba(93, 64, 55, 0.1);
+}
+
+.theme-sepia .font-size-btn {
+  background: #EFE6DA;
+}
+
+.theme-sepia .font-size-btn:active {
+  background: #E8DCC8;
+}
+
+.theme-sepia .font-size-icon {
+  color: #6B4226;
+}
+
+.theme-sepia .font-size-preset,
+.theme-sepia .line-height-option {
+  background: #fff;
+  border-color: #E8DCC8;
+  color: #8D6E63;
+}
+
+.theme-sepia .font-size-preset.selected,
+.theme-sepia .line-height-option.selected {
+  background: #F5F0EB;
+  border-color: #6B4226;
+  color: #6B4226;
 }
 
 .theme-dark .checkbox-label .checkbox-title {

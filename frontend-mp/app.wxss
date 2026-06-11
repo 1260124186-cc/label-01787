@@ -16,10 +16,10 @@ page {
 }
 
 .theme-green {
-  --bg-color: #C7EDCC;
+  --bg-color: #EBF9ED;
   --text-color: #2D4A2D;
-  --card-bg: #D8F5DC;
-  --border-color: #B0D8B5;
+  --card-bg: #F4FBF5;
+  --border-color: #C7E6CC;
 }
 
 .theme-dark {
@@ -27,6 +27,13 @@ page {
   --text-color: #E0E0E0;
   --card-bg: #252542;
   --border-color: #3A3A5C;
+}
+
+.theme-sepia {
+  --bg-color: #F5F0EB;
+  --text-color: #5D4037;
+  --card-bg: #FAF6F1;
+  --border-color: #E8DCC8;
 }
 
 /* 通用样式 */

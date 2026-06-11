@@ -40,9 +40,11 @@
     bindscrolltolower="loadMorePages"
     lower-threshold="300">
     <view wx:for="{{loadedPages}}" wx:key="index" class="page-image-wrap" id="unit-{{index}}"
-      bindlongpress="onPageLongPress">
+      bindlongpress="onPageLongPress"
+      style="transform: scale({{imageScale}}); transform-origin: top center;">
       <image src="{{item}}" mode="widthFix" class="page-image" lazy-load show-menu-by-longpress="{{false}}" />
       <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
+      <view class="sepia-overlay" wx:if="{{theme === 'sepia'}}"></view>
       <view class="bookmark-badge" wx:if="{{currentBookmarked && index === displayUnit - startUnitNum}}">
         <view class="icon icon-bookmark-filled"></view>
       </view>
@@ -61,9 +63,11 @@
     style="background-color: {{bgColor}};">
     <swiper-item wx:for="{{loadedPages}}" wx:key="index">
       <scroll-view scroll-y class="swiper-page-scroll" style="background-color: {{bgColor}};">
-        <view class="page-image-wrap" bindlongpress="onPageLongPress">
+        <view class="page-image-wrap" bindlongpress="onPageLongPress"
+          style="transform: scale({{imageScale}}); transform-origin: top center;">
           <image src="{{item}}" mode="widthFix" class="page-image" show-menu-by-longpress="{{false}}" />
           <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
+          <view class="sepia-overlay" wx:if="{{theme === 'sepia'}}"></view>
           <view class="bookmark-badge" wx:if="{{currentBookmarked && index === displayUnit - startUnitNum}}">
             <view class="icon icon-bookmark-filled"></view>
           </view>
@@ -83,9 +87,9 @@
     <view wx:for="{{loadedChapters}}" wx:key="chapterIndex" class="chapter-wrap" id="chapter-{{item.chapterIndex}}"
       bindlongpress="onPageLongPress">
       <view class="chapter-title-bar" wx:if="{{item.title}}">
-        <text class="chapter-title-text">{{item.title}}</text>
+        <text class="chapter-title-text" style="font-size: {{fontSizeValue + 6}}rpx;">{{item.title}}</text>
       </view>
-      <view class="chapter-body rich-text-{{theme}}">
+      <view class="chapter-body rich-text-{{theme}} font-size-{{fontSize}} line-height-{{lineHeight}}">
         <rich-text nodes="{{item.html}}" space="nbsp"></rich-text>
       </view>
       <view class="bookmark-badge" wx:if="{{currentBookmarked && item.chapterIndex === displayUnit - 1}}">
@@ -108,9 +112,9 @@
       <scroll-view scroll-y class="swiper-page-scroll html-reader" style="background-color: {{bgColor}};"
         bindlongpress="onPageLongPress">
         <view class="chapter-title-bar" wx:if="{{item.title}}">
-          <text class="chapter-title-text">{{item.title}}</text>
+          <text class="chapter-title-text" style="font-size: {{fontSizeValue + 6}}rpx;">{{item.title}}</text>
         </view>
-        <view class="chapter-body rich-text-{{theme}}">
+        <view class="chapter-body rich-text-{{theme}} font-size-{{fontSize}} line-height-{{lineHeight}}">
           <rich-text nodes="{{item.html}}" space="nbsp"></rich-text>
         </view>
         <view class="bookmark-badge" wx:if="{{currentBookmarked && item.chapterIndex === displayUnit - 1}}">
@@ -126,6 +130,18 @@
       <text class="page-info">{{displayUnit}} / {{totalUnits || '-'}} {{streamType === 'html' ? '章' : '页'}}</text>
     </view>
     <view class="tool-row actions">
+      <view class="tool-btn" bindtap="decreaseFontSize">
+        <view class="icon icon-font-small"></view>
+        <text>A-</text>
+      </view>
+      <view class="tool-btn" bindtap="increaseFontSize">
+        <view class="icon icon-font-large"></view>
+        <text>A+</text>
+      </view>
+      <view class="tool-btn" bindtap="showSettingsPanel">
+        <view class="icon icon-settings"></view>
+        <text>设置</text>
+      </view>
       <view class="tool-btn {{readMode === 'scroll' ? 'active' : ''}}" bindtap="switchMode" data-mode="scroll">
         <view class="icon icon-scroll"></view>
         <text>滚动</text>
@@ -282,9 +298,77 @@
         <view class="theme-circle" style="background: #EBF9ED;"></view>
         <text>护眼绿</text>
       </view>
+      <view class="theme-option {{theme === 'sepia' ? 'selected' : ''}}" bindtap="changeTheme" data-theme="sepia">
+        <view class="theme-circle" style="background: #F5F0EB; border: 2rpx solid #E8DCC8;"></view>
+        <text>羊皮纸</text>
+      </view>
       <view class="theme-option {{theme === 'dark' ? 'selected' : ''}}" bindtap="changeTheme" data-theme="dark">
         <view class="theme-circle" style="background: #1A1A2E;"></view>
         <text>夜空黑</text>
+      </view>
+    </view>
+    <view class="follow-system-row" bindtap="toggleFollowSystemTheme">
+      <text class="option-label">跟随系统深色模式</text>
+      <view class="switch {{followSystemTheme ? 'on' : ''}}">
+        <view class="switch-dot"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设置面板：字号、行间距、屏幕常亮 -->
+  <view class="theme-mask" wx:if="{{showSettings}}" bindtap="hideSettingsPanel"></view>
+  <view class="theme-panel settings-panel {{showSettings ? 'show' : ''}}">
+    <text class="theme-title">阅读设置</text>
+
+    <!-- 字号设置 -->
+    <view class="settings-section">
+      <text class="settings-section-title">字号大小</text>
+      <view class="font-size-options">
+        <view class="font-size-btn" bindtap="decreaseFontSize">
+          <text class="font-size-icon">A-</text>
+        </view>
+        <view class="font-size-preset-row">
+          <view wx:for="{{fontSizeOptions}}" wx:key="key"
+            class="font-size-preset {{fontSize === item.key ? 'selected' : ''}}"
+            bindtap="changeFontSize" data-key="{{item.key}}">
+            <text>{{item.name}}</text>
+          </view>
+        </view>
+        <view class="font-size-btn" bindtap="increaseFontSize">
+          <text class="font-size-icon">A+</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 行间距（仅文本模式） -->
+    <view class="settings-section" wx:if="{{streamType === 'html'}}">
+      <text class="settings-section-title">行间距</text>
+      <view class="line-height-options">
+        <view wx:for="{{lineHeightOptions}}" wx:key="key"
+          class="line-height-option {{lineHeight === item.key ? 'selected' : ''}}"
+          bindtap="changeLineHeight" data-key="{{item.key}}">
+          <text>{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 屏幕常亮 -->
+    <view class="settings-section">
+      <view class="follow-system-row" bindtap="toggleKeepScreenOn">
+        <text class="option-label">屏幕常亮</text>
+        <view class="switch {{keepScreenOn ? 'on' : ''}}">
+          <view class="switch-dot"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 跟随系统深色模式 -->
+    <view class="settings-section">
+      <view class="follow-system-row" bindtap="toggleFollowSystemTheme">
+        <text class="option-label">跟随系统深色模式</text>
+        <view class="switch {{followSystemTheme ? 'on' : ''}}">
+          <view class="switch-dot"></view>
+        </view>
       </view>
     </view>
   </view>

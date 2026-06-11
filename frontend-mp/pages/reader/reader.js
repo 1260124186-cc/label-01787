@@ -1,10 +1,55 @@
 const { request } = require('../../utils/request')
 const { formatSize } = require('../../utils/util')
+const { THEMES, THEME_LIST, isValidTheme, getThemeConfig } = require('../../utils/theme')
 
 const THEME_CONFIG = {
   white: { bgColor: '#FFFFFF', textColor: '#333333' },
   green: { bgColor: '#EBF9ED', textColor: '#2D4A2D' },
-  dark:  { bgColor: '#1A1A2E', textColor: '#E0E0E0' }
+  dark:  { bgColor: '#1A1A2E', textColor: '#E0E0E0' },
+  sepia: { bgColor: '#F5F0EB', textColor: '#5D4037' }
+}
+
+const BOOK_PREF_PREFIX = 'book_pref_'
+
+const FONT_SIZE_OPTIONS = [
+  { key: 'xs', name: '小', value: 24, scale: 0.85 },
+  { key: 'sm', name: '标准', value: 28, scale: 0.95 },
+  { key: 'md', name: '中', value: 32, scale: 1.0 },
+  { key: 'lg', name: '大', value: 36, scale: 1.1 },
+  { key: 'xl', name: '特大', value: 42, scale: 1.25 }
+]
+
+const LINE_HEIGHT_OPTIONS = [
+  { key: 'tight', name: '紧凑', value: 1.5 },
+  { key: 'normal', name: '标准', value: 1.8 },
+  { key: 'loose', name: '宽松', value: 2.1 },
+  { key: 'very-loose', name: '特松', value: 2.4 }
+]
+
+function getBookPrefKey(bookId) {
+  return `${BOOK_PREF_PREFIX}${bookId}`
+}
+
+function loadBookPref(bookId) {
+  try {
+    const key = getBookPrefKey(bookId)
+    const pref = wx.getStorageSync(key)
+    if (pref && typeof pref === 'object') {
+      return pref
+    }
+  } catch (e) {
+    console.warn('加载书籍偏好失败', e)
+  }
+  return null
+}
+
+function saveBookPref(bookId, pref) {
+  try {
+    const key = getBookPrefKey(bookId)
+    wx.setStorageSync(key, pref)
+  } catch (e) {
+    console.warn('保存书籍偏好失败', e)
+  }
 }
 
 const STREAM_IMAGE = 'image'
@@ -27,12 +72,24 @@ Page({
     swiperIndex: 0,
     readMode: 'scroll',
     theme: 'white',
+    themeList: THEME_LIST,
     themeClass: 'theme-white',
     bgColor: '#FFFFFF',
+    textColor: '#333333',
+    followSystemTheme: false,
+    fontSize: 'md',
+    fontSizeOptions: FONT_SIZE_OPTIONS,
+    fontSizeValue: 32,
+    lineHeight: 'normal',
+    lineHeightOptions: LINE_HEIGHT_OPTIONS,
+    lineHeightValue: 1.8,
+    imageScale: 1.0,
+    keepScreenOn: true,
     showUI: false,
     showToc: false,
     showBookmark: false,
     showTheme: false,
+    showSettings: false,
     showNoteDialog: false,
     noteTags: '',
     noteIsPinned: false,
@@ -70,26 +127,68 @@ Page({
 
   onLoad(options) {
     const app = getApp()
-    const theme = app.globalData.theme || 'white'
+    const bookId = options.id
+    const globalTheme = app.globalData.theme || 'white'
+    const followSystemTheme = app.globalData.followSystemTheme || false
     const startPage = Number(options.page) || 0
     const startChapter = Number(options.chapter) || 0
     const format = options.format || 'pdf'
     const highlight = options.highlight ? decodeURIComponent(options.highlight) : ''
     const matchStart = Number(options.matchStart) || 0
     const matchEnd = Number(options.matchEnd) || 0
+
+    const bookPref = loadBookPref(bookId)
+    let finalTheme = globalTheme
+    let finalReadMode = 'scroll'
+    let finalFontSize = 'md'
+    let finalLineHeight = 'normal'
+    let finalImageScale = 1.0
+
+    if (bookPref) {
+      if (bookPref.theme && isValidTheme(bookPref.theme) && !followSystemTheme) {
+        finalTheme = bookPref.theme
+      }
+      if (bookPref.readMode === 'scroll' || bookPref.readMode === 'swipe') {
+        finalReadMode = bookPref.readMode
+      }
+      if (bookPref.fontSize && FONT_SIZE_OPTIONS.find(f => f.key === bookPref.fontSize)) {
+        finalFontSize = bookPref.fontSize
+      }
+      if (bookPref.lineHeight && LINE_HEIGHT_OPTIONS.find(l => l.key === bookPref.lineHeight)) {
+        finalLineHeight = bookPref.lineHeight
+      }
+      if (typeof bookPref.imageScale === 'number') {
+        finalImageScale = bookPref.imageScale
+      }
+    }
+
+    const fontSizeOpt = FONT_SIZE_OPTIONS.find(f => f.key === finalFontSize) || FONT_SIZE_OPTIONS[2]
+    const lineHeightOpt = LINE_HEIGHT_OPTIONS.find(l => l.key === finalLineHeight) || LINE_HEIGHT_OPTIONS[1]
+    const themeCfg = THEME_CONFIG[finalTheme] || THEME_CONFIG.white
+
     this.setData({
-      bookId: options.id,
+      bookId,
       format,
       startPageNum: startPage,
       startChapterNum: startChapter,
-      theme,
-      themeClass: `theme-${theme}`,
-      bgColor: THEME_CONFIG[theme].bgColor,
+      theme: finalTheme,
+      themeClass: `theme-${finalTheme}`,
+      bgColor: themeCfg.bgColor,
+      textColor: themeCfg.textColor,
+      followSystemTheme,
+      readMode: finalReadMode,
+      fontSize: finalFontSize,
+      fontSizeValue: fontSizeOpt.value,
+      lineHeight: finalLineHeight,
+      lineHeightValue: lineHeightOpt.value,
+      imageScale: finalImageScale,
       highlightKeyword: highlight,
       highlightMatchStart: matchStart,
       highlightMatchEnd: matchEnd
     })
-    this.applyPageBgColor(theme)
+
+    this.applyPageBgColor(finalTheme)
+    this.applyKeepScreenOn(true)
     this.initReader()
     if (highlight) {
       this.loadPageMatches(highlight)
@@ -179,10 +278,116 @@ Page({
 
   onUnload() {
     this.endReading()
+    this.applyKeepScreenOn(false)
   },
 
   onHide() {
     this.endReading()
+  },
+
+  onShow() {
+    this.applyKeepScreenOn(this.data.keepScreenOn)
+  },
+
+  saveCurrentBookPref() {
+    if (!this.data.bookId) return
+    const pref = {
+      theme: this.data.theme,
+      readMode: this.data.readMode,
+      fontSize: this.data.fontSize,
+      lineHeight: this.data.lineHeight,
+      imageScale: this.data.imageScale,
+      updatedAt: Date.now()
+    }
+    saveBookPref(this.data.bookId, pref)
+  },
+
+  applyKeepScreenOn(on) {
+    try {
+      wx.setKeepScreenOn({ keepScreenOn: !!on })
+    } catch (e) {
+      console.warn('setKeepScreenOn failed', e)
+    }
+  },
+
+  showSettingsPanel() {
+    this.setData({ showSettings: true })
+  },
+
+  hideSettingsPanel() {
+    this.setData({ showSettings: false })
+  },
+
+  changeFontSize(e) {
+    const key = e.currentTarget.dataset.key
+    const opt = FONT_SIZE_OPTIONS.find(f => f.key === key)
+    if (!opt) return
+    this.setData({
+      fontSize: key,
+      fontSizeValue: opt.value,
+      imageScale: opt.scale
+    })
+    this.saveCurrentBookPref()
+  },
+
+  increaseFontSize() {
+    const idx = FONT_SIZE_OPTIONS.findIndex(f => f.key === this.data.fontSize)
+    if (idx < FONT_SIZE_OPTIONS.length - 1) {
+      const opt = FONT_SIZE_OPTIONS[idx + 1]
+      this.setData({
+        fontSize: opt.key,
+        fontSizeValue: opt.value,
+        imageScale: opt.scale
+      })
+      this.saveCurrentBookPref()
+    }
+  },
+
+  decreaseFontSize() {
+    const idx = FONT_SIZE_OPTIONS.findIndex(f => f.key === this.data.fontSize)
+    if (idx > 0) {
+      const opt = FONT_SIZE_OPTIONS[idx - 1]
+      this.setData({
+        fontSize: opt.key,
+        fontSizeValue: opt.value,
+        imageScale: opt.scale
+      })
+      this.saveCurrentBookPref()
+    }
+  },
+
+  changeLineHeight(e) {
+    const key = e.currentTarget.dataset.key
+    const opt = LINE_HEIGHT_OPTIONS.find(l => l.key === key)
+    if (!opt) return
+    this.setData({
+      lineHeight: key,
+      lineHeightValue: opt.value
+    })
+    this.saveCurrentBookPref()
+  },
+
+  toggleKeepScreenOn() {
+    const newVal = !this.data.keepScreenOn
+    this.setData({ keepScreenOn: newVal })
+    this.applyKeepScreenOn(newVal)
+  },
+
+  toggleFollowSystemTheme() {
+    const app = getApp()
+    const newFollow = !this.data.followSystemTheme
+    app.setFollowSystemTheme(newFollow)
+    const theme = app.globalData.theme
+    const themeCfg = THEME_CONFIG[theme] || THEME_CONFIG.white
+    this.setData({
+      followSystemTheme: newFollow,
+      theme,
+      themeClass: `theme-${theme}`,
+      bgColor: themeCfg.bgColor,
+      textColor: themeCfg.textColor
+    })
+    this.applyPageBgColor(theme)
+    this.saveCurrentBookPref()
   },
 
   async loadBook() {
@@ -395,28 +600,6 @@ Page({
     }, 200)
   },
 
-  calcCurrentUnit(selector) {
-    const query = this.createSelectorQuery()
-    query.selectAll(selector).boundingClientRect()
-    query.exec((res) => {
-      if (!res || !res[0] || res[0].length === 0) return
-      const rects = res[0]
-      const screenMid = 300
-      let visibleIndex = 0
-      for (let i = 0; i < rects.length; i++) {
-        if (rects[i].top <= screenMid && rects[i].bottom > 0) {
-          visibleIndex = i
-        }
-      }
-      const newUnit = this.data.streamType === STREAM_HTML
-        ? (this.data.loadedChapters[visibleIndex]?.chapterIndex ?? 0) + 1
-        : this.data.startUnitNum + visibleIndex
-      if (newUnit !== this.data.displayUnit && newUnit > 0) {
-        this.setData({ displayUnit: newUnit })
-      }
-    })
-  },
-
   onSwiperChange(e) {
     const idx = e.detail.current
     const displayUnit = this.data.streamType === STREAM_HTML
@@ -538,10 +721,11 @@ Page({
   switchMode(e) {
     const mode = e.currentTarget.dataset.mode
     this.setData({ readMode: mode, swiperIndex: 0 })
+    this.saveCurrentBookPref()
   },
 
   showThemePicker() {
-    this.setData({ showTheme: true })
+    this.setData({ showTheme: true, showSettings: false })
   },
 
   hideThemePicker() {
@@ -550,19 +734,24 @@ Page({
 
   changeTheme(e) {
     const theme = e.currentTarget.dataset.theme
+    if (!isValidTheme(theme)) return
     const app = getApp()
     app.setTheme(theme)
+    const cfg = THEME_CONFIG[theme] || THEME_CONFIG.white
     this.setData({
       theme,
       themeClass: `theme-${theme}`,
-      bgColor: THEME_CONFIG[theme].bgColor,
+      bgColor: cfg.bgColor,
+      textColor: cfg.textColor,
       showTheme: false
     })
     this.applyPageBgColor(theme)
+    this.saveCurrentBookPref()
   },
 
   applyPageBgColor(theme) {
-    const color = THEME_CONFIG[theme].bgColor
+    const cfg = THEME_CONFIG[theme] || THEME_CONFIG.white
+    const color = cfg.bgColor
     wx.setBackgroundColor({
       backgroundColor: color,
       backgroundColorTop: color,
