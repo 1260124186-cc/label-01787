@@ -11,6 +11,41 @@
     </scroll-view>
   </view>
 
+  <!-- 继续阅读 -->
+  <view class="continue-section" wx:if="{{continueList.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">继续阅读</text>
+      <text class="section-more">更多 ›</text>
+    </view>
+    <scroll-view scroll-x class="continue-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="continue-scroll-inner">
+        <view class="continue-card" wx:for="{{continueList}}" wx:key="bookId"
+          bindtap="openContinueBook" data-id="{{item.bookId}}" data-page="{{item.lastPage}}">
+          <view class="continue-cover">
+            <view class="continue-cover-placeholder">
+              <text class="continue-cover-title">{{item.bookTitle}}</text>
+              <text class="continue-cover-author">{{item.bookAuthor || '未知作者'}}</text>
+            </view>
+            <view class="continue-progress-badge">
+              <text class="continue-progress-text">{{item.progress}}%</text>
+            </view>
+          </view>
+          <view class="continue-info">
+            <text class="continue-title">{{item.bookTitle}}</text>
+            <text class="continue-author">{{item.bookAuthor || '未知作者'}}</text>
+            <view class="continue-progress-bar">
+              <view class="continue-progress-fill" style="width: {{item.progress}}%"></view>
+            </view>
+            <view class="continue-meta">
+              <text class="continue-meta-text">第{{item.lastPage}}/{{item.pageCount}}页</text>
+              <text class="continue-meta-text">{{item.durationText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 书籍列表 -->
   <view class="book-grid" wx:if="{{books.length > 0}}">
     <view class="book-card" wx:for="{{books}}" wx:key="id" bindtap="openBook" data-id="{{item.id}}"

@@ -222,4 +222,12 @@ public class AdminController {
         }
         return Result.success(contentComplianceService.generateComplianceReport(startTime, endTime));
     }
+
+    @GetMapping("/reading-stats")
+    @Log("查看阅读统计")
+    @RequirePermission("dashboard:view")
+    public Result<Map<String, Object>> readingStats(
+            @RequestParam(defaultValue = "7") Integer days) {
+        return Result.success(adminService.readingStats(days));
+    }
 }

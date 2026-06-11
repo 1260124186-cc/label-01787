@@ -144,4 +144,61 @@ public class ReadingService {
             return minutes + "分钟";
         }
     }
+
+    public List<Map<String, Object>> continueReadingList(Long userId, Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 5;
+        }
+        return readingRecordMapper.continueReadingList(userId, limit);
+    }
+
+    public List<Map<String, Object>> readingTimeline(Long userId, String period) {
+        LocalDate now = LocalDate.now();
+        LocalDateTime start;
+        LocalDateTime end;
+
+        switch (period != null ? period : "month") {
+            case "week":
+                LocalDate weekStart = now.with(DayOfWeek.MONDAY);
+                start = weekStart.atStartOfDay();
+                end = weekStart.plusDays(7).atStartOfDay();
+                break;
+            case "year":
+                LocalDate yearStart = now.with(TemporalAdjusters.firstDayOfYear());
+                LocalDate yearEnd = now.with(TemporalAdjusters.lastDayOfYear());
+                start = yearStart.atStartOfDay();
+                end = yearEnd.atTime(LocalTime.MAX);
+                break;
+            default:
+                LocalDate monthStart = now.with(TemporalAdjusters.firstDayOfMonth());
+                LocalDate monthEnd = now.with(TemporalAdjusters.lastDayOfMonth());
+                start = monthStart.atStartOfDay();
+                end = monthEnd.atTime(LocalTime.MAX);
+                break;
+        }
+
+        List<Map<String, Object>> flatList = readingRecordMapper.readingTimeline(userId, start, end);
+        
+        java.util.LinkedHashMap<String, java.util.List<Map<String, Object>>> dayMap = new java.util.LinkedHashMap<>();
+        for (Map<String, Object> item : flatList) {
+            String date = String.valueOf(item.get("date"));
+            Map<String, Object> bookInfo = new java.util.HashMap<>();
+            bookInfo.put("bookId", item.get("bookId"));
+            bookInfo.put("bookTitle", item.get("bookTitle"));
+            bookInfo.put("bookAuthor", item.get("bookAuthor"));
+            bookInfo.put("duration", item.get("duration"));
+            bookInfo.put("lastPage", item.get("lastPage"));
+            
+            dayMap.computeIfAbsent(date, k -> new java.util.ArrayList<>()).add(bookInfo);
+        }
+
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Map.Entry<String, java.util.List<Map<String, Object>>> entry : dayMap.entrySet()) {
+            Map<String, Object> dayItem = new java.util.HashMap<>();
+            dayItem.put("date", entry.getKey());
+            dayItem.put("books", entry.getValue());
+            result.add(dayItem);
+        }
+        return result;
+    }
 }

@@ -89,3 +89,7 @@ export function getAuditList(params) {
 export function getComplianceReport(params) {
   return request.get('/admin/compliance/report', { params })
 }
+
+export function getReadingStats(params) {
+  return request.get('/admin/reading-stats', { params })
+}

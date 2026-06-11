@@ -1,0 +1,94 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  display: inline-flex;
+  width: 420rpx;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.coverWrap {
+  position: relative;
+  width: 160rpx;
+  height: 210rpx;
+  flex-shrink: 0;
+}
+
+.cover {
+  width: 100%;
+  height: 100%;
+}
+
+.progressBadge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40rpx;
+  background: rgba(107, 66, 38, 0.85);
+  @include flex-center;
+}
+
+.progressText {
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+}
+
+.info {
+  flex: 1;
+  padding: 16rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.title {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.author {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  @include text-ellipsis;
+  margin-top: 4rpx;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8rpx;
+  background: $color-progress-bg;
+  border-radius: $radius-round;
+  margin-top: 12rpx;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary, $color-accent);
+  border-radius: $radius-round;
+  transition: width 0.3s ease;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8rpx;
+}
+
+.metaText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

@@ -293,3 +293,152 @@
   font-weight: 600;
 }
 
+/* 阅读足迹时间线 */
+.timeline-card {
+  margin-top: 24rpx;
+}
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  min-height: 200rpx;
+}
+
+.timeline-date-col {
+  width: 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.timeline-date-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.timeline-day-of-week {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 2rpx;
+}
+
+.timeline-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: #eee;
+  margin-top: 16rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-dot.active {
+  background: #6B4226;
+}
+
+.timeline-line {
+  width: 4rpx;
+  flex: 1;
+  background: #eee;
+  margin-top: 8rpx;
+  min-height: 80rpx;
+}
+
+.timeline-content-col {
+  flex: 1;
+  padding-left: 24rpx;
+  padding-bottom: 32rpx;
+  min-width: 0;
+}
+
+.timeline-day-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+  padding-top: 8rpx;
+}
+
+.timeline-day-total {
+  font-size: 24rpx;
+  color: #E8734A;
+  font-weight: 500;
+}
+
+.timeline-book-count {
+  font-size: 20rpx;
+  color: #999;
+  background: #f5f0eb;
+  padding: 2rpx 12rpx;
+  border-radius: 20rpx;
+}
+
+.timeline-book-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 12rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.timeline-book-card:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.timeline-book-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 20rpx;
+}
+
+.timeline-book-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.timeline-book-author {
+  font-size: 22rpx;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.timeline-book-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.timeline-book-duration {
+  font-size: 24rpx;
+  color: #6B4226;
+  font-weight: 500;
+}
+
+.timeline-book-page {
+  font-size: 20rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
+

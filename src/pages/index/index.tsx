@@ -1,24 +1,25 @@
-import React from 'react'
-import { View, Text } from '@tarojs/components'
-import styles from './index.module.scss'
+import React from 'react';
+import { View, Text, Image } from '@tarojs/components';
+import Taro from '@tarojs/taro';
+import styles from './index.module.scss';
 
-const IndexPage: React.FC = () => {
+const Index: React.FC = () => {
+  const handleClick = () => {
+    Taro.showToast({ title: '开始体验', icon: 'success' });
+  };
+
   return (
-    <View className={styles.pageContainer}>
-      <View className={styles.header}>
-        <Text className={styles.title}>小安的书店</Text>
-        <Text className={styles.subtitle}>让阅读成为一种生活方式</Text>
-      </View>
-      <View className={styles.placeholderContent}>
-        <Text className={styles.icon}>📚</Text>
-        <Text className={styles.text}>首页功能</Text>
-        <Text className={styles.tip}>
-          功能正在开发中...{'\n'}
-          点击底部「消息」tab 查看消息通知中心
-        </Text>
+    <View className={styles.container}>
+      <View className={styles.card}>
+        <Text className={styles.logo}>🎉</Text>
+        <Text className={styles.welcome}>欢迎使用 PAI 小程序</Text>
+        <Text className={styles.desc}>基于 PAI 跨端技术构建的现代化小程序模板</Text>
+        <View className={styles.button} onClick={handleClick}>
+          <Text className={styles.buttonText}>开始体验</Text>
+        </View>
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default IndexPage
+export default Index;

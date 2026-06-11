@@ -47,6 +47,37 @@
     </view>
   </view>
 
+  <view class="timeline-card card" wx:if="{{timeline.length > 0}}">
+    <text class="section-title">📚 阅读足迹</text>
+    <view class="timeline-list">
+      <view class="timeline-item" wx:for="{{timeline}}" wx:key="date" wx:for-item="dayItem">
+        <view class="timeline-date-col">
+          <text class="timeline-date-label">{{dayItem.dateLabel}}</text>
+          <text class="timeline-day-of-week">{{dayItem.dayOfWeek}}</text>
+          <view class="timeline-dot {{dayItem.isLast ? '' : 'active'}}"></view>
+          <view class="timeline-line" wx:if="{{!dayItem.isLast}}"></view>
+        </view>
+        <view class="timeline-content-col">
+          <view class="timeline-day-header">
+            <text class="timeline-day-total">共读 {{dayItem.totalMin}} 分钟</text>
+            <text class="timeline-book-count">{{dayItem.books.length}} 本书</text>
+          </view>
+          <view class="timeline-book-card" wx:for="{{dayItem.books}}" wx:key="bookId" wx:for-item="bookItem"
+            bindtap="openTimelineBook" data-id="{{bookItem.bookId}}">
+            <view class="timeline-book-info">
+              <text class="timeline-book-title">{{bookItem.bookTitle}}</text>
+              <text class="timeline-book-author">{{bookItem.bookAuthor || '未知作者'}}</text>
+            </view>
+            <view class="timeline-book-meta">
+              <text class="timeline-book-duration">{{bookItem.durationText}}</text>
+              <text class="timeline-book-page">至第{{bookItem.lastPage}}页</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <view class="advanced-section card" wx:if="{{isVip && summary.bookRank && summary.bookRank.length > 0}}">
     <text class="section-title">📚 书籍排行</text>
     <view class="rank-list">

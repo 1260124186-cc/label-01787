@@ -11,6 +11,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/mp/reading")
 @RequiredArgsConstructor
@@ -37,5 +40,19 @@ public class MpReadingController {
     public Result<ReadingSummaryVO> summary(@RequestParam(defaultValue = "week") String period) {
         Long userId = TenantContext.getTenantId();
         return Result.success(readingService.summary(userId, period));
+    }
+
+    @GetMapping("/continue-list")
+    public Result<List<Map<String, Object>>> continueReadingList(
+            @RequestParam(defaultValue = "5") Integer limit) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(readingService.continueReadingList(userId, limit));
+    }
+
+    @GetMapping("/timeline")
+    public Result<List<Map<String, Object>>> timeline(
+            @RequestParam(defaultValue = "month") String period) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(readingService.readingTimeline(userId, period));
     }
 }

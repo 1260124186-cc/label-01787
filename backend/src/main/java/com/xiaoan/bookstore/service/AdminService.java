@@ -17,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -221,5 +223,43 @@ public class AdminService {
         if (!Constants.ROLE_SUPER_ADMIN.equals(getCurrentRoleCode())) {
             throw new BusinessException(403, "仅超级管理员可执行此操作");
         }
+    }
+
+    public Map<String, Object> readingStats(Integer days) {
+        if (days == null || days <= 0) {
+            days = 7;
+        }
+        LocalDateTime start = LocalDate.now().minusDays(days).atStartOfDay();
+        LocalDateTime end = LocalDateTime.now();
+
+        Map<String, Object> data = new HashMap<>();
+        Long activeUsers = readingRecordMapper.countActiveUsers(start, end);
+        Long avgDuration = readingRecordMapper.avgDailyDurationPerUser(start, end);
+        java.util.List<Map<String, Object>> dailyStats = readingRecordMapper.dailyReadingStats(start, end);
+
+        data.put("activeUsers", activeUsers != null ? activeUsers : 0L);
+        data.put("avgDurationPerUser", avgDuration != null ? avgDuration : 0L);
+        data.put("dailyStats", dailyStats);
+        data.put("days", days);
+
+        long totalSeconds = 0;
+        long totalBookReads = 0;
+        if (dailyStats != null) {
+            for (Map<String, Object> stat : dailyStats) {
+                if (stat.get("totalDuration") != null) {
+                    totalSeconds += ((Number) stat.get("totalDuration")).longValue();
+                }
+                if (stat.get("bookCount") != null) {
+                    totalBookReads += ((Number) stat.get("bookCount")).longValue();
+                }
+            }
+        }
+        data.put("totalDuration", totalSeconds);
+        data.put("avgDurationPerDay", days > 0 ? totalSeconds / days : 0L);
+        data.put("totalBookReads", totalBookReads);
+        data.put("avgBooksPerDay", days > 0 ? (double) totalBookReads / days : 0);
+
+        log.info("管理端阅读统计: days={}, activeUsers={}, avgDuration={}s", days, activeUsers, avgDuration);
+        return data;
     }
 }

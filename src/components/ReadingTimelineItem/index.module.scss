@@ -1,0 +1,137 @@
+@use '@/styles/variables.scss' as *;
+
+.timelineItem {
+  display: flex;
+  min-height: 200rpx;
+}
+
+.dateCol {
+  width: 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dateLabel {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.dayOfWeek {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: 2rpx;
+}
+
+.dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: $radius-round;
+  background: $color-border;
+  margin-top: $spacing-sm;
+  position: relative;
+  z-index: 1;
+}
+
+.dotActive {
+  background: $color-primary;
+}
+
+.line {
+  width: 4rpx;
+  flex: 1;
+  background: $color-border;
+  margin-top: $spacing-xs;
+  min-height: 80rpx;
+}
+
+.contentCol {
+  flex: 1;
+  padding-left: $spacing-md;
+  padding-bottom: $spacing-lg;
+  min-width: 0;
+}
+
+.dayHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+  padding-top: 8rpx;
+}
+
+.dayTotal {
+  font-size: $font-size-sm;
+  color: $color-accent;
+  font-weight: $font-weight-medium;
+}
+
+.bookCount {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  background: $color-bg-hover;
+  padding: 2rpx 12rpx;
+  border-radius: $radius-round;
+}
+
+.bookCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.bookInfo {
+  flex: 1;
+  min-width: 0;
+  margin-right: $spacing-md;
+}
+
+.bookTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis;
+  display: block;
+}
+
+.bookAuthor {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  @include text-ellipsis;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.bookMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.bookDuration {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.bookPage {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}

@@ -1,11 +1,12 @@
 const { request, uploadFile } = require('../../utils/request')
-const { formatSize } = require('../../utils/util')
+const { formatSize, formatDuration } = require('../../utils/util')
 
 Page({
   data: {
     books: [],
     categories: [],
     currentCategory: '',
+    continueList: [],
     loading: false,
     page: 1,
     hasMore: true,
@@ -26,11 +27,12 @@ Page({
     if (app.globalData.token) {
       this.setData({ isLogin: true })
       this.loadCategories()
+      this.loadContinueReading()
       if (!this.data.showCopyrightModal) {
         this.refreshBooks()
       }
     } else {
-      this.setData({ isLogin: false, books: [] })
+      this.setData({ isLogin: false, books: [], continueList: [] })
     }
   },
 
@@ -42,6 +44,30 @@ Page({
     if (this.data.hasMore && !this.data.loading) {
       this.loadBooks()
     }
+  },
+
+  async loadContinueReading() {
+    if (!this.data.isLogin) return
+    try {
+      const res = await request({
+        url: '/reading/continue-list',
+        data: { limit: 5 }
+      })
+      const list = (res.data || []).map(item => ({
+        ...item,
+        progress: item.pageCount > 0 ? Math.round((item.lastPage / item.pageCount) * 100) : 0,
+        durationText: formatDuration(item.totalDuration)
+      }))
+      this.setData({ continueList: list })
+    } catch (e) {
+      console.error('加载继续阅读列表失败', e)
+    }
+  },
+
+  openContinueBook(e) {
+    const id = e.currentTarget.dataset.id
+    const page = e.currentTarget.dataset.page || 1
+    wx.navigateTo({ url: `/pages/reader/reader?id=${id}&page=${page}` })
   },
 
   async refreshBooks() {

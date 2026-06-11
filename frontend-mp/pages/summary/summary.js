@@ -7,6 +7,7 @@ Page({
     summary: {},
     dailyData: [],
     durationText: '0分钟',
+    timeline: [],
     isLogin: false,
     isVip: false,
     loading: false
@@ -50,11 +51,18 @@ Page({
     if (!this.data.isLogin) return
     this.setData({ loading: true })
     try {
-      const res = await request({
-        url: '/reading/summary',
-        data: { period: this.data.period }
-      })
-      const data = res.data
+      const [summaryRes, timelineRes] = await Promise.all([
+        request({
+          url: '/reading/summary',
+          data: { period: this.data.period }
+        }),
+        request({
+          url: '/reading/timeline',
+          data: { period: this.data.period }
+        })
+      ])
+
+      const data = summaryRes.data
       const totalSeconds = data.totalDuration || 0
       const durationText = formatDuration(totalSeconds)
 
@@ -69,10 +77,13 @@ Page({
         return { date: dateStr, minutes, height, label }
       })
 
+      const timelineData = this.formatTimeline(timelineRes.data || [])
+
       this.setData({
         summary: data,
         dailyData,
         durationText,
+        timeline: timelineData,
         isVip: data.isVip || false
       })
     } catch (e) {
@@ -80,6 +91,43 @@ Page({
     } finally {
       this.setData({ loading: false })
     }
+  },
+
+  formatTimeline(timelineList) {
+    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    return timelineList.map((day, index) => {
+      const dateObj = new Date(day.date)
+      const isToday = dateObj.toDateString() === today.toDateString()
+      const isYesterday = dateObj.toDateString() === yesterday.toDateString()
+      const dayOfWeek = weekDays[dateObj.getDay()]
+      const dateLabel = isToday ? '今天' : isYesterday ? '昨天' : `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`
+
+      const books = (day.books || []).map(book => ({
+        ...book,
+        durationText: formatDuration(book.duration || 0)
+      }))
+
+      const totalDuration = books.reduce((sum, b) => sum + (b.duration || 0), 0)
+      const totalMin = Math.round(totalDuration / 60)
+
+      return {
+        date: day.date,
+        dateLabel,
+        dayOfWeek,
+        books,
+        totalMin,
+        isLast: index === timelineList.length - 1
+      }
+    }
+  },
+
+  openTimelineBook(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({ url: `/pages/reader/reader?id=${id}` })
   },
 
   goMembership() {

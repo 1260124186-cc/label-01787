@@ -35,8 +35,10 @@ Page({
   onLoad(options) {
     const app = getApp()
     const theme = app.globalData.theme || 'white'
+    const startPage = Number(options.page) || 0
     this.setData({
       bookId: options.id,
+      startPageNum: startPage,
       theme,
       themeClass: `theme-${theme}`,
       bgColor: THEME_CONFIG[theme].bgColor
@@ -59,9 +61,11 @@ Page({
     try {
       const res = await request({ url: `/books/${this.data.bookId}` })
       this.setData({ book: res.data })
-      // 从上次阅读位置开始
-      const startPage = Math.max(1, res.data.lastPage || 1)
-      this.setData({ currentPage: startPage, displayPage: startPage })
+      // 优先使用 URL 传入的页码，其次使用书籍的 lastPage
+      const urlPage = Number(this.data.startPageNum) || 0
+      const lastPage = res.data.lastPage || 1
+      const startPage = Math.max(1, urlPage > 0 ? urlPage : lastPage)
+      this.setData({ currentPage: startPage, displayPage: startPage, startPageNum: startPage })
       this.loadPageImages(startPage, Math.min(startPage + 2, res.data.pageCount))
     } catch (e) {
       console.error('加载书籍失败', e)

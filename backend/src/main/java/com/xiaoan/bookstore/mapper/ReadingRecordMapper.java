@@ -45,4 +45,48 @@ public interface ReadingRecordMapper extends BaseMapper<ReadingRecord> {
 
     @Select("SELECT DATE(start_time) as date, SUM(duration) as total FROM reading_record WHERE user_id = #{userId} AND start_time >= #{start} AND start_time < #{end} GROUP BY DATE(start_time) ORDER BY total DESC LIMIT 1")
     Map<String, Object> maxDayDuration(@Param("userId") Long userId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Select("SELECT b.id as bookId, b.title as bookTitle, b.author as bookAuthor, b.page_count as pageCount, " +
+            "b.last_page as lastPage, MAX(r.start_time) as lastReadTime, " +
+            "SUM(r.duration) as totalDuration, COUNT(r.id) as readCount " +
+            "FROM book b " +
+            "LEFT JOIN reading_record r ON b.id = r.book_id AND r.user_id = #{userId} " +
+            "WHERE b.user_id = #{userId} AND b.status = 1 " +
+            "AND b.last_page < b.page_count " +
+            "GROUP BY b.id " +
+            "HAVING lastReadTime IS NOT NULL " +
+            "ORDER BY lastReadTime DESC " +
+            "LIMIT #{limit}")
+    List<Map<String, Object>> continueReadingList(@Param("userId") Long userId, @Param("limit") Integer limit);
+
+    @Select("SELECT DATE(r.start_time) as date, " +
+            "b.id as bookId, b.title as bookTitle, b.author as bookAuthor, " +
+            "SUM(r.duration) as duration, MAX(r.last_page) as lastPage " +
+            "FROM reading_record r " +
+            "LEFT JOIN book b ON r.book_id = b.id " +
+            "WHERE r.user_id = #{userId} AND r.start_time >= #{start} AND r.start_time < #{end} " +
+            "AND r.duration > 0 " +
+            "GROUP BY DATE(r.start_time), r.book_id " +
+            "ORDER BY date DESC, duration DESC")
+    List<Map<String, Object>> readingTimeline(@Param("userId") Long userId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Select("SELECT COUNT(DISTINCT user_id) FROM reading_record " +
+            "WHERE start_time >= #{start} AND start_time < #{end} AND duration > 0")
+    Long countActiveUsers(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Select("SELECT COALESCE(AVG(daily_total), 0) FROM (" +
+            "    SELECT user_id, SUM(duration) as daily_total " +
+            "    FROM reading_record " +
+            "    WHERE start_time >= #{start} AND start_time < #{end} AND duration > 0 " +
+            "    GROUP BY user_id, DATE(start_time)" +
+            ") as user_daily")
+    Long avgDailyDurationPerUser(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Select("SELECT DATE(start_time) as date, COUNT(DISTINCT user_id) as userCount, " +
+            "SUM(duration) as totalDuration, COUNT(DISTINCT book_id) as bookCount " +
+            "FROM reading_record " +
+            "WHERE start_time >= #{start} AND start_time < #{end} AND duration > 0 " +
+            "GROUP BY DATE(start_time) " +
+            "ORDER BY date DESC")
+    List<Map<String, Object>> dailyReadingStats(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

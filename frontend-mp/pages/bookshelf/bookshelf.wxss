@@ -3,6 +3,166 @@
   padding-bottom: 120rpx;
 }
 
+/* 继续阅读 */
+.continue-section {
+  padding: 24rpx 0 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.section-more {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.continue-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.continue-scroll-inner {
+  display: inline-flex;
+  gap: 20rpx;
+  padding: 0 24rpx;
+}
+
+.continue-card {
+  display: inline-flex;
+  width: 420rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.continue-card:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.continue-cover {
+  position: relative;
+  width: 160rpx;
+  height: 210rpx;
+  flex-shrink: 0;
+}
+
+.continue-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #6B4226 0%, #8b5e3c 50%, #D4A574 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx;
+}
+
+.continue-cover-title {
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+}
+
+.continue-cover-author {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18rpx;
+  margin-top: 8rpx;
+}
+
+.continue-progress-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36rpx;
+  background: rgba(107, 66, 38, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.continue-progress-text {
+  font-size: 20rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.continue-info {
+  flex: 1;
+  padding: 16rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.continue-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.continue-author {
+  font-size: 22rpx;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.continue-progress-bar {
+  width: 100%;
+  height: 8rpx;
+  background: #f0f0f0;
+  border-radius: 4rpx;
+  margin-top: 12rpx;
+  overflow: hidden;
+}
+
+.continue-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6B4226, #E8734A);
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+}
+
+.continue-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8rpx;
+}
+
+.continue-meta-text {
+  font-size: 20rpx;
+  color: #999;
+}
+
 /* 分类筛选 */
 .filter-bar {
   background: #fff;
