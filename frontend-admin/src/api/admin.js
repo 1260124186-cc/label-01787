@@ -117,3 +117,7 @@ export function getPlazaReportList(params) {
 export function handlePlazaReport(id, data) {
   return request.post(`/admin/plaza/reports/${id}/handle`, null, { params: data })
 }
+
+export function getReadingPlanStats() {
+  return request.get('/admin/reading-plans/stats')
+}

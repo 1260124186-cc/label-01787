@@ -83,6 +83,10 @@
           <el-menu-item v-if="userStore.hasPermission('plaza:view')" index="/plaza/excerpts">书摘管理</el-menu-item>
           <el-menu-item v-if="userStore.hasPermission('plaza:report_view')" index="/plaza/reports">举报管理</el-menu-item>
         </el-sub-menu>
+        <el-menu-item v-if="userStore.hasPermission('reading_plan:view')" index="/reading-plans">
+          <el-icon><Calendar /></el-icon>
+          <template #title><span>阅读计划统计</span></template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 

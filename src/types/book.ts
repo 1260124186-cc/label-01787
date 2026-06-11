@@ -5,6 +5,7 @@ export interface BookItem {
   pageCount: number
   lastPage: number
   categoryId: number
+  bookFormat: string
   coverUrl: string
   status: number
   createdAt: string

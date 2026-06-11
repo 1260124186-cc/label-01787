@@ -1,0 +1,218 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF8F2 0%, $color-bg-page 30%);
+  padding: 0 $page-padding;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 120rpx);
+}
+
+.planInfoCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-top: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.bookTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+  @include text-ellipsis;
+}
+
+.bookAuthor {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-lg;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.progressBar {
+  flex: 1;
+  height: 16rpx;
+  background: $color-divider;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: $color-primary;
+  border-radius: $radius-round;
+  transition: width $transition-base;
+}
+
+.progressPercent {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  min-width: 80rpx;
+  text-align: right;
+}
+
+.sectionCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-lg;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.calendarHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: $spacing-sm;
+}
+
+.calendarHeaderCell {
+  @include flex-center;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding: $spacing-xs 0;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4rpx;
+}
+
+.calendarDay {
+  @include flex-center;
+  height: 72rpx;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  border-radius: $radius-sm;
+}
+
+.calendarDayChecked {
+  background: $color-primary;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.calendarDayToday {
+  border: 2rpx solid $color-primary;
+}
+
+.calendarDayOutside {
+  color: $color-text-disabled;
+}
+
+.checkinButton {
+  @include flex-center;
+  width: 100%;
+  height: $button-height-lg;
+  background: $color-primary;
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  border-radius: $radius-button;
+  margin-bottom: $spacing-lg;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.checkinButtonDisabled {
+  background: $color-text-disabled;
+  color: $color-text-white;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.statItem {
+  @include flex-center;
+  flex-direction: column;
+  padding: $spacing-md 0;
+  gap: $spacing-xs;
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.badgesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+}
+
+.badgeItem {
+  @include flex-center;
+  flex-direction: column;
+  width: 140rpx;
+  gap: $spacing-xs;
+}
+
+.badgeIcon {
+  font-size: 56rpx;
+}
+
+.badgeName {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  text-align: center;
+}
+
+.badgeDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  text-align: center;
+}
+
+.badgeItemLocked {
+  opacity: 0.35;
+}
+
+.abandonButton {
+  @include flex-center;
+  width: 100%;
+  height: $button-height-sm;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+  margin-top: $spacing-lg;
+  margin-bottom: $spacing-xl;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.emptyBadges {
+  @include flex-center;
+  padding: $spacing-xl 0;
+}
+
+.emptyBadgesText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}

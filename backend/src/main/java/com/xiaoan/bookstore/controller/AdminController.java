@@ -12,6 +12,7 @@ import com.xiaoan.bookstore.entity.Role;
 import com.xiaoan.bookstore.service.AdminService;
 import com.xiaoan.bookstore.service.ContentComplianceService;
 import com.xiaoan.bookstore.service.RbacService;
+import com.xiaoan.bookstore.service.ReadingPlanService;
 import com.xiaoan.bookstore.service.SensitiveOperationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -30,6 +31,7 @@ public class AdminController {
     private final RbacService rbacService;
     private final SensitiveOperationService sensitiveOperationService;
     private final ContentComplianceService contentComplianceService;
+    private final ReadingPlanService readingPlanService;
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@Valid @RequestBody AdminLoginDTO dto) {
@@ -237,5 +239,12 @@ public class AdminController {
     public Result<Map<String, Object>> readingStats(
             @RequestParam(defaultValue = "7") Integer days) {
         return Result.success(adminService.readingStats(days));
+    }
+
+    @GetMapping("/reading-plans/stats")
+    @Log("查看阅读计划统计")
+    @RequirePermission("reading_plan:view")
+    public Result<Map<String, Object>> readingPlanStats() {
+        return Result.success(readingPlanService.adminStats());
     }
 }

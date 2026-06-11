@@ -125,6 +125,12 @@ const routes = [
         name: 'PlazaReports',
         component: () => import('@/views/PlazaReportList.vue'),
         meta: { title: '举报管理', permission: 'plaza:report_view' }
+      },
+      {
+        path: 'reading-plans',
+        name: 'ReadingPlanStats',
+        component: () => import('@/views/ReadingPlanStats.vue'),
+        meta: { title: '阅读计划统计', permission: 'reading_plan:view' }
       }
     ]
   }

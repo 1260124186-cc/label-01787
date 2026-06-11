@@ -1,0 +1,226 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF8F2 0%, $color-bg-page 30%);
+  padding: 0 $page-padding;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 120rpx);
+}
+
+.pageHeader {
+  padding: $spacing-lg 0 $spacing-md;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.statusTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-round;
+  padding: 4rpx;
+  box-shadow: $shadow-card;
+}
+
+.statusTab {
+  flex: 1;
+  height: 64rpx;
+  @include flex-center;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.statusTabActive {
+  background: $color-primary;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.planList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.planCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  transition: transform $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.planCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-md;
+}
+
+.planBookInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.planBookTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.planBookAuthor {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  @include text-ellipsis;
+}
+
+.planStatusBadge {
+  flex-shrink: 0;
+  font-size: $font-size-xs;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+  font-weight: $font-weight-medium;
+  margin-left: $spacing-sm;
+}
+
+.planStatusActive {
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+}
+
+.planStatusCompleted {
+  background: rgba($color-success, 0.1);
+  color: $color-success;
+}
+
+.planStatusAbandoned {
+  background: rgba($color-text-tertiary, 0.1);
+  color: $color-text-tertiary;
+}
+
+.progressSection {
+  margin-bottom: $spacing-md;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.progressLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.progressValue {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.progressBar {
+  height: 12rpx;
+  background: $color-divider;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: $color-primary;
+  border-radius: $radius-round;
+  transition: width $transition-base;
+}
+
+.progressFillCompleted {
+  background: $color-success;
+}
+
+.progressFillAbandoned {
+  background: $color-text-tertiary;
+}
+
+.planStats {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.planStatItem {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.planStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.planStatValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.planStatValueHighlight {
+  color: $color-primary;
+}
+
+.emptyState {
+  @include flex-center;
+  flex-direction: column;
+  padding: 120rpx 0;
+  gap: $spacing-md;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.fabButton {
+  position: fixed;
+  right: $page-padding;
+  bottom: calc(env(safe-area-inset-bottom) + 40rpx);
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background: $color-primary;
+  @include flex-center;
+  box-shadow: 0 8rpx 24rpx rgba($color-primary, 0.4);
+  z-index: 100;
+  transition: transform $transition-base;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.fabIcon {
+  font-size: 48rpx;
+  color: $color-text-white;
+  line-height: 1;
+}
