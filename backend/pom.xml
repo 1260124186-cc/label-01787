@@ -87,6 +87,13 @@
             <version>${pdfbox.version}</version>
         </dependency>
 
+        <!-- EPUB -->
+        <dependency>
+            <groupId>com.positiondev.epublib</groupId>
+            <artifactId>epublib-core</artifactId>
+            <version>3.1</version>
+        </dependency>
+
         <!-- CSV -->
         <dependency>
             <groupId>com.opencsv</groupId>

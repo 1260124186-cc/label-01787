@@ -148,6 +148,24 @@
       </el-col>
     </el-row>
 
+    <el-card style="margin-top: 16px;" v-if="formatStats && formatStats.formats">
+      <template #header>
+        <div class="card-header">
+          <span>书籍格式分布</span>
+          <el-tag type="info">共 {{ formatStats.total }} 本</el-tag>
+        </div>
+      </template>
+      <el-row :gutter="24">
+        <el-col :span="8" v-for="item in formatStats.formats" :key="item.format">
+          <div class="overview-item">
+            <div class="overview-label">{{ item.format.toUpperCase() }} 格式</div>
+            <div class="overview-value">{{ item.count }} 本</div>
+            <div class="overview-sublabel">占比 {{ item.percentage }}%</div>
+          </div>
+        </el-col>
+      </el-row>
+    </el-card>
+
     <el-card style="margin-top: 16px;">
       <template #header>
         <div class="card-header">
@@ -184,6 +202,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh, User, Collection, Files, EditPen, Timer, Folder } from '@element-plus/icons-vue'
 import { getStorageStats } from '@/api/backup'
+import { getBookFormatStats } from '@/api/admin'
 
 const loading = ref(false)
 const stats = reactive({
@@ -197,6 +216,7 @@ const stats = reactive({
   topUsers: [],
   dailyTrend: []
 })
+const formatStats = ref(null)
 
 const avgBooksPerUser = computed(() => {
   if (!stats.totalUsers || !stats.totalBooks) return '0'
@@ -236,6 +256,8 @@ const fetchData = async () => {
   try {
     const res = await getStorageStats()
     Object.assign(stats, res.data)
+    const formatRes = await getBookFormatStats()
+    formatStats.value = formatRes.data
   } catch (e) {
     ElMessage.error('获取统计数据失败')
   } finally {
@@ -326,6 +348,11 @@ onMounted(fetchData)
     font-size: 28px;
     font-weight: 600;
     color: #409eff;
+  }
+  .overview-sublabel {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 4px;
   }
 }
 </style>

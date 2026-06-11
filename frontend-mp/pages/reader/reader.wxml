@@ -10,27 +10,44 @@
     </view>
   </view>
 
+  <!-- MOBI/AZW3 不支持提示 -->
+  <view wx:if="{{streamType === 'unsupported'}}" class="unsupported-wrap" style="background-color: {{bgColor}};">
+    <view class="unsupported-card">
+      <view class="unsupported-icon">
+        <view class="icon icon-document"></view>
+      </view>
+      <text class="unsupported-title">暂不支持在线阅读</text>
+      <text class="unsupported-desc">MOBI/AZW3 格式暂不支持在线阅读，建议转换为 EPUB 或 PDF 格式后上传</text>
+      <view class="unsupported-info">
+        <view class="info-row"><text class="info-label">书名：</text><text class="info-value">{{book.title}}</text></view>
+        <view class="info-row"><text class="info-label">格式：</text><text class="info-value">{{(book.bookFormat || 'mobi').toUpperCase()}}</text></view>
+        <view class="info-row"><text class="info-label">大小：</text><text class="info-value">{{book.fileSizeText}}</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== 图片流渲染 (PDF) ========== -->
   <!-- 滚动模式 -->
-  <scroll-view wx:if="{{readMode === 'scroll'}}" scroll-y class="scroll-reader"
+  <scroll-view wx:if="{{streamType === 'image' && readMode === 'scroll'}}" scroll-y class="scroll-reader"
     style="background-color: {{bgColor}};"
     bindtap="toggleUI"
     bindscroll="onScroll"
     bindscrolltolower="loadMorePages"
     lower-threshold="300">
-    <view wx:for="{{loadedPages}}" wx:key="index" class="page-image-wrap" id="page-{{index}}">
+    <view wx:for="{{loadedPages}}" wx:key="index" class="page-image-wrap" id="unit-{{index}}">
       <image src="{{item}}" mode="widthFix" class="page-image" lazy-load />
       <view class="green-overlay" wx:if="{{theme === 'green'}}"></view>
     </view>
-    <view class="load-more" wx:if="{{currentPage < book.pageCount}}" bindtap="loadMorePages">
+    <view class="load-more" wx:if="{{currentUnit < totalUnits}}" bindtap="loadMorePages">
       <text>{{loading ? '加载中...' : '加载更多'}}</text>
     </view>
-    <view class="load-end" wx:if="{{currentPage >= book.pageCount}}">
+    <view class="load-end" wx:if="{{currentUnit >= totalUnits}}">
       <text>已加载全部页面</text>
     </view>
   </scroll-view>
 
   <!-- 翻页模式 -->
-  <swiper wx:if="{{readMode === 'swipe'}}" class="swipe-reader" current="{{swiperIndex}}"
+  <swiper wx:if="{{streamType === 'image' && readMode === 'swipe'}}" class="swipe-reader" current="{{swiperIndex}}"
     bindchange="onSwiperChange" bindtap="toggleUI"
     style="background-color: {{bgColor}};">
     <swiper-item wx:for="{{loadedPages}}" wx:key="index">
@@ -43,10 +60,50 @@
     </swiper-item>
   </swiper>
 
+  <!-- ========== HTML 流渲染 (EPUB) ========== -->
+  <!-- 章节滚动模式 -->
+  <scroll-view wx:if="{{streamType === 'html' && readMode === 'scroll'}}" scroll-y class="scroll-reader html-reader"
+    style="background-color: {{bgColor}};"
+    bindtap="toggleUI"
+    bindscroll="onScrollHtml"
+    bindscrolltolower="loadMoreChapters"
+    lower-threshold="300">
+    <view wx:for="{{loadedChapters}}" wx:key="chapterIndex" class="chapter-wrap" id="chapter-{{item.chapterIndex}}">
+      <view class="chapter-title-bar" wx:if="{{item.title}}">
+        <text class="chapter-title-text">{{item.title}}</text>
+      </view>
+      <view class="chapter-body rich-text-{{theme}}">
+        <rich-text nodes="{{item.html}}" space="nbsp"></rich-text>
+      </view>
+    </view>
+    <view class="load-more" wx:if="{{currentUnit < totalUnits}}" bindtap="loadMoreChapters">
+      <text>{{loading ? '加载中...' : '加载更多章节'}}</text>
+    </view>
+    <view class="load-end" wx:if="{{currentUnit >= totalUnits}}">
+      <text>已加载全部章节</text>
+    </view>
+  </scroll-view>
+
+  <!-- 章节翻页模式 -->
+  <swiper wx:if="{{streamType === 'html' && readMode === 'swipe'}}" class="swipe-reader" current="{{swiperIndex}}"
+    bindchange="onSwiperChangeHtml" bindtap="toggleUI"
+    style="background-color: {{bgColor}};">
+    <swiper-item wx:for="{{loadedChapters}}" wx:key="chapterIndex">
+      <scroll-view scroll-y class="swiper-page-scroll html-reader" style="background-color: {{bgColor}};">
+        <view class="chapter-title-bar" wx:if="{{item.title}}">
+          <text class="chapter-title-text">{{item.title}}</text>
+        </view>
+        <view class="chapter-body rich-text-{{theme}}">
+          <rich-text nodes="{{item.html}}" space="nbsp"></rich-text>
+        </view>
+      </scroll-view>
+    </swiper-item>
+  </swiper>
+
   <!-- 底部工具栏 -->
-  <view class="bottom-bar" wx:if="{{showUI}}">
+  <view class="bottom-bar" wx:if="{{showUI && streamType !== 'unsupported'}}">
     <view class="tool-row">
-      <text class="page-info">{{displayPage}} / {{book.pageCount || '-'}}</text>
+      <text class="page-info">{{displayUnit}} / {{totalUnits || '-'}} {{streamType === 'html' ? '章' : '页'}}</text>
     </view>
     <view class="tool-row actions">
       <view class="tool-btn {{readMode === 'scroll' ? 'active' : ''}}" bindtap="switchMode" data-mode="scroll">
@@ -80,10 +137,18 @@
       <view class="toc-close" bindtap="toggleToc"><view class="icon icon-close"></view></view>
     </view>
     <scroll-view scroll-y class="toc-list">
-      <view class="toc-item" wx:for="{{toc}}" wx:key="index" bindtap="jumpToPage" data-page="{{item.page}}">
-        <text class="toc-text">{{item.title}}</text>
-        <text class="toc-page">{{item.page}}</text>
-      </view>
+      <block wx:if="{{streamType === 'html'}}">
+        <view class="toc-item" wx:for="{{toc}}" wx:key="index" bindtap="jumpToChapter" data-index="{{item.chapterIndex}}">
+          <text class="toc-text">{{item.title}}</text>
+          <text class="toc-page">第{{(item.chapterIndex || 0) + 1}}章</text>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="toc-item" wx:for="{{toc}}" wx:key="index" bindtap="jumpToPage" data-page="{{item.page}}">
+          <text class="toc-text">{{item.title}}</text>
+          <text class="toc-page">{{item.page}}</text>
+        </view>
+      </block>
       <view class="empty-state" wx:if="{{toc.length === 0}}">
         <text class="empty-text">暂无目录信息</text>
       </view>

@@ -4,17 +4,43 @@
       <h2>书籍管理</h2>
     </div>
 
-    <el-card>
+    <el-card v-if="formatStats && formatStats.formats && formatStats.formats.length">
+      <div class="format-stats-bar">
+        <span class="format-stats-title">格式分布</span>
+        <div class="format-stats-items">
+          <span v-for="item in formatStats.formats" :key="item.format" class="format-stats-item">
+            <el-tag :type="getFormatTagType(item.format)" size="small">{{ item.format.toUpperCase() }}</el-tag>
+            <span class="format-stats-count">{{ item.count }} 本 ({{ item.percentage }}%)</span>
+          </span>
+        </div>
+      </div>
+    </el-card>
+
+    <el-card style="margin-top: 16px;">
       <div class="search-bar">
-        <el-input v-model="keyword" placeholder="搜索书籍名称" clearable style="width: 280px"
+        <el-input v-model="keyword" placeholder="搜索书籍名称" clearable style="width: 240px"
           @keyup.enter="fetchData" prefix-icon="Search" />
-        <el-button type="primary" :loading="loading" @click="fetchData">搜索</el-button>
+        <el-select v-model="formatFilter" placeholder="全部格式" clearable style="width: 140px; margin-left: 12px;" @change="fetchData">
+          <el-option label="PDF" value="pdf" />
+          <el-option label="EPUB" value="epub" />
+          <el-option label="MOBI" value="mobi" />
+        </el-select>
+        <el-button type="primary" :loading="loading" @click="fetchData" style="margin-left: 12px;">搜索</el-button>
       </div>
 
       <el-table :data="tableData" stripe v-loading="loading" style="width: 100%" empty-text="暂无书籍数据">
         <el-table-column prop="title" label="书名" min-width="200" show-overflow-tooltip />
         <el-table-column prop="author" label="作者" min-width="120" />
-        <el-table-column prop="pageCount" label="页数" width="80" />
+        <el-table-column label="格式" width="90">
+          <template #default="{ row }">
+            <el-tag :type="getFormatTagType(row.bookFormat)" size="small">{{ (row.bookFormat || 'pdf').toUpperCase() }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="页数/章节" width="100">
+          <template #default="{ row }">
+            {{ row.bookFormat === 'epub' ? (row.chapterCount || 0) + '章' : (row.pageCount || 0) + '页' }}
+          </template>
+        </el-table-column>
         <el-table-column label="文件大小" width="110">
           <template #default="{ row }">
             {{ formatSize(row.fileSize) }}
@@ -47,26 +73,41 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getBookList } from '@/api/admin'
+import { getBookList, getBookFormatStats } from '@/api/admin'
 
 const tableData = ref([])
 const loading = ref(false)
 const keyword = ref('')
+const formatFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+const formatStats = ref(null)
 
 const fetchData = async () => {
   loading.value = true
   const start = Date.now()
   try {
-    const res = await getBookList({ page: currentPage.value, size: pageSize.value, keyword: keyword.value })
+    const params = { page: currentPage.value, size: pageSize.value, keyword: keyword.value }
+    if (formatFilter.value) {
+      params.format = formatFilter.value
+    }
+    const res = await getBookList(params)
     tableData.value = res.data.records || []
     total.value = Number(res.data.total) || 0
   } finally {
     const elapsed = Date.now() - start
     if (elapsed < 300) await new Promise(r => setTimeout(r, 300 - elapsed))
     loading.value = false
+  }
+}
+
+const fetchFormatStats = async () => {
+  try {
+    const res = await getBookFormatStats()
+    formatStats.value = res.data
+  } catch (e) {
+    // ignore
   }
 }
 
@@ -77,16 +118,52 @@ const formatSize = (bytes) => {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
-onMounted(fetchData)
+const getFormatTagType = (format) => {
+  switch (format) {
+    case 'epub': return 'warning'
+    case 'mobi': return 'info'
+    default: return ''
+  }
+}
+
+onMounted(() => {
+  fetchData()
+  fetchFormatStats()
+})
 </script>
 
 <style lang="scss" scoped>
 .search-bar {
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
 }
 .pagination-wrap {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+}
+.format-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.format-stats-title {
+  font-weight: 600;
+  color: #303133;
+  white-space: nowrap;
+}
+.format-stats-items {
+  display: flex;
+  gap: 20px;
+}
+.format-stats-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.format-stats-count {
+  font-size: 13px;
+  color: #606266;
 }
 </style>

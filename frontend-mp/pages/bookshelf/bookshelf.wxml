@@ -20,12 +20,13 @@
     <scroll-view scroll-x class="continue-scroll" enhanced show-scrollbar="{{false}}">
       <view class="continue-scroll-inner">
         <view class="continue-card" wx:for="{{continueList}}" wx:key="bookId"
-          bindtap="openContinueBook" data-id="{{item.bookId}}" data-page="{{item.lastPage}}">
+          bindtap="openContinueBook" data-id="{{item.bookId}}" data-page="{{item.lastPage}}" data-chapter="{{item.lastChapter}}" data-format="{{item.bookFormat}}">
           <view class="continue-cover">
             <view class="continue-cover-placeholder">
               <text class="continue-cover-title">{{item.bookTitle}}</text>
               <text class="continue-cover-author">{{item.bookAuthor || '未知作者'}}</text>
             </view>
+            <view class="format-badge format-{{item.bookFormat || 'pdf'}}">{{(item.bookFormat || 'pdf').toUpperCase()}}</view>
             <view class="continue-progress-badge">
               <text class="continue-progress-text">{{item.progress}}%</text>
             </view>
@@ -37,7 +38,7 @@
               <view class="continue-progress-fill" style="width: {{item.progress}}%"></view>
             </view>
             <view class="continue-meta">
-              <text class="continue-meta-text">第{{item.lastPage}}/{{item.pageCount}}页</text>
+              <text class="continue-meta-text">{{item.bookFormat === 'epub' ? '第' + (item.lastChapter || 0) + '/' + (item.chapterCount || 0) + '章' : '第' + item.lastPage + '/' + item.pageCount + '页'}}</text>
               <text class="continue-meta-text">{{item.durationText}}</text>
             </view>
           </view>
@@ -48,20 +49,21 @@
 
   <!-- 书籍列表 -->
   <view class="book-grid" wx:if="{{books.length > 0}}">
-    <view class="book-card" wx:for="{{books}}" wx:key="id" bindtap="openBook" data-id="{{item.id}}"
+    <view class="book-card" wx:for="{{books}}" wx:key="id" bindtap="openBook" data-id="{{item.id}}" data-format="{{item.bookFormat}}"
       bindlongpress="showBookAction" data-index="{{index}}">
       <view class="book-cover">
         <view class="cover-placeholder">
           <text class="cover-title">{{item.title}}</text>
           <text class="cover-author">{{item.author || '未知作者'}}</text>
         </view>
-        <view class="progress-bar" wx:if="{{item.pageCount > 0}}">
-          <view class="progress-fill" style="width: {{(item.lastPage / item.pageCount * 100)}}%"></view>
+        <view class="format-badge format-{{item.bookFormat || 'pdf'}}">{{(item.bookFormat || 'pdf').toUpperCase()}}</view>
+        <view class="progress-bar" wx:if="{{(item.bookFormat === 'epub' ? item.chapterCount : item.pageCount) > 0}}">
+          <view class="progress-fill" style="width: {{(item.bookFormat === 'epub' ? (item.lastChapter / (item.chapterCount || 1) * 100) : (item.lastPage / (item.pageCount || 1) * 100))}}%"></view>
         </view>
       </view>
       <view class="book-info">
         <text class="book-title">{{item.title}}</text>
-        <text class="book-meta">{{item.pageCount}}页 · {{item.fileSizeText}}</text>
+        <text class="book-meta">{{item.bookFormat === 'epub' ? (item.chapterCount || 0) + '章' : (item.pageCount || 0) + '页'}} · {{item.fileSizeText}}</text>
       </view>
     </view>
   </view>
@@ -72,7 +74,13 @@
       <view class="icon icon-books"></view>
     </view>
     <text class="empty-text">书架空空如也</text>
-    <text class="empty-sub">点击下方按钮上传你的第一本PDF</text>
+    <text class="empty-sub">点击下方按钮上传你的第一本电子书</text>
+    <view class="empty-format-tips">
+      <text class="empty-format-item format-item-pdf">PDF</text>
+      <text class="empty-format-item format-item-epub">EPUB</text>
+      <text class="empty-format-item format-item-mobi">MOBI</text>
+      <text class="empty-format-item format-item-mobi">AZW3</text>
+    </view>
   </view>
 
   <!-- 上传按钮 -->

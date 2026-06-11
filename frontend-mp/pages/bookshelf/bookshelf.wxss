@@ -107,6 +107,30 @@
   font-weight: 600;
 }
 
+.format-badge {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 18rpx;
+  font-weight: 600;
+  color: #fff;
+  z-index: 10;
+}
+
+.format-badge.format-pdf {
+  background: linear-gradient(135deg, #E53935, #FF7043);
+}
+
+.format-badge.format-epub {
+  background: linear-gradient(135deg, #43A047, #66BB6A);
+}
+
+.format-badge.format-mobi {
+  background: linear-gradient(135deg, #1E88E5, #42A5F5);
+}
+
 .continue-info {
   flex: 1;
   padding: 16rpx 20rpx;
@@ -292,6 +316,34 @@
   font-size: 24rpx;
   color: #bbb;
   margin-top: 12rpx;
+}
+
+.empty-format-tips {
+  display: flex;
+  justify-content: center;
+  gap: 16rpx;
+  margin-top: 32rpx;
+  flex-wrap: wrap;
+}
+
+.empty-format-item {
+  padding: 8rpx 24rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #fff;
+}
+
+.format-item-pdf {
+  background: linear-gradient(135deg, #E53935, #FF7043);
+}
+
+.format-item-epub {
+  background: linear-gradient(135deg, #43A047, #66BB6A);
+}
+
+.format-item-mobi {
+  background: linear-gradient(135deg, #1E88E5, #42A5F5);
 }
 
 /* 悬浮按钮 */

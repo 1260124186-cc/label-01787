@@ -8,22 +8,15 @@ import com.xiaoan.bookstore.common.TenantValidator;
 import com.xiaoan.bookstore.entity.Book;
 import com.xiaoan.bookstore.exception.BusinessException;
 import com.xiaoan.bookstore.mapper.BookMapper;
+import com.xiaoan.bookstore.service.reader.ReaderAdapter;
+import com.xiaoan.bookstore.service.reader.ReaderAdapterFactory;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
-import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,18 +29,17 @@ import java.util.*;
 public class BookService {
 
     private static final Logger log = LoggerFactory.getLogger(BookService.class);
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(".pdf", ".epub", ".mobi", ".azw3");
+    private static final long MIN_FILE_SIZE = 1024 * 1024;
+
     private final BookMapper bookMapper;
     private final ContentComplianceService contentComplianceService;
     private final MembershipService membershipService;
     private final PointsService pointsService;
+    private final ReaderAdapterFactory readerAdapterFactory;
 
     @Value("${app.upload.path}")
     private String uploadPath;
-
-    @Value("${app.upload.max-size}")
-    private long maxFileSize;
-
-    private static final long MIN_FILE_SIZE = 1024 * 1024;
 
     public Book upload(Long userId, MultipartFile file, String title, String author, Long categoryId, Integer copyrightDeclared) {
         if (file.isEmpty()) {
@@ -56,19 +48,24 @@ public class BookService {
         if (file.getSize() < MIN_FILE_SIZE) {
             throw new BusinessException("文件大小不能小于1MB");
         }
+
+        String originalName = file.getOriginalFilename();
+        String format = ReaderAdapterFactory.resolveFormat(originalName);
+        long maxFileSize = getMaxFileSize(format);
         if (file.getSize() > maxFileSize) {
-            throw new BusinessException("文件大小不能超过150MB");
+            String maxText = format.equals(Constants.FORMAT_PDF) ? "150MB" : "100MB";
+            throw new BusinessException(format.toUpperCase() + "文件大小不能超过" + maxText);
+        }
+
+        if (!isAllowedExtension(originalName)) {
+            throw new BusinessException("仅支持PDF、EPUB、MOBI/AZW3格式文件");
         }
 
         membershipService.checkBookQuota(userId);
         membershipService.checkStorageQuota(userId, file.getSize());
 
-        String originalName = file.getOriginalFilename();
-        if (originalName == null || !originalName.toLowerCase().endsWith(".pdf")) {
-            throw new BusinessException("仅支持PDF文件");
-        }
-
-        String fileName = UUID.randomUUID() + ".pdf";
+        String extension = getExtension(originalName);
+        String fileName = UUID.randomUUID() + extension;
         String userDir = uploadPath + File.separator + userId;
         Path dirPath = Paths.get(userDir).toAbsolutePath().normalize();
         try {
@@ -77,20 +74,28 @@ public class BookService {
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             int pageCount = 0;
-            try (PDDocument doc = Loader.loadPDF(filePath.toFile())) {
-                pageCount = doc.getNumberOfPages();
+            int chapterCount = 0;
+            ReaderAdapter adapter = readerAdapterFactory.getAdapter(format);
+            int totalUnits = adapter.getTotalUnits(filePath.toString());
+            if (Constants.FORMAT_PDF.equals(format)) {
+                pageCount = totalUnits;
+            } else {
+                chapterCount = totalUnits;
             }
 
             Book book = new Book();
             book.setUserId(userId);
-            String bookTitle = title != null && !title.isBlank() ? title : originalName.replace(".pdf", "");
+            String bookTitle = title != null && !title.isBlank() ? title : originalName.replace(extension, "");
             book.setTitle(bookTitle);
             book.setAuthor(author != null ? author : "");
             book.setFilePath(userId + "/" + fileName);
             book.setFileSize(file.getSize());
+            book.setBookFormat(format);
             book.setPageCount(pageCount);
+            book.setChapterCount(chapterCount);
             book.setCategoryId(categoryId);
             book.setLastPage(0);
+            book.setLastChapter(0);
             book.setCopyrightDeclared(copyrightDeclared != null && copyrightDeclared == 1 ? 1 : 0);
             book.setStatus(Constants.STATUS_ENABLED);
             bookMapper.insert(book);
@@ -101,7 +106,8 @@ public class BookService {
                 log.warn("书名审核失败，不影响上传: {}", e.getMessage());
             }
 
-            log.info("书籍上传成功: userId={}, title={}, pages={}, copyrightDeclared={}", userId, bookTitle, pageCount, book.getCopyrightDeclared());
+            log.info("书籍上传成功: userId={}, title={}, format={}, pages={}, chapters={}, copyrightDeclared={}",
+                    userId, bookTitle, format, pageCount, chapterCount, book.getCopyrightDeclared());
 
             try {
                 pointsService.earnPoints(userId, Constants.POINTS_CATEGORY_UPLOAD_BOOK, 0, "上传书籍《" + bookTitle + "》", String.valueOf(book.getId()));
@@ -144,89 +150,49 @@ public class BookService {
         log.info("书籍删除: userId={}, bookId={}", userId, bookId);
     }
 
+    public String getStreamType(Long userId, Long bookId) {
+        Book book = detail(userId, bookId);
+        ReaderAdapter adapter = readerAdapterFactory.getAdapter(book.getBookFormat());
+        return adapter.getStreamType();
+    }
+
     public byte[] getPageImage(Long userId, Long bookId, int pageNum) {
         Book book = detail(userId, bookId);
         Path filePath = Paths.get(uploadPath, book.getFilePath()).toAbsolutePath().normalize();
-
-        try (PDDocument doc = Loader.loadPDF(filePath.toFile())) {
-            if (pageNum < 1 || pageNum > doc.getNumberOfPages()) {
-                throw new BusinessException("页码超出范围");
-            }
-            PDFRenderer renderer = new PDFRenderer(doc);
-            BufferedImage image = renderer.renderImageWithDPI(pageNum - 1, 150);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(image, "png", baos);
-            return baos.toByteArray();
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("获取PDF页面失败", e);
-            throw new BusinessException("获取页面失败");
+        ReaderAdapter adapter = readerAdapterFactory.getAdapter(book.getBookFormat());
+        byte[] result = adapter.getUnitImage(filePath.toString(), pageNum);
+        if (result == null || result.length == 0) {
+            throw new BusinessException("该格式不支持图片渲染");
         }
+        return result;
     }
 
     public List<Map<String, Object>> getToc(Long userId, Long bookId) {
         Book book = detail(userId, bookId);
         Path filePath = Paths.get(uploadPath, book.getFilePath()).toAbsolutePath().normalize();
-        List<Map<String, Object>> toc = new ArrayList<>();
-
-        try (PDDocument doc = Loader.loadPDF(filePath.toFile())) {
-            PDDocumentOutline outline = doc.getDocumentCatalog().getDocumentOutline();
-            if (outline != null) {
-                for (PDOutlineItem item : outline.children()) {
-                    Map<String, Object> entry = new HashMap<>();
-                    entry.put("title", item.getTitle());
-                    int pageIndex = getPageNumber(doc, item);
-                    entry.put("page", pageIndex + 1);
-                    List<Map<String, Object>> children = new ArrayList<>();
-                    for (PDOutlineItem child : item.children()) {
-                        Map<String, Object> childEntry = new HashMap<>();
-                        childEntry.put("title", child.getTitle());
-                        childEntry.put("page", getPageNumber(doc, child) + 1);
-                        children.add(childEntry);
-                    }
-                    if (!children.isEmpty()) {
-                        entry.put("children", children);
-                    }
-                    toc.add(entry);
-                }
-            }
-        } catch (Exception e) {
-            log.error("获取PDF目录失败", e);
-        }
-        return toc;
-    }
-
-    private int getPageNumber(PDDocument doc, PDOutlineItem item) {
-        try {
-            PDPage page = item.findDestinationPage(doc);
-            if (page != null) {
-                return doc.getPages().indexOf(page);
-            }
-        } catch (Exception e) {
-            log.debug("获取目录页码失败: {}", item.getTitle());
-        }
-        return 0;
+        ReaderAdapter adapter = readerAdapterFactory.getAdapter(book.getBookFormat());
+        return adapter.getToc(filePath.toString());
     }
 
     public String getPageText(Long userId, Long bookId, int pageNum) {
         Book book = detail(userId, bookId);
         Path filePath = Paths.get(uploadPath, book.getFilePath()).toAbsolutePath().normalize();
+        ReaderAdapter adapter = readerAdapterFactory.getAdapter(book.getBookFormat());
+        return adapter.getUnitContent(filePath.toString(), pageNum);
+    }
 
-        try (PDDocument doc = Loader.loadPDF(filePath.toFile())) {
-            if (pageNum < 1 || pageNum > doc.getNumberOfPages()) {
-                throw new BusinessException("页码超出范围");
-            }
-            PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setStartPage(pageNum);
-            stripper.setEndPage(pageNum);
-            return stripper.getText(doc);
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("获取PDF文本失败", e);
-            throw new BusinessException("获取文本失败");
-        }
+    public String getUnitContent(Long userId, Long bookId, int unitIndex) {
+        Book book = detail(userId, bookId);
+        Path filePath = Paths.get(uploadPath, book.getFilePath()).toAbsolutePath().normalize();
+        ReaderAdapter adapter = readerAdapterFactory.getAdapter(book.getBookFormat());
+        return adapter.getUnitContent(filePath.toString(), unitIndex);
+    }
+
+    public String getChapterHtml(Long userId, Long bookId, int chapterIndex) {
+        Book book = detail(userId, bookId);
+        Path filePath = Paths.get(uploadPath, book.getFilePath()).toAbsolutePath().normalize();
+        ReaderAdapter adapter = readerAdapterFactory.getAdapter(book.getBookFormat());
+        return adapter.getUnitContent(filePath.toString(), chapterIndex);
     }
 
     public void updateLastPage(Long userId, Long bookId, int lastPage) {
@@ -235,7 +201,36 @@ public class BookService {
         bookMapper.updateById(book);
     }
 
+    public void updateLastChapter(Long userId, Long bookId, int lastChapter) {
+        Book book = detail(userId, bookId);
+        book.setLastChapter(lastChapter);
+        bookMapper.updateById(book);
+    }
+
     public void update(Book book) {
         bookMapper.updateById(book);
+    }
+
+    private boolean isAllowedExtension(String filename) {
+        if (filename == null) return false;
+        String lower = filename.toLowerCase();
+        return ALLOWED_EXTENSIONS.stream().anyMatch(lower::endsWith);
+    }
+
+    private String getExtension(String filename) {
+        if (filename == null) return ".pdf";
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".azw3")) return ".azw3";
+        if (lower.endsWith(".mobi")) return ".mobi";
+        if (lower.endsWith(".epub")) return ".epub";
+        return ".pdf";
+    }
+
+    private long getMaxFileSize(String format) {
+        return switch (format) {
+            case Constants.FORMAT_EPUB -> Constants.MAX_SIZE_EPUB;
+            case Constants.FORMAT_MOBI -> Constants.MAX_SIZE_MOBI;
+            default -> Constants.MAX_SIZE_PDF;
+        };
     }
 }

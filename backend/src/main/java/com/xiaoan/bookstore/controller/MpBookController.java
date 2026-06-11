@@ -87,11 +87,37 @@ public class MpBookController {
                                         @RequestBody Map<String, Integer> body) {
         Long userId = TenantContext.getTenantId();
         Integer lastPage = body.get("lastPage");
-        if (lastPage == null || lastPage < 0) {
-            throw new com.xiaoan.bookstore.exception.BusinessException("页码参数无效");
+        Integer lastChapter = body.get("lastChapter");
+        if (lastPage != null && lastPage >= 0) {
+            bookService.updateLastPage(userId, id, lastPage);
         }
-        bookService.updateLastPage(userId, id, lastPage);
+        if (lastChapter != null && lastChapter >= 0) {
+            bookService.updateLastChapter(userId, id, lastChapter);
+        }
+        if (lastPage == null && lastChapter == null) {
+            throw new com.xiaoan.bookstore.exception.BusinessException("进度参数无效");
+        }
         return Result.success();
+    }
+
+    @GetMapping("/books/{id}/chapter/{chapterIndex}")
+    public Result<String> getChapterHtml(@PathVariable Long id,
+                                          @PathVariable int chapterIndex) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(bookService.getChapterHtml(userId, id, chapterIndex));
+    }
+
+    @GetMapping("/books/{id}/stream-type")
+    public Result<String> getStreamType(@PathVariable Long id) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(bookService.getStreamType(userId, id));
+    }
+
+    @GetMapping("/books/{id}/unit/{unitIndex}")
+    public Result<String> getUnitContent(@PathVariable Long id,
+                                          @PathVariable int unitIndex) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(bookService.getUnitContent(userId, id, unitIndex));
     }
 
     @PostMapping("/categories")

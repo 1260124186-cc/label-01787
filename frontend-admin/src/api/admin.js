@@ -22,6 +22,10 @@ export function getBookList(params) {
   return request.get('/admin/books', { params })
 }
 
+export function getBookFormatStats() {
+  return request.get('/admin/books/format-stats')
+}
+
 export function deleteBook(id) {
   return request.delete(`/admin/books/${id}`, {
     headers: { 'X-Sensitive-Operation': 'delete_book' }

@@ -53,11 +53,24 @@ Page({
         url: '/reading/continue-list',
         data: { limit: 5 }
       })
-      const list = (res.data || []).map(item => ({
-        ...item,
-        progress: item.pageCount > 0 ? Math.round((item.lastPage / item.pageCount) * 100) : 0,
-        durationText: formatDuration(item.totalDuration)
-      }))
+      const list = (res.data || []).map(item => {
+        const format = item.bookFormat || 'pdf'
+        let progress = 0
+        if (format === 'epub') {
+          const total = Math.max(1, item.chapterCount || 0)
+          const last = item.lastChapter || 0
+          progress = total > 0 ? Math.round((last / total) * 100) : 0
+        } else {
+          const total = Math.max(1, item.pageCount || 0)
+          const last = item.lastPage || 0
+          progress = total > 0 ? Math.round((last / total) * 100) : 0
+        }
+        return {
+          ...item,
+          progress,
+          durationText: formatDuration(item.totalDuration)
+        }
+      })
       this.setData({ continueList: list })
     } catch (e) {
       console.error('加载继续阅读列表失败', e)
@@ -67,7 +80,9 @@ Page({
   openContinueBook(e) {
     const id = e.currentTarget.dataset.id
     const page = e.currentTarget.dataset.page || 1
-    wx.navigateTo({ url: `/pages/reader/reader?id=${id}&page=${page}` })
+    const chapter = e.currentTarget.dataset.chapter || 0
+    const format = e.currentTarget.dataset.format || 'pdf'
+    wx.navigateTo({ url: `/pages/reader/reader?id=${id}&page=${page}&chapter=${chapter}&format=${format}` })
   },
 
   async refreshBooks() {
@@ -123,7 +138,8 @@ Page({
 
   openBook(e) {
     const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: `/pages/reader/reader?id=${id}` })
+    const format = e.currentTarget.dataset.format || 'pdf'
+    wx.navigateTo({ url: `/pages/reader/reader?id=${id}&format=${format}` })
   },
 
   showBookAction(e) {
@@ -168,10 +184,16 @@ Page({
   },
 
   doUpload() {
+    const FORMAT_MAX_SIZE = {
+      pdf: 150 * 1024 * 1024,
+      epub: 100 * 1024 * 1024,
+      mobi: 100 * 1024 * 1024,
+      azw3: 100 * 1024 * 1024
+    }
     wx.chooseMessageFile({
       count: 1,
       type: 'file',
-      extension: ['pdf'],
+      extension: ['pdf', 'epub', 'mobi', 'azw3'],
       success: (res) => {
         const file = res.tempFiles[0]
         if (!file || !file.path) {
@@ -182,24 +204,34 @@ Page({
           wx.showToast({ title: '文件不能小于1MB', icon: 'none' })
           return
         }
-        if (file.size > 150 * 1024 * 1024) {
-          wx.showToast({ title: '文件不能超过150MB', icon: 'none' })
+
+        const fileName = file.name || ''
+        const lowerName = fileName.toLowerCase()
+        let format = 'pdf'
+        if (lowerName.endsWith('.epub')) format = 'epub'
+        else if (lowerName.endsWith('.mobi')) format = 'mobi'
+        else if (lowerName.endsWith('.azw3')) format = 'azw3'
+
+        const maxSize = FORMAT_MAX_SIZE[format] || FORMAT_MAX_SIZE.pdf
+        const maxSizeMB = Math.round(maxSize / (1024 * 1024))
+        if (file.size > maxSize) {
+          wx.showToast({ title: `${format.toUpperCase()}文件不能超过${maxSizeMB}MB`, icon: 'none' })
           return
         }
 
-        let fileName = file.name
-        if (!fileName) {
+        let finalFileName = fileName
+        if (!finalFileName) {
           const pathParts = file.path.split('/')
-          fileName = pathParts[pathParts.length - 1] || '未命名文件'
+          finalFileName = pathParts[pathParts.length - 1] || '未命名文件'
         }
 
         this.pendingFilePath = file.path
-        this.pendingFileName = fileName
+        this.pendingFileName = finalFileName
 
         this.setData({
           showCopyrightModal: true,
           pendingFilePath: file.path,
-          pendingFileName: fileName,
+          pendingFileName: finalFileName,
           copyrightDeclared: false
         })
       }
@@ -239,7 +271,11 @@ Page({
 
     this.setData({ showCopyrightModal: false })
     wx.showLoading({ title: '上传中...' })
-    const title = fileName.replace('.pdf', '').replace('.PDF', '')
+    const title = fileName
+      .replace(/\.pdf$/i, '')
+      .replace(/\.epub$/i, '')
+      .replace(/\.mobi$/i, '')
+      .replace(/\.azw3$/i, '')
     uploadFile(this.pendingFilePath, { title, copyrightDeclared: copyrightDeclared ? '1' : '0' }).then(() => {
       wx.hideLoading()
       wx.showToast({ title: '上传成功', icon: 'success' })

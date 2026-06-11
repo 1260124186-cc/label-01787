@@ -46,13 +46,17 @@ public interface ReadingRecordMapper extends BaseMapper<ReadingRecord> {
     @Select("SELECT DATE(start_time) as date, SUM(duration) as total FROM reading_record WHERE user_id = #{userId} AND start_time >= #{start} AND start_time < #{end} GROUP BY DATE(start_time) ORDER BY total DESC LIMIT 1")
     Map<String, Object> maxDayDuration(@Param("userId") Long userId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    @Select("SELECT b.id as bookId, b.title as bookTitle, b.author as bookAuthor, b.page_count as pageCount, " +
-            "b.last_page as lastPage, MAX(r.start_time) as lastReadTime, " +
+    @Select("SELECT b.id as bookId, b.title as bookTitle, b.author as bookAuthor, " +
+            "b.book_format as bookFormat, " +
+            "b.page_count as pageCount, b.chapter_count as chapterCount, " +
+            "b.last_page as lastPage, b.last_chapter as lastChapter, " +
+            "MAX(r.start_time) as lastReadTime, " +
             "SUM(r.duration) as totalDuration, COUNT(r.id) as readCount " +
             "FROM book b " +
             "LEFT JOIN reading_record r ON b.id = r.book_id AND r.user_id = #{userId} " +
             "WHERE b.user_id = #{userId} AND b.status = 1 " +
-            "AND b.last_page < b.page_count " +
+            "AND ((b.book_format = 'epub' AND b.last_chapter < GREATEST(b.chapter_count, 1)) " +
+            "     OR (b.book_format != 'epub' AND b.last_page < GREATEST(b.page_count, 1))) " +
             "GROUP BY b.id " +
             "HAVING lastReadTime IS NOT NULL " +
             "ORDER BY lastReadTime DESC " +

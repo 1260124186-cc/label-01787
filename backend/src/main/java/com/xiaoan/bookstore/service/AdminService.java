@@ -19,9 +19,8 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -117,14 +116,42 @@ public class AdminService {
         return userMapper.selectPage(new Page<>(page, size), wrapper);
     }
 
-    public Page<Book> bookList(int page, int size, String keyword) {
+    public Page<Book> bookList(int page, int size, String keyword, String format) {
         LambdaQueryWrapper<Book> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.like(Book::getTitle, keyword);
         }
+        if (format != null && !format.isEmpty()) {
+            wrapper.eq(Book::getBookFormat, format);
+        }
         wrapper.ne(Book::getStatus, Constants.STATUS_DISABLED);
         wrapper.orderByDesc(Book::getCreatedAt);
         return bookMapper.selectPage(new Page<>(page, size), wrapper);
+    }
+
+    public Map<String, Object> bookFormatStats() {
+        Map<String, Object> result = new HashMap<>();
+        long totalCount = bookMapper.selectCount(
+                new LambdaQueryWrapper<Book>().ne(Book::getStatus, Constants.STATUS_DISABLED)
+        );
+        result.put("total", totalCount);
+
+        List<Map<String, Object>> formatStats = new ArrayList<>();
+        String[] formats = {Constants.FORMAT_PDF, Constants.FORMAT_EPUB, Constants.FORMAT_MOBI};
+        for (String fmt : formats) {
+            long count = bookMapper.selectCount(
+                    new LambdaQueryWrapper<Book>()
+                            .eq(Book::getBookFormat, fmt)
+                            .ne(Book::getStatus, Constants.STATUS_DISABLED)
+            );
+            Map<String, Object> stat = new HashMap<>();
+            stat.put("format", fmt);
+            stat.put("count", count);
+            stat.put("percentage", totalCount > 0 ? String.format("%.1f", (double) count / totalCount * 100) : "0.0");
+            formatStats.add(stat);
+        }
+        result.put("formats", formatStats);
+        return result;
     }
 
     public Page<OperationLog> logList(int page, int size) {

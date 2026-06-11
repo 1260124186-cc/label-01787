@@ -68,8 +68,16 @@ public class AdminController {
     public Result<?> bookList(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword) {
-        return Result.success(adminService.bookList(page, size, keyword));
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String format) {
+        return Result.success(adminService.bookList(page, size, keyword, format));
+    }
+
+    @GetMapping("/books/format-stats")
+    @Log("查看格式统计")
+    @RequirePermission("book:view")
+    public Result<Map<String, Object>> bookFormatStats() {
+        return Result.success(adminService.bookFormatStats());
     }
 
     @DeleteMapping("/books/{id}")

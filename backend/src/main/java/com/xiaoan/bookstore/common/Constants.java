@@ -105,5 +105,13 @@ public class Constants {
 
     public static final int ORDER_EXPIRE_MINUTES = 30;
 
+    public static final String FORMAT_PDF = "pdf";
+    public static final String FORMAT_EPUB = "epub";
+    public static final String FORMAT_MOBI = "mobi";
+
+    public static final long MAX_SIZE_PDF = 157286400L;
+    public static final long MAX_SIZE_EPUB = 104857600L;
+    public static final long MAX_SIZE_MOBI = 104857600L;
+
     private Constants() {}
 }

@@ -50,6 +50,9 @@ app:
   upload:
     path: ${UPLOAD_PATH:./uploads}
     max-size: 157286400
+    max-size-epub: 104857600
+    max-size-mobi: 104857600
+    allowed-extensions: pdf,epub,mobi,azw3
   wx:
     app-id: ${WX_APP_ID:your-app-id}
     app-secret: ${WX_APP_SECRET:your-app-secret}

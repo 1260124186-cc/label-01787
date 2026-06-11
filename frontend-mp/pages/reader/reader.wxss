@@ -159,6 +159,213 @@ page {
   height: 100vh;
 }
 
+/* ========== HTML 流渲染 (EPUB) ========== */
+.html-reader {
+  padding: 0;
+}
+
+.chapter-wrap {
+  width: 100%;
+  padding: 20rpx 0 40rpx;
+  box-sizing: border-box;
+}
+
+.chapter-title-bar {
+  padding: 40rpx 40rpx 20rpx;
+  border-bottom: 2rpx solid rgba(107, 66, 38, 0.15);
+  margin-bottom: 24rpx;
+}
+
+.chapter-title-text {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.5;
+}
+
+.chapter-body {
+  padding: 0 32rpx;
+  font-size: 30rpx;
+  line-height: 1.9;
+  color: #333;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+/* rich-text 主题样式 */
+.rich-text-white {
+  color: #333333;
+}
+
+.rich-text-green {
+  color: #2D4A2D;
+}
+
+.rich-text-dark {
+  color: #E0E0E0;
+}
+
+/* 主题覆盖 rich-text 内部常见元素 */
+.html-reader .chapter-body p,
+.html-reader .chapter-body div,
+.html-reader .chapter-body span {
+  line-height: 1.9 !important;
+}
+
+.html-reader .chapter-body img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+  margin: 20rpx auto;
+  border-radius: 8rpx;
+}
+
+.html-reader .chapter-body h1,
+.html-reader .chapter-body h2,
+.html-reader .chapter-body h3 {
+  margin: 32rpx 0 20rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.html-reader .chapter-body h1 { font-size: 40rpx; }
+.html-reader .chapter-body h2 { font-size: 34rpx; }
+.html-reader .chapter-body h3 { font-size: 32rpx; }
+
+.html-reader .chapter-body blockquote {
+  margin: 24rpx 0;
+  padding: 20rpx 24rpx;
+  border-left: 6rpx solid #D4A574;
+  background: rgba(212, 165, 116, 0.1);
+  border-radius: 0 8rpx 8rpx 0;
+  font-style: italic;
+}
+
+.html-reader .chapter-body hr {
+  border: none;
+  height: 2rpx;
+  background: rgba(107, 66, 38, 0.2);
+  margin: 32rpx 0;
+}
+
+.html-reader .chapter-body ul,
+.html-reader .chapter-body ol {
+  padding-left: 48rpx;
+  margin: 16rpx 0;
+}
+
+.html-reader .chapter-body li {
+  margin: 12rpx 0;
+}
+
+.html-reader .chapter-body a {
+  color: #6B4226;
+  text-decoration: none;
+}
+
+/* 主题适配 */
+.theme-green .chapter-title-text { color: #2D4A2D; }
+.theme-green .chapter-body { color: #2D4A2D; }
+.theme-green .chapter-title-bar { border-bottom-color: rgba(45, 74, 45, 0.2); }
+.theme-green blockquote { background: rgba(45, 74, 45, 0.08); border-left-color: #67C23A; }
+
+.theme-dark .chapter-title-text { color: #E0E0E0; }
+.theme-dark .chapter-body { color: #E0E0E0; }
+.theme-dark .chapter-title-bar { border-bottom-color: rgba(224, 224, 224, 0.15); }
+.theme-dark blockquote { background: rgba(224, 224, 224, 0.08); border-left-color: #D4A574; }
+.theme-dark .chapter-body a { color: #E8734A; }
+
+/* ========== MOBI/AZW3 不支持页面 ========== */
+.unsupported-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+  box-sizing: border-box;
+}
+
+.unsupported-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 64rpx 48rpx;
+  text-align: center;
+  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.08);
+}
+
+.theme-green .unsupported-card { background: #FFFFFF; }
+.theme-dark .unsupported-card { background: #2A2A44; }
+
+.unsupported-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin: 0 auto 32rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1E88E5, #42A5F5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.unsupported-icon .icon {
+  transform: scale(2);
+}
+
+.unsupported-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.theme-dark .unsupported-title { color: #fff; }
+
+.unsupported-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.7;
+  margin-bottom: 40rpx;
+}
+
+.theme-dark .unsupported-desc { color: #bbb; }
+
+.unsupported-info {
+  background: rgba(107, 66, 38, 0.05);
+  border-radius: 16rpx;
+  padding: 24rpx 32rpx;
+  text-align: left;
+}
+
+.theme-dark .unsupported-info { background: rgba(255, 255, 255, 0.05); }
+
+.info-row {
+  display: flex;
+  padding: 12rpx 0;
+  font-size: 26rpx;
+}
+
+.info-label {
+  flex-shrink: 0;
+  color: #999;
+  width: 120rpx;
+}
+
+.theme-dark .info-label { color: #888; }
+
+.info-value {
+  flex: 1;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-dark .info-value { color: #ddd; }
+
 /* 底部工具栏 */
 .bottom-bar {
   position: fixed;

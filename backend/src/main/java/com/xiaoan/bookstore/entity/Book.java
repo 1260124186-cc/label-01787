@@ -14,9 +14,12 @@ public class Book {
     private String author;
     private String filePath;
     private Long fileSize;
+    private String bookFormat;
     private Integer pageCount;
+    private Integer chapterCount;
     private Long categoryId;
     private Integer lastPage;
+    private Integer lastChapter;
     private Integer copyrightDeclared;
     private LocalDateTime copyrightAgreedAt;
     private Integer status;

@@ -1,4 +1,5 @@
 const { request } = require('../../utils/request')
+const { formatSize } = require('../../utils/util')
 
 const THEME_CONFIG = {
   white: { bgColor: '#FFFFFF', textColor: '#333333' },
@@ -6,16 +7,25 @@ const THEME_CONFIG = {
   dark:  { bgColor: '#1A1A2E', textColor: '#E0E0E0' }
 }
 
+const STREAM_IMAGE = 'image'
+const STREAM_HTML = 'html'
+const STREAM_UNSUPPORTED = 'unsupported'
+
 Page({
   data: {
     book: {},
     bookId: null,
     toc: [],
+    format: 'pdf',
+    streamType: STREAM_IMAGE,
     loadedPages: [],
-    currentPage: 1,
-    displayPage: 1,
+    loadedChapters: [],
+    chapterTitleMap: {},
+    totalUnits: 0,
+    currentUnit: 1,
+    displayUnit: 1,
     swiperIndex: 0,
-    readMode: 'scroll', // scroll | swipe
+    readMode: 'scroll',
     theme: 'white',
     themeClass: 'theme-white',
     bgColor: '#FFFFFF',
@@ -28,25 +38,53 @@ Page({
     noteType: 2,
     readingRecordId: null,
     loading: false,
-    startPageNum: 1,
-    _scrollTimer: null
+    startUnitNum: 1,
+    _scrollTimer: null,
+    _chapterHtmlCache: {}
   },
 
   onLoad(options) {
     const app = getApp()
     const theme = app.globalData.theme || 'white'
     const startPage = Number(options.page) || 0
+    const startChapter = Number(options.chapter) || 0
+    const format = options.format || 'pdf'
     this.setData({
       bookId: options.id,
+      format,
       startPageNum: startPage,
+      startChapterNum: startChapter,
       theme,
       themeClass: `theme-${theme}`,
       bgColor: THEME_CONFIG[theme].bgColor
     })
     this.applyPageBgColor(theme)
-    this.loadBook()
-    this.loadToc()
+    this.initReader()
+  },
+
+  async initReader() {
+    await this.loadBook()
+    await this.determineStreamType()
+    await this.loadToc()
+    await this.loadStartContent()
     this.startReading()
+  },
+
+  async determineStreamType() {
+    const format = this.data.book.bookFormat || this.data.format
+    try {
+      const res = await request({ url: `/books/${this.data.bookId}/stream-type` })
+      let streamType = res.data || STREAM_IMAGE
+      if (format === 'mobi' || format === 'azw3') {
+        streamType = STREAM_UNSUPPORTED
+      }
+      this.setData({ streamType })
+    } catch (e) {
+      let streamType = STREAM_IMAGE
+      if (format === 'epub') streamType = STREAM_HTML
+      else if (format === 'mobi' || format === 'azw3') streamType = STREAM_UNSUPPORTED
+      this.setData({ streamType })
+    }
   },
 
   onUnload() {
@@ -60,17 +98,59 @@ Page({
   async loadBook() {
     try {
       const res = await request({ url: `/books/${this.data.bookId}` })
-      this.setData({ book: res.data })
-      // 优先使用 URL 传入的页码，其次使用书籍的 lastPage
-      const urlPage = Number(this.data.startPageNum) || 0
-      const lastPage = res.data.lastPage || 1
-      const startPage = Math.max(1, urlPage > 0 ? urlPage : lastPage)
-      this.setData({ currentPage: startPage, displayPage: startPage, startPageNum: startPage })
-      this.loadPageImages(startPage, Math.min(startPage + 2, res.data.pageCount))
+      const book = res.data
+      const format = book.bookFormat || this.data.format
+      const totalUnits = format === 'epub' ? (book.chapterCount || 0) : (book.pageCount || 0)
+      this.setData({
+        book: { ...book, fileSizeText: formatSize(book.fileSize) },
+        format,
+        totalUnits
+      })
     } catch (e) {
       console.error('加载书籍失败', e)
       wx.showToast({ title: '加载失败', icon: 'none' })
     }
+  },
+
+  async loadStartContent() {
+    const { streamType, format, book, startPageNum, startChapterNum } = this.data
+    if (streamType === STREAM_UNSUPPORTED) return
+
+    if (streamType === STREAM_IMAGE) {
+      const lastPage = book.lastPage || 1
+      const urlPage = Number(startPageNum) || 0
+      const startPage = Math.max(1, urlPage > 0 ? urlPage : lastPage)
+      this.setData({ currentUnit: startPage, displayUnit: startPage, startUnitNum: startPage })
+      this.loadPageImages(startPage, Math.min(startPage + 2, this.data.totalUnits))
+    } else if (streamType === STREAM_HTML) {
+      const lastChapter = book.lastChapter || 0
+      const urlChapter = Number(startChapterNum) || 0
+      const startChapter = Math.max(0, urlChapter > 0 ? urlChapter : lastChapter)
+      this.setData({
+        currentUnit: startChapter,
+        displayUnit: startChapter + 1,
+        startUnitNum: startChapter
+      })
+      this.buildChapterTitleMap()
+      this.loadChapters(startChapter, Math.min(startChapter + 1, this.data.totalUnits - 1))
+    }
+  },
+
+  buildChapterTitleMap() {
+    const map = {}
+    const traverse = (items) => {
+      if (!items || !items.length) return
+      items.forEach(item => {
+        if (typeof item.chapterIndex === 'number') {
+          map[item.chapterIndex] = item.title
+        }
+        if (item.children && item.children.length) {
+          traverse(item.children)
+        }
+      })
+    }
+    traverse(this.data.toc)
+    this.setData({ chapterTitleMap: map })
   },
 
   async loadToc() {
@@ -83,69 +163,134 @@ Page({
   },
 
   loadPageImages(from, to) {
+    if (from > to) return
     const app = getApp()
     const pages = []
     for (let i = from; i <= to; i++) {
       pages.push(`${app.globalData.baseUrl}/books/${this.data.bookId}/page/${i}?token=${app.globalData.token}`)
     }
-    // 记录起始页号（loadedPages 数组第0项对应的实际页码）
-    const startPageNum = this.data.startPageNum || from
+    const startUnitNum = this.data.startUnitNum || from
     this.setData({
       loadedPages: [...this.data.loadedPages, ...pages],
-      currentPage: to,
-      startPageNum
+      currentUnit: to,
+      startUnitNum
     })
   },
 
   loadMorePages() {
-    // 防止重复加载
     if (this.data.loading) return
-    
-    const next = this.data.currentPage + 1
-    if (next > this.data.book.pageCount) return
-    
-    const end = Math.min(next + 2, this.data.book.pageCount)
+    const next = this.data.currentUnit + 1
+    if (next > this.data.totalUnits) return
+    const end = Math.min(next + 2, this.data.totalUnits)
     this.setData({ loading: true })
     this.loadPageImages(next, end)
     this.setData({ loading: false })
   },
 
+  async loadChapters(from, to) {
+    if (from > to || from < 0) return
+    const chapters = []
+    for (let i = from; i <= to; i++) {
+      const html = await this.getChapterHtml(i)
+      if (html) {
+        chapters.push({
+          chapterIndex: i,
+          title: this.data.chapterTitleMap[i] || `第 ${i + 1} 章`,
+          html: html
+        })
+      }
+    }
+    this.setData({
+      loadedChapters: [...this.data.loadedChapters, ...chapters],
+      currentUnit: to
+    })
+  },
+
+  async getChapterHtml(chapterIndex) {
+    const cacheKey = String(chapterIndex)
+    if (this.data._chapterHtmlCache[cacheKey]) {
+      return this.data._chapterHtmlCache[cacheKey]
+    }
+    try {
+      const res = await request({ url: `/books/${this.data.bookId}/unit/${chapterIndex}` })
+      const html = res.data || ''
+      this.data._chapterHtmlCache[cacheKey] = html
+      return html
+    } catch (e) {
+      console.error('加载章节失败', chapterIndex, e)
+      return ''
+    }
+  },
+
+  async loadMoreChapters() {
+    if (this.data.loading) return
+    const next = this.data.currentUnit + 1
+    if (next >= this.data.totalUnits) return
+    const end = Math.min(next + 1, this.data.totalUnits - 1)
+    this.setData({ loading: true })
+    try {
+      await this.loadChapters(next, end)
+    } finally {
+      this.setData({ loading: false })
+    }
+  },
+
   onScroll(e) {
-    // 节流：避免频繁查询节点
     if (this._scrollTimer) return
     this._scrollTimer = setTimeout(() => {
       this._scrollTimer = null
-      this.calcCurrentPage()
+      this.calcCurrentUnit('.page-image-wrap')
     }, 200)
   },
 
-  calcCurrentPage() {
+  onScrollHtml(e) {
+    if (this._scrollTimer) return
+    this._scrollTimer = setTimeout(() => {
+      this._scrollTimer = null
+      this.calcCurrentUnit('.chapter-wrap')
+    }, 200)
+  },
+
+  calcCurrentUnit(selector) {
     const query = this.createSelectorQuery()
-    query.selectAll('.page-image-wrap').boundingClientRect()
+    query.selectAll(selector).boundingClientRect()
     query.exec((res) => {
       if (!res || !res[0] || res[0].length === 0) return
       const rects = res[0]
-      const screenMid = 300 // 大约屏幕中上部位置（rpx 转 px 后约 150px）
+      const screenMid = 300
       let visibleIndex = 0
       for (let i = 0; i < rects.length; i++) {
-        // 找到顶部在屏幕中部以上、底部在屏幕中部以下的图片
         if (rects[i].top <= screenMid && rects[i].bottom > 0) {
           visibleIndex = i
         }
       }
-      const newPage = this.data.startPageNum + visibleIndex
-      if (newPage !== this.data.displayPage) {
-        this.setData({ displayPage: newPage })
+      const newUnit = this.data.streamType === STREAM_HTML
+        ? (this.data.loadedChapters[visibleIndex]?.chapterIndex ?? 0) + 1
+        : this.data.startUnitNum + visibleIndex
+      if (newUnit !== this.data.displayUnit && newUnit > 0) {
+        this.setData({ displayUnit: newUnit })
       }
     })
   },
 
   onSwiperChange(e) {
     const idx = e.detail.current
-    this.setData({ swiperIndex: idx, displayPage: idx + 1 })
-    // 预加载：当滑到倒数第2页时加载更多
-    if (idx >= this.data.loadedPages.length - 2 && this.data.currentPage < this.data.book.pageCount) {
+    const displayUnit = this.data.streamType === STREAM_HTML
+      ? (this.data.loadedChapters[idx]?.chapterIndex ?? 0) + 1
+      : idx + 1
+    this.setData({ swiperIndex: idx, displayUnit })
+    if (idx >= this.data.loadedPages.length - 2 && this.data.currentUnit < this.data.totalUnits) {
       this.loadMorePages()
+    }
+  },
+
+  onSwiperChangeHtml(e) {
+    const idx = e.detail.current
+    const chapter = this.data.loadedChapters[idx]
+    const displayUnit = chapter ? chapter.chapterIndex + 1 : idx + 1
+    this.setData({ swiperIndex: idx, displayUnit })
+    if (idx >= this.data.loadedChapters.length - 2 && this.data.currentUnit < this.data.totalUnits - 1) {
+      this.loadMoreChapters()
     }
   },
 
@@ -165,21 +310,25 @@ Page({
   async endReading() {
     if (!this.data.readingRecordId) return
     try {
-      await request({
-        url: '/reading/end',
-        method: 'POST',
-        data: {
-          bookId: Number(this.data.bookId),
-          recordId: this.data.readingRecordId,
-          lastPage: this.data.displayPage
-        }
-      })
-      // 更新阅读进度
-      await request({
-        url: `/books/${this.data.bookId}/progress`,
-        method: 'PUT',
-        data: { lastPage: this.data.displayPage }
-      })
+      const progressData = {
+        bookId: Number(this.data.bookId),
+        recordId: this.data.readingRecordId,
+        lastPage: this.data.streamType === STREAM_IMAGE ? this.data.displayUnit : 0
+      }
+      await request({ url: '/reading/end', method: 'POST', data: progressData })
+      const updateBody = {}
+      if (this.data.streamType === STREAM_IMAGE) {
+        updateBody.lastPage = this.data.displayUnit
+      } else if (this.data.streamType === STREAM_HTML) {
+        updateBody.lastChapter = this.data.displayUnit - 1
+      }
+      if (Object.keys(updateBody).length > 0) {
+        await request({
+          url: `/books/${this.data.bookId}/progress`,
+          method: 'PUT',
+          data: updateBody
+        })
+      }
     } catch (e) {
       console.error('记录阅读结束失败', e)
     }
@@ -196,26 +345,55 @@ Page({
   jumpToPage(e) {
     const page = e.currentTarget.dataset.page
     this.setData({ showToc: false })
+    if (!page) return
     if (this.data.readMode === 'swipe') {
-      // 确保页面已加载
       if (page > this.data.loadedPages.length) {
-        this.setData({ loadedPages: [], startPageNum: page })
-        this.loadPageImages(page, Math.min(page + 2, this.data.book.pageCount))
-        this.setData({ swiperIndex: 0, displayPage: page })
+        this.setData({ loadedPages: [], startUnitNum: page })
+        this.loadPageImages(page, Math.min(page + 2, this.data.totalUnits))
+        this.setData({ swiperIndex: 0, displayUnit: page })
       } else {
-        this.setData({ swiperIndex: page - 1, displayPage: page })
+        this.setData({ swiperIndex: page - 1, displayUnit: page })
       }
     } else {
-      // 滚动模式 - 重新从目标页加载
-      this.setData({ loadedPages: [], startPageNum: page })
-      this.loadPageImages(page, Math.min(page + 2, this.data.book.pageCount))
-      this.setData({ displayPage: page })
+      this.setData({ loadedPages: [], startUnitNum: page })
+      this.loadPageImages(page, Math.min(page + 2, this.data.totalUnits))
+      this.setData({ displayUnit: page })
+    }
+  },
+
+  async jumpToChapter(e) {
+    const chapterIndex = Number(e.currentTarget.dataset.index)
+    this.setData({ showToc: false })
+    if (isNaN(chapterIndex) || chapterIndex < 0) return
+    const existingIdx = this.data.loadedChapters.findIndex(c => c.chapterIndex === chapterIndex)
+    if (this.data.readMode === 'swipe') {
+      if (existingIdx >= 0) {
+        this.setData({ swiperIndex: existingIdx, displayUnit: chapterIndex + 1 })
+      } else {
+        this.setData({ loadedChapters: [], currentUnit: chapterIndex, startUnitNum: chapterIndex })
+        try {
+          this.setData({ loading: true })
+          await this.loadChapters(chapterIndex, Math.min(chapterIndex + 1, this.data.totalUnits - 1))
+          this.setData({ swiperIndex: 0, displayUnit: chapterIndex + 1 })
+        } finally {
+          this.setData({ loading: false })
+        }
+      }
+    } else {
+      this.setData({ loadedChapters: [], currentUnit: chapterIndex, startUnitNum: chapterIndex })
+      try {
+        this.setData({ loading: true })
+        await this.loadChapters(chapterIndex, Math.min(chapterIndex + 1, this.data.totalUnits - 1))
+        this.setData({ displayUnit: chapterIndex + 1 })
+      } finally {
+        this.setData({ loading: false })
+      }
     }
   },
 
   switchMode(e) {
     const mode = e.currentTarget.dataset.mode
-    this.setData({ readMode: mode })
+    this.setData({ readMode: mode, swiperIndex: 0 })
   },
 
   showThemePicker() {
@@ -239,7 +417,6 @@ Page({
     this.applyPageBgColor(theme)
   },
 
-  /** 设置页面级背景色，防止滚动到边界时露白 */
   applyPageBgColor(theme) {
     const color = THEME_CONFIG[theme].bgColor
     wx.setBackgroundColor({
@@ -284,7 +461,7 @@ Page({
         method: 'POST',
         data: {
           bookId: Number(this.data.bookId),
-          pageNum: this.data.displayPage,
+          pageNum: this.data.displayUnit,
           selectedText: this.data.noteText,
           content: this.data.noteContent,
           type: this.data.noteType
@@ -299,7 +476,7 @@ Page({
 
   openAiAssistant() {
     wx.navigateTo({
-      url: `/pages/ai-assistant/ai-assistant?id=${this.data.bookId}&page=${this.data.displayPage}`
+      url: `/pages/ai-assistant/ai-assistant?id=${this.data.bookId}&page=${this.data.displayUnit}`
     })
   }
 })
