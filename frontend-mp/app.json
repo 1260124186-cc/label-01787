@@ -12,7 +12,8 @@
     "pages/backup/backup",
     "pages/membership/membership",
     "pages/points/points",
-    "pages/ai-summary/ai-summary"
+    "pages/ai-summary/ai-summary",
+    "pages/ai-assistant/ai-assistant"
   ],
   "window": {
     "backgroundTextStyle": "dark",

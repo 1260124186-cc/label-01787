@@ -295,5 +295,11 @@ Page({
     } catch (e) {
       console.error('保存笔记失败', e)
     }
+  },
+
+  openAiAssistant() {
+    wx.navigateTo({
+      url: `/pages/ai-assistant/ai-assistant?id=${this.data.bookId}&page=${this.data.displayPage}`
+    })
   }
 })

@@ -367,3 +367,32 @@ page {
   top: 50%;
   transform: translateY(-50%);
 }
+
+/* AI助手图标 */
+.icon-ai {
+  width: 40rpx;
+  height: 40rpx;
+  position: relative;
+}
+.icon-ai::before {
+  content: '';
+  position: absolute;
+  width: 28rpx;
+  height: 20rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 14rpx 14rpx 4rpx 4rpx;
+  top: 4rpx;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.icon-ai::after {
+  content: '';
+  position: absolute;
+  width: 8rpx;
+  height: 8rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+  bottom: 4rpx;
+  left: 50%;
+  transform: translateX(-50%);
+}

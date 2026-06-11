@@ -1,0 +1,238 @@
+<view class="ai-assistant-container">
+  <view class="disclaimer-bar" wx:if="{{showDisclaimer}}">
+    <text class="disclaimer-text">⚠️ AI结果仅供参考，请确保拥有书籍版权</text>
+  </view>
+
+  <view class="copyright-modal" wx:if="{{showCopyrightModal}}">
+    <view class="modal-mask" bindtap="hideCopyrightModal"></view>
+    <view class="modal-content">
+      <view class="modal-title">版权声明</view>
+      <view class="modal-body">
+        <text>请确认以下事项：</text>
+        <view class="copyright-item">
+          <text>1. 我确认拥有该书籍的合法版权或使用权</text>
+        </view>
+        <view class="copyright-item">
+          <text>2. 我将仅用于个人学习，不进行传播或商业使用</text>
+        </view>
+        <view class="copyright-item">
+          <text>3. 我理解AI生成结果仅供参考，不代表书籍原文</text>
+        </view>
+        <view class="copyright-item">
+          <text>4. 系统不会上传完整PDF文件，仅处理文本片段</text>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="hideCopyrightModal">取消</button>
+        <button class="btn-confirm" bindtap="agreeCopyright">确认并继续</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="function-tabs">
+    <scroll-view scroll-x class="tabs-scroll">
+      <view class="tab-item {{activeTab === 'quick' ? 'active' : ''}}" bindtap="switchTab" data-tab="quick">
+        <text>快捷功能</text>
+      </view>
+      <view class="tab-item {{activeTab === 'book' ? 'active' : ''}}" bindtap="switchTab" data-tab="book">
+        <text>全书分析</text>
+      </view>
+      <view class="tab-item {{activeTab === 'history' ? 'active' : ''}}" bindtap="switchTab" data-tab="history">
+        <text>对话历史</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="quick-functions" wx:if="{{activeTab === 'quick'}}">
+    <view class="source-selector">
+      <text class="section-title">选择文本范围</text>
+      <view class="source-options">
+        <view class="source-option {{sourceType === 1 ? 'active' : ''}}" bindtap="selectSource" data-type="1">
+          <text>选中段落</text>
+        </view>
+        <view class="source-option {{sourceType === 2 ? 'active' : ''}}" bindtap="selectSource" data-type="2">
+          <text>当前页</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="source-text-area" wx:if="{{sourceType === 1}}">
+      <text class="section-title">输入或粘贴文本</text>
+      <textarea 
+        class="source-textarea" 
+        placeholder="请输入或粘贴要处理的文本内容..."
+        value="{{sourceText}}"
+        bindinput="onSourceTextInput"
+        maxlength="2000"
+        auto-height
+      />
+      <text class="char-count">{{sourceText.length}}/2000</text>
+    </view>
+
+    <view class="function-buttons">
+      <view class="func-btn" bindtap="handleFunction" data-type="1">
+        <view class="func-icon">📝</view>
+        <text class="func-name">摘要</text>
+        <text class="func-desc">提炼核心要点</text>
+      </view>
+      <view class="func-btn" bindtap="handleFunction" data-type="2">
+        <view class="func-icon">💡</view>
+        <text class="func-name">解释</text>
+        <text class="func-desc">详细解析内容</text>
+      </view>
+      <view class="func-btn" bindtap="handleFunction" data-type="3">
+        <view class="func-icon">🌐</view>
+        <text class="func-name">翻译</text>
+        <text class="func-desc">多语言互译</text>
+      </view>
+      <view class="func-btn" bindtap="handleFunction" data-type="4">
+        <view class="func-icon">❓</view>
+        <text class="func-name">出题</text>
+        <text class="func-desc">自测题生成</text>
+      </view>
+    </view>
+
+    <view class="custom-prompt" wx:if="{{showCustomPrompt}}">
+      <text class="section-title">自定义提示词（可选）</text>
+      <input 
+        class="prompt-input" 
+        placeholder="例如：用通俗的语言解释"
+        value="{{customPrompt}}"
+        bindinput="onPromptInput"
+      />
+    </view>
+
+    <view class="lang-selector" wx:if="{{showLangSelector}}">
+      <text class="section-title">目标语言</text>
+      <view class="lang-options">
+        <view class="lang-option {{targetLang === '英文' ? 'active' : ''}}" bindtap="selectLang" data-lang="英文">
+          <text>英文</text>
+        </view>
+        <view class="lang-option {{targetLang === '日文' ? 'active' : ''}}" bindtap="selectLang" data-lang="日文">
+          <text>日文</text>
+        </view>
+        <view class="lang-option {{targetLang === '韩文' ? 'active' : ''}}" bindtap="selectLang" data-lang="韩文">
+          <text>韩文</text>
+        </view>
+        <view class="lang-option {{targetLang === '法文' ? 'active' : ''}}" bindtap="selectLang" data-lang="法文">
+          <text>法文</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="book-functions" wx:if="{{activeTab === 'book'}}">
+    <view class="book-info" wx:if="{{book}}">
+      <text class="book-title">{{book.title}}</text>
+      <text class="book-author">作者：{{book.author || '未知'}}</text>
+      <text class="book-pages">共 {{book.pageCount}} 页</text>
+    </view>
+
+    <view class="book-function-list">
+      <view class="book-func-item" bindtap="handleBookFunction" data-type="5">
+        <view class="book-func-icon">📋</view>
+        <view class="book-func-info">
+          <text class="book-func-name">章节大纲</text>
+          <text class="book-func-desc">生成全书结构大纲</text>
+        </view>
+        <view class="arrow">›</view>
+      </view>
+      <view class="book-func-item" bindtap="handleBookFunction" data-type="6">
+        <view class="book-func-icon">🎴</view>
+        <view class="book-func-info">
+          <text class="book-func-name">知识卡片</text>
+          <text class="book-func-desc">生成全书知识要点卡片</text>
+        </view>
+        <view class="arrow">›</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="chat-history" wx:if="{{activeTab === 'history'}}">
+    <view class="session-list" wx:if="{{sessions.length > 0}}">
+      <view 
+        class="session-item {{activeSessionId === item.sessionId ? 'active' : ''}}" 
+        wx:for="{{sessions}}" 
+        wx:key="sessionId"
+        bindtap="selectSession"
+        data-session="{{item}}"
+      >
+        <view class="session-book-info">
+          <text class="session-book-title">{{item.bookTitle}}</text>
+          <text class="session-chat-count">{{item.chatCount}} 条对话</text>
+        </view>
+        <text class="session-time">{{item.lastActiveText}}</text>
+      </view>
+    </view>
+    <view class="empty-sessions" wx:else>
+      <text class="empty-text">暂无对话历史</text>
+    </view>
+
+    <view class="chat-list" wx:if="{{activeSessionId && chatList.length > 0}}">
+      <view class="chat-header">
+        <text class="chat-title">对话记录</text>
+        <view class="chat-actions">
+          <text class="clear-btn" bindtap="clearSessionChats">清空</text>
+        </view>
+      </view>
+      <view 
+        class="chat-item" 
+        wx:for="{{chatList}}" 
+        wx:key="id"
+        bindlongpress="showChatMenu"
+        data-id="{{item.id}}"
+      >
+        <view class="chat-question">
+          <view class="chat-question-header">
+            <text class="chat-type">{{item.typeText}}</text>
+            <text class="chat-source">{{item.sourceText}}</text>
+          </view>
+          <text class="chat-question-content" wx:if="{{item.sourceText}}">{{item.sourceText}}</text>
+        </view>
+        <view class="chat-answer">
+          <text class="chat-answer-content">{{item.aiResponse}}</text>
+          <text class="chat-time">{{item.createdAtText}}</text>
+        </view>
+      </view>
+      <view class="load-more" wx:if="{{hasMore}}" bindtap="loadMoreHistory">
+        <text>加载更多</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="result-modal" wx:if="{{showResult}}">
+    <view class="modal-mask" bindtap="hideResult"></view>
+    <view class="modal-content result-content">
+      <view class="modal-header">
+        <text class="modal-title">{{resultTitle}}</text>
+        <text class="close-btn" bindtap="hideResult">×</text>
+      </view>
+      <scroll-view scroll-y class="result-scroll">
+        <text class="result-text">{{currentResult}}</text>
+      </scroll-view>
+      <view class="modal-footer result-footer">
+        <text class="result-disclaimer">【AI结果仅供参考，请以书籍原文为准】</text>
+        <button class="btn-copy" bindtap="copyResult">复制结果</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="chat-menu-modal" wx:if="{{showChatMenu}}">
+    <view class="modal-mask" bindtap="hideChatMenu"></view>
+    <view class="menu-content">
+      <view class="menu-item" bindtap="deleteChat">
+        <text class="menu-text danger">删除该条记录</text>
+      </view>
+      <view class="menu-item" bindtap="hideChatMenu">
+        <text class="menu-text">取消</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="loading-overlay" wx:if="{{loading}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">{{loadingText}}</text>
+    </view>
+  </view>
+</view>

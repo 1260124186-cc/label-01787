@@ -234,4 +234,8 @@ public class BookService {
         book.setLastPage(lastPage);
         bookMapper.updateById(book);
     }
+
+    public void update(Book book) {
+        bookMapper.updateById(book);
+    }
 }
