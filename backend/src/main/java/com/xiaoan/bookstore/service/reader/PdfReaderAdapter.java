@@ -116,4 +116,33 @@ public class PdfReaderAdapter implements ReaderAdapter {
         }
         return 0;
     }
+
+    @Override
+    public Map<String, String> extractMetadata(String filePath) {
+        Map<String, String> meta = new HashMap<>();
+        try (PDDocument doc = Loader.loadPDF(Paths.get(filePath).toFile())) {
+            var info = doc.getDocumentInformation();
+            if (info != null) {
+                String title = info.getTitle();
+                String author = info.getAuthor();
+                if (title != null && !title.isBlank()) {
+                    meta.put("title", title.trim());
+                }
+                if (author != null && !author.isBlank()) {
+                    meta.put("author", author.trim());
+                }
+                String subject = info.getSubject();
+                if (subject != null && !subject.isBlank()) {
+                    meta.put("subject", subject.trim());
+                }
+                String keywords = info.getKeywords();
+                if (keywords != null && !keywords.isBlank()) {
+                    meta.put("keywords", keywords.trim());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("提取PDF元数据失败: {}", e.getMessage());
+        }
+        return meta;
+    }
 }

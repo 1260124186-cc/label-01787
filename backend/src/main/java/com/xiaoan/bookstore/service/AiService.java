@@ -46,7 +46,7 @@ public class AiService {
     private void checkCopyrightAndQuota(Long userId, Long bookId) {
         membershipService.checkAiQuota(userId);
 
-        Book book = bookService.detail(userId, bookId);
+        Book book = bookService.getBookById(userId, bookId);
         if (book.getCopyrightDeclared() == null || book.getCopyrightDeclared() != 1) {
             throw new BusinessException("请先确认您拥有该书籍的合法版权");
         }
@@ -90,7 +90,7 @@ public class AiService {
     public AiChatHistory processChat(Long userId, AiChatDTO dto) {
         checkCopyrightAndQuota(userId, dto.getBookId());
 
-        Book book = bookService.detail(userId, dto.getBookId());
+        Book book = bookService.getBookById(userId, dto.getBookId());
         AiChatHistory history = createChatHistory(userId, dto, book);
 
         try {
@@ -404,7 +404,7 @@ public class AiService {
 
     @Transactional
     public void agreeCopyright(Long userId, Long bookId) {
-        Book book = bookService.detail(userId, bookId);
+        Book book = bookService.getBookById(userId, bookId);
         TenantValidator.validateCrossTenant(book.getUserId(), userId);
         book.setCopyrightDeclared(1);
         book.setCopyrightAgreedAt(LocalDateTime.now());
@@ -415,7 +415,7 @@ public class AiService {
     public AiSummary generateSummary(Long userId, AiSummaryDTO dto) {
         membershipService.checkAiQuota(userId);
 
-        Book book = bookService.detail(userId, dto.getBookId());
+        Book book = bookService.getBookById(userId, dto.getBookId());
 
         LambdaQueryWrapper<AiSummary> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AiSummary::getUserId, userId)

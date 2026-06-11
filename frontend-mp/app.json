@@ -17,7 +17,10 @@
     "pages/ai-assistant/ai-assistant",
     "pages/plaza/plaza",
     "pages/plaza-detail/plaza-detail",
-    "pages/my-excerpts/my-excerpts"
+    "pages/my-excerpts/my-excerpts",
+    "pages/book-detail/book-detail",
+    "pages/book-edit/book-edit",
+    "pages/trash/trash"
   ],
   "window": {
     "backgroundTextStyle": "dark",

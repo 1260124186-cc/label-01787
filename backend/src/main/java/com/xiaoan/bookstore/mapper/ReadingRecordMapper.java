@@ -121,4 +121,7 @@ public interface ReadingRecordMapper extends BaseMapper<ReadingRecord> {
             "GROUP BY DATE(start_time) " +
             "ORDER BY date ASC")
     List<Map<String, Object>> readingTrend(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Select("SELECT COALESCE(SUM(duration), 0) FROM reading_record WHERE user_id = #{userId} AND book_id = #{bookId}")
+    Long sumDurationByBookId(@Param("userId") Long userId, @Param("bookId") Long bookId);
 }

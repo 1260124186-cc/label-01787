@@ -1,0 +1,78 @@
+<view class="edit-page">
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+  </view>
+
+  <block wx:else>
+    <view class="form-section">
+      <view class="form-item">
+        <view class="form-label">书名 <text class="required">*</text></view>
+        <input
+          class="form-input"
+          placeholder="请输入书名"
+          value="{{title}}"
+          bindinput="onTitleInput"
+          maxlength="200"
+          placeholder-style="color:#CCCCCC"
+        />
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">作者</view>
+        <input
+          class="form-input"
+          placeholder="请输入作者"
+          value="{{author}}"
+          bindinput="onAuthorInput"
+          maxlength="100"
+          placeholder-style="color:#CCCCCC"
+        />
+      </view>
+
+      <view class="form-item" bindtap="openCategoryPicker">
+        <view class="form-label">分类</view>
+        <view class="form-picker">
+          <block wx:if="{{categoryIndex >= 0 && categories[categoryIndex]}}">
+            <view class="picker-tag" style="background: {{categories[categoryIndex].color || '#4A90D9'}}">
+              {{categories[categoryIndex].name}}
+            </view>
+          </block>
+          <text wx:else class="picker-placeholder">未分类</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="save-wrap">
+      <button class="btn-save {{saving ? 'disabled' : ''}}" bindtap="save" disabled="{{saving}}">
+        {{saving ? '保存中...' : '保存'}}
+      </button>
+    </view>
+  </block>
+
+  <view wx:if="{{showCategoryPicker}}" class="mask" bindtap="closeCategoryPicker"></view>
+  <view wx:if="{{showCategoryPicker}}" class="picker-sheet">
+    <view class="picker-header">
+      <text class="picker-title">选择分类</text>
+      <text class="picker-close" bindtap="closeCategoryPicker">✕</text>
+    </view>
+    <scroll-view class="picker-list" scroll-y>
+      <view class="picker-item {{categoryId == null ? 'selected' : ''}}" data-id="{{null}}" data-index="-1" bindtap="onCategoryPick">
+        <view class="item-name">未分类</view>
+        <view wx:if="{{categoryId == null}}" class="item-check">✓</view>
+      </view>
+      <view
+        wx:for="{{categories}}"
+        wx:key="id"
+        class="picker-item {{categoryId == item.id ? 'selected' : ''}}"
+        data-id="{{item.id}}"
+        data-index="{{index}}"
+        bindtap="onCategoryPick"
+      >
+        <view class="item-color" style="background: {{item.color || '#4A90D9'}}"></view>
+        <view class="item-name">{{item.name}}</view>
+        <view wx:if="{{categoryId == item.id}}" class="item-check">✓</view>
+      </view>
+    </scroll-view>
+  </view>
+</view>

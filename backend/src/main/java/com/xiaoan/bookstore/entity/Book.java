@@ -23,6 +23,8 @@ public class Book {
     private Integer copyrightDeclared;
     private LocalDateTime copyrightAgreedAt;
     private Integer status;
+    private LocalDateTime lastReadAt;
+    private LocalDateTime deletedAt;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)

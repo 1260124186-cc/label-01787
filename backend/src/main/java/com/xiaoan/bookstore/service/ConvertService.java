@@ -73,7 +73,7 @@ public class ConvertService {
     }
 
     public ConvertTask createTask(Long userId, Long bookId) {
-        Book book = bookService.detail(userId, bookId);
+        Book book = bookService.getBookById(userId, bookId);
 
         int pending = convertTaskMapper.countPendingByUserId(userId);
         if (pending >= 3) {
@@ -165,7 +165,7 @@ public class ConvertService {
         log.info("开始处理转图任务: taskId={}, book={}", task.getId(), task.getBookTitle());
 
         try {
-            Book book = bookService.detail(task.getUserId(), task.getBookId());
+            Book book = bookService.getBookById(task.getUserId(), task.getBookId());
             Path pdfPath = Paths.get(uploadPath, book.getFilePath()).toAbsolutePath().normalize();
 
             String imagesDir = task.getBookId() + "_images";

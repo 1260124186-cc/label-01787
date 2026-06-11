@@ -115,6 +115,17 @@ public class CategoryService {
         log.info("删除分类: id={}", id);
     }
 
+    public Category getById(Long userId, Long id) {
+        Category category = categoryMapper.selectById(id);
+        if (category == null) {
+            return null;
+        }
+        if (!category.getUserId().equals(userId)) {
+            return null;
+        }
+        return category;
+    }
+
     @Transactional
     public void batchSort(Long userId, List<Map<String, Object>> sortList) {
         for (Map<String, Object> item : sortList) {

@@ -29,4 +29,6 @@ public interface ReaderAdapter {
     default byte[] getPageImage(String filePath, int index) {
         return getUnitImage(filePath, index);
     }
+
+    Map<String, String> extractMetadata(String filePath);
 }

@@ -170,5 +170,15 @@ public class Constants {
     /** 批注已置顶 */
     public static final int ANNOTATION_PINNED = 1;
 
+    /** 书籍排序：上传时间（最新） */
+    public static final String BOOK_SORT_UPLOAD_TIME = "upload_time";
+    /** 书籍排序：最近阅读 */
+    public static final String BOOK_SORT_LAST_READ = "last_read";
+    /** 书籍排序：书名（字母序） */
+    public static final String BOOK_SORT_TITLE = "title";
+
+    /** 书籍回收站过期天数 */
+    public static final int BOOK_TRASH_EXPIRE_DAYS = 7;
+
     private Constants() {}
 }

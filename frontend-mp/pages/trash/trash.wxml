@@ -1,0 +1,59 @@
+<view class="trash-page">
+  <view class="trash-header">
+    <view class="header-title">回收站</view>
+    <view class="header-desc">删除的书籍保留7天，过期将永久删除</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+  </view>
+
+  <view wx:elif="{{empty}}" class="empty-wrap">
+    <view class="empty-icon">🗑</view>
+    <view class="empty-text">回收站空空如也</view>
+    <view class="empty-back" bindtap="backToShelf">返回书架</view>
+  </view>
+
+  <view wx:else class="book-list">
+    <view
+      wx:for="{{books}}"
+      wx:key="id"
+      class="book-card"
+      data-book="{{item}}"
+      bindtap="onBookTap"
+    >
+      <view class="cover-wrap">
+        <image wx:if="{{item.coverPath}}" class="cover-img" src="{{item.coverPath}}" mode="aspectFill"></image>
+        <view wx:else class="cover-placeholder">
+          <text class="cover-text">{{item.title[0]}}</text>
+        </view>
+        <view class="remain-badge {{item.remainDays <= 1 ? 'warning' : ''}}">
+          {{item.remainDays}}天
+        </view>
+      </view>
+      <view class="book-info">
+        <view class="book-title">{{item.title}}</view>
+        <view class="book-author">{{item.author || '未知作者'}}</view>
+        <view wx:if="{{item.categoryName}}" class="book-category">{{item.categoryName}}</view>
+        <view class="book-meta">
+          <text class="meta-item">删除于 {{item.deletedAt}}</text>
+        </view>
+      </view>
+      <view class="action-wrap" catchtap="openRestore" data-book="{{item}}">
+        <view class="btn-restore">恢复</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showRestoreConfirm}}" class="mask" bindtap="closeRestore"></view>
+  <view wx:if="{{showRestoreConfirm}}" class="confirm-modal">
+    <view class="modal-title">恢复书籍</view>
+    <view wx:if="{{restoreBook}}" class="modal-content">
+      确定要恢复《{{restoreBook.title}}》吗？恢复后将回到书架中。
+    </view>
+    <view class="modal-btns">
+      <view class="modal-btn cancel" bindtap="closeRestore">取消</view>
+      <view class="modal-btn confirm" bindtap="confirmRestore">确认恢复</view>
+    </view>
+  </view>
+</view>

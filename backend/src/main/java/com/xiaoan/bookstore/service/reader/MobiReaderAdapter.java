@@ -44,4 +44,10 @@ public class MobiReaderAdapter implements ReaderAdapter {
     public int getTotalUnits(String filePath) {
         return 0;
     }
+
+    @Override
+    public Map<String, String> extractMetadata(String filePath) {
+        log.warn("MOBI/AZW3 格式暂不支持元数据提取: {}", filePath);
+        return new java.util.HashMap<>();
+    }
 }

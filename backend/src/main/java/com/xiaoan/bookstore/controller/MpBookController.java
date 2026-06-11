@@ -4,6 +4,9 @@ import com.xiaoan.bookstore.annotation.Log;
 import com.xiaoan.bookstore.annotation.RateLimit;
 import com.xiaoan.bookstore.common.Result;
 import com.xiaoan.bookstore.common.TenantContext;
+import com.xiaoan.bookstore.dto.BatchBookDTO;
+import com.xiaoan.bookstore.dto.BookDetailVO;
+import com.xiaoan.bookstore.dto.BookUpdateDTO;
 import com.xiaoan.bookstore.dto.CategoryDTO;
 import com.xiaoan.bookstore.entity.Book;
 import com.xiaoan.bookstore.entity.Category;
@@ -42,22 +45,62 @@ public class MpBookController {
     @GetMapping("/books")
     public Result<?> myBooks(@RequestParam(required = false) Long categoryId,
                              @RequestParam(defaultValue = "1") int page,
-                             @RequestParam(defaultValue = "20") int size) {
+                             @RequestParam(defaultValue = "20") int size,
+                             @RequestParam(required = false) String keyword,
+                             @RequestParam(required = false, defaultValue = "upload_time") String sortBy) {
         Long userId = TenantContext.getTenantId();
-        return Result.success(bookService.myBooks(userId, categoryId, page, size));
+        return Result.success(bookService.myBooks(userId, categoryId, page, size, keyword, sortBy));
     }
 
     @GetMapping("/books/{id}")
-    public Result<Book> detail(@PathVariable Long id) {
+    public Result<BookDetailVO> detail(@PathVariable Long id) {
         Long userId = TenantContext.getTenantId();
         return Result.success(bookService.detail(userId, id));
     }
 
+    @PutMapping("/books/{id}")
+    @Log("更新书籍信息")
+    public Result<Book> updateBook(@PathVariable Long id, @Valid @RequestBody BookUpdateDTO dto) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(bookService.updateBook(userId, id, dto.getTitle(), dto.getAuthor(), dto.getCategoryId()));
+    }
+
     @DeleteMapping("/books/{id}")
-    @Log("删除书籍")
+    @Log("删除书籍（移入回收站）")
     public Result<Void> delete(@PathVariable Long id) {
         Long userId = TenantContext.getTenantId();
-        bookService.delete(userId, id);
+        bookService.softDelete(userId, id);
+        return Result.success();
+    }
+
+    @PostMapping("/books/{id}/restore")
+    @Log("从回收站恢复书籍")
+    public Result<Void> restore(@PathVariable Long id) {
+        Long userId = TenantContext.getTenantId();
+        bookService.restore(userId, id);
+        return Result.success();
+    }
+
+    @GetMapping("/trash/books")
+    public Result<?> trashList(@RequestParam(defaultValue = "1") int page,
+                               @RequestParam(defaultValue = "20") int size) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(bookService.trashList(userId, page, size));
+    }
+
+    @PostMapping("/books/batch-delete")
+    @Log("批量删除书籍（移入回收站）")
+    public Result<Void> batchDelete(@RequestBody BatchBookDTO dto) {
+        Long userId = TenantContext.getTenantId();
+        bookService.batchDelete(userId, dto.getBookIds());
+        return Result.success();
+    }
+
+    @PostMapping("/books/batch-move-category")
+    @Log("批量移动书籍分类")
+    public Result<Void> batchMoveCategory(@RequestBody BatchBookDTO dto) {
+        Long userId = TenantContext.getTenantId();
+        bookService.batchMoveCategory(userId, dto.getBookIds(), dto.getCategoryId());
         return Result.success();
     }
 

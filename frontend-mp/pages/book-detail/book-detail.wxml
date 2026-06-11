@@ -1,0 +1,122 @@
+<view class="detail-page">
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:elif="{{book}}">
+    <view class="detail-header">
+      <view class="cover-wrap">
+        <image wx:if="{{book.coverPath}}" class="cover-img" src="{{book.coverPath}}" mode="aspectFill"></image>
+        <view wx:else class="cover-placeholder">
+          <text class="cover-text">{{book.title[0]}}</text>
+        </view>
+      </view>
+      <view class="header-info">
+        <view class="book-title">{{book.title}}</view>
+        <view class="book-author">{{book.author || '未知作者'}}</view>
+        <view class="header-tags">
+          <view class="tag format-tag">{{book.format.toUpperCase()}}</view>
+          <view wx:if="{{book.categoryName}}" class="tag category-tag" style="background: {{book.categoryColor || '#4A90D9'}}">
+            {{book.categoryName}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="action-bar">
+      <view class="btn-read" bindtap="startRead">
+        <text class="btn-icon">▶</text>
+        <text class="btn-text">开始阅读</text>
+      </view>
+      <view class="btn-secondary" bindtap="editBook">
+        <text class="btn-icon">✎</text>
+        <text class="btn-text">编辑</text>
+      </view>
+      <view class="btn-secondary btn-more" bindtap="openActionSheet">
+        <text class="btn-icon">⋯</text>
+      </view>
+    </view>
+
+    <view class="progress-section">
+      <view class="section-title">阅读进度</view>
+      <view class="progress-wrap">
+        <view class="progress-circle">
+          <view class="progress-ring" style="background: conic-gradient(#4A90D9 {{book.progressPercent || 0}}%, #E8E8E8 {{book.progressPercent || 0}}%)">
+            <view class="progress-inner">
+              <text class="progress-percent">{{book.progressPercent || 0}}%</text>
+            </view>
+          </view>
+        </view>
+        <view class="progress-info">
+          <view wx:if="{{book.format === 'pdf'}}" class="info-row">
+            <text class="info-label">页码</text>
+            <text class="info-value">{{book.lastPage || 0}} / {{book.totalPages || 0}} 页</text>
+          </view>
+          <view wx:else class="info-row">
+            <text class="info-label">章节</text>
+            <text class="info-value">{{book.lastChapter || 0}} / {{book.totalChapters || 0}} 章</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">阅读时长</text>
+            <text class="info-value">{{book.totalDurationText || '0分钟'}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">批注数量</text>
+            <text class="info-value">{{book.annotationCount || 0}} 条</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="meta-section">
+      <view class="section-title">书籍信息</view>
+      <view class="meta-grid">
+        <view class="meta-item">
+          <text class="meta-label">文件大小</text>
+          <text class="meta-value">{{book.fileSizeText || '-'}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">文件格式</text>
+          <text class="meta-value">{{book.format.toUpperCase()}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">上传时间</text>
+          <text class="meta-value">{{book.createdAt}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">最近阅读</text>
+          <text class="meta-value">{{book.lastReadAt || '尚未阅读'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{book.annotationCount > 0}}" class="excerpt-entry" bindtap="goExcerpts">
+      <text class="entry-title">查看我的笔记与批注 ({{book.annotationCount}})</text>
+      <text class="entry-arrow">›</text>
+    </view>
+  </block>
+
+  <view wx:if="{{showActionSheet}}" class="mask" bindtap="closeActionSheet"></view>
+  <view wx:if="{{showActionSheet}}" class="action-sheet">
+    <view class="action-sheet-item" data-action="edit" bindtap="onActionTap">
+      <text class="sheet-icon">✎</text>
+      <text class="sheet-text">编辑书籍信息</text>
+    </view>
+    <view class="action-sheet-item" data-action="delete" bindtap="onActionTap">
+      <text class="sheet-icon danger">🗑</text>
+      <text class="sheet-text danger">删除书籍</text>
+    </view>
+    <view class="action-sheet-cancel" bindtap="closeActionSheet">取消</view>
+  </view>
+
+  <view wx:if="{{showDeleteConfirm}}" class="mask" bindtap="cancelDelete"></view>
+  <view wx:if="{{showDeleteConfirm}}" class="confirm-modal">
+    <view class="modal-title">确认删除</view>
+    <view class="modal-content">删除后将移入回收站，7天内可恢复，过期将永久删除。</view>
+    <view class="modal-btns">
+      <view class="modal-btn cancel" bindtap="cancelDelete">取消</view>
+      <view class="modal-btn confirm" bindtap="confirmDelete">确认删除</view>
+    </view>
+  </view>
+</view>
