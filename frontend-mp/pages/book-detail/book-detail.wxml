@@ -29,12 +29,54 @@
         <text class="btn-icon">▶</text>
         <text class="btn-text">开始阅读</text>
       </view>
+      <view class="btn-secondary btn-bilingual" bindtap="openBilingualList">
+        <text class="btn-icon">📖</text>
+        <text class="btn-text">双语对照</text>
+      </view>
       <view class="btn-secondary" bindtap="editBook">
         <text class="btn-icon">✎</text>
         <text class="btn-text">编辑</text>
       </view>
       <view class="btn-secondary btn-more" bindtap="openActionSheet">
         <text class="btn-icon">⋯</text>
+      </view>
+    </view>
+
+    <view wx:if="{{bilingualPairs && bilingualPairs.length > 0}}" class="bilingual-section">
+      <view class="section-title">
+        <text>我的双语关联</text>
+        <view class="add-pair-link" bindtap="createBilingualPair">+ 新建关联</view>
+      </view>
+      <view class="bilingual-list">
+        <view class="bilingual-item" wx:for="{{bilingualPairs}}" wx:key="id" bindtap="openBilingualReader" data-pair="{{item}}">
+          <view class="bilingual-header">
+            <text class="bilingual-name">{{item.name}}</text>
+            <view class="bilingual-badge strategy-{{item.alignmentStrategy}}">
+              {{item.alignmentStrategy === 1 ? '章节对齐' : 'AI对齐'}}
+            </view>
+          </view>
+          <view class="bilingual-books">
+            <view class="bilingual-book left">
+              <text class="book-lang">{{item.leftLanguage || '左'}}</text>
+              <text class="book-title-small">{{item.leftBookTitle}}</text>
+            </view>
+            <text class="bilingual-arrow">⇄</text>
+            <view class="bilingual-book right">
+              <text class="book-lang">{{item.rightLanguage || '右'}}</text>
+              <text class="book-title-small">{{item.rightBookTitle}}</text>
+            </view>
+          </view>
+          <view class="bilingual-progress-row">
+            <view class="mini-progress">
+              <view class="mini-progress-fill" style="width: {{item.leftProgress || 0}}%"></view>
+            </view>
+            <text class="mini-progress-text">左 {{item.leftProgress || 0}}%</text>
+            <view class="mini-progress">
+              <view class="mini-progress-fill" style="width: {{item.rightProgress || 0}}%"></view>
+            </view>
+            <text class="mini-progress-text">右 {{item.rightProgress || 0}}%</text>
+          </view>
+        </view>
       </view>
     </view>
 

@@ -6,7 +6,8 @@ Page({
     book: null,
     loading: true,
     showActionSheet: false,
-    showDeleteConfirm: false
+    showDeleteConfirm: false,
+    bilingualPairs: []
   },
 
   onLoad(options) {
@@ -23,6 +24,7 @@ Page({
   onShow() {
     if (this.data.bookId) {
       this.loadDetail()
+      this.loadBilingualPairs()
     }
   },
 
@@ -35,6 +37,56 @@ Page({
       console.error('加载书籍详情失败', e)
       this.setData({ loading: false })
     }
+  },
+
+  async loadBilingualPairs() {
+    try {
+      const res = await request({ url: `/bilingual/pairs/book/${this.data.bookId}` })
+      const pairs = res.data || []
+      const pairsWithProgress = await Promise.all(pairs.map(async (p) => {
+        try {
+          const progRes = await request({ url: `/bilingual/pairs/${p.id}/progress` })
+          return { ...p, ...progRes.data }
+        } catch (e) {
+          return p
+        }
+      }))
+      this.setData({ bilingualPairs: pairsWithProgress })
+    } catch (e) {
+      console.warn('加载双语关联失败', e)
+    }
+  },
+
+  openBilingualList() {
+    if (this.data.bilingualPairs && this.data.bilingualPairs.length > 0) {
+      wx.showActionSheet({
+        itemList: ['打开双语阅读器', '创建新的双语关联'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            const pair = this.data.bilingualPairs[0]
+            this.openBilingualReader({ currentTarget: { dataset: { pair } } })
+          } else {
+            this.createBilingualPair()
+          }
+        }
+      })
+    } else {
+      this.createBilingualPair()
+    }
+  },
+
+  createBilingualPair() {
+    wx.navigateTo({
+      url: `/pages/bilingual-pair/bilingual-pair?bookId=${this.data.bookId}`
+    })
+  },
+
+  openBilingualReader(e) {
+    const pair = e.currentTarget.dataset.pair
+    if (!pair) return
+    wx.navigateTo({
+      url: `/pages/bilingual-reader/bilingual-reader?pairId=${pair.id}`
+    })
   },
 
   startRead() {

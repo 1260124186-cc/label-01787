@@ -415,7 +415,7 @@ public class ReadingReportService {
         );
         result.put("totalReports", totalReports != null ? totalReports : 0L);
 
-        Long totalShares = 0;
+        Long totalShares = 0L;
         List<ReadingReport> reports = readingReportMapper.selectList(
                 new LambdaQueryWrapper<ReadingReport>()
                         .ge(ReadingReport::getCreatedAt, start)

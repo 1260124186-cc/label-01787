@@ -1,0 +1,363 @@
+<view class="bi-page {{themeClass}}" bindtap="toggleUI">
+  <view wx:if="{{loading}}" class="bi-loading">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">双语阅读器加载中...</view>
+  </view>
+
+  <block wx:if="{{!loading}}">
+    <view class="bi-topbar" wx:if="{{showUI}}" catchtap="">
+      <view class="tb-left" bindtap="goBack">
+        <text class="tb-icon">‹</text>
+      </view>
+      <view class="tb-title">
+        <text class="tb-book left">{{pair ? pair.leftBookTitle : ''}}</text>
+        <text class="tb-vs">⇄</text>
+        <text class="tb-book right">{{pair ? pair.rightBookTitle : ''}}</text>
+      </view>
+      <view class="tb-right"></view>
+    </view>
+
+    <view class="bi-sync-status" wx:if="{{!showUI && syncEnabled}}">
+      <view class="sync-dot {{syncEnabled ? 'on' : 'off'}}"></view>
+      <text class="sync-text">{{syncMode === 'scroll' ? '滚动同步' : '点击同步'}}</text>
+    </view>
+
+    <view class="bi-container">
+      <scroll-view id="left-scroll"
+        class="bi-column bi-left bilingual-left"
+        scroll-y
+        style="background-color: {{bgColor}};"
+        data-side="left"
+        bindscroll="onSideScroll"
+        bindscrolltolower="onScrollLower"
+        lower-threshold="300"
+        wx:if="{{readMode === 'scroll'}}">
+
+        <view class="col-header">
+          <view class="lang-badge left-badge">{{pair ? (pair.leftLanguage || '原文') : ''}}</view>
+          <text class="col-progress">{{leftDisplayUnit}} / {{leftTotalUnits || '-'}}</text>
+        </view>
+
+        <view wx:if="{{leftStreamType === 'image'}}">
+          <view wx:for="{{leftLoadedUnits}}" wx:key="index"
+            class="page-image-wrap bi-left-unit"
+            id="bi-left-unit-{{index}}"
+            data-side="left"
+            data-index="{{index + leftStartUnitNum}}"
+            bindtap="onTapUnit"
+            style="transform: scale({{imageScale}}); transform-origin: top center;">
+            <block wx:if="{{item}}">
+              <image src="{{item}}" mode="widthFix" class="page-image" lazy-load />
+              <view class="unit-anchor-bar" wx:if="{{alignmentsMapLeft[index + leftStartUnitNum] && alignmentsMapLeft[index + leftStartUnitNum][0].id === activeAlignmentId}}">
+                <view class="anchor-line left-line"></view>
+                <text class="anchor-text">已对齐</text>
+              </view>
+            </block>
+            <view wx:else class="skeleton-page">
+              <view class="skeleton-line"></view><view class="skeleton-line"></view><view class="skeleton-line"></view>
+            </view>
+          </view>
+        </view>
+
+        <view wx:elif="{{leftStreamType === 'html'}}">
+          <view wx:for="{{leftLoadedChapters}}" wx:key="chapterIndex"
+            class="chapter-wrap bi-left-unit"
+            id="bi-left-unit-{{index}}"
+            data-side="left"
+            data-index="{{item.chapterIndex}}"
+            bindtap="onTapUnit">
+            <view class="chapter-title-bar" wx:if="{{item.title}}">
+              <text class="chapter-title-text" style="font-size: {{fontSizeValue + 6}}rpx;">{{item.title}}</text>
+            </view>
+            <view class="chapter-body rich-text-{{theme}} font-size-{{fontSize}} line-height-{{lineHeight}}">
+              <rich-text nodes="{{item.html}}" space="nbsp"></rich-text>
+            </view>
+            <view class="unit-anchor-bar" wx:if="{{alignmentsMapLeft[item.chapterIndex] && alignmentsMapLeft[item.chapterIndex][0].id === activeAlignmentId}}">
+              <view class="anchor-line left-line"></view>
+              <text class="anchor-text">已对齐</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="load-more" wx:if="{{leftCurrentUnit < leftTotalUnits - 1}}">
+          <text>{{loading ? '加载中...' : '加载更多'}}</text>
+        </view>
+        <view class="load-end" wx:if="{{leftCurrentUnit >= leftTotalUnits - 1}}">
+          <text>左侧已加载完</text>
+        </view>
+      </scroll-view>
+
+      <view class="bi-divider">
+        <view class="divider-line"></view>
+        <view class="divider-swap" catchtap="toggleSync">
+          <text class="swap-icon">{{syncEnabled ? '⇄' : '↮'}}</text>
+        </view>
+        <view class="divider-line"></view>
+      </view>
+
+      <scroll-view id="right-scroll"
+        class="bi-column bi-right bilingual-right"
+        scroll-y
+        style="background-color: {{bgColor}};"
+        data-side="right"
+        bindscroll="onSideScroll"
+        bindscrolltolower="onScrollLower"
+        lower-threshold="300"
+        wx:if="{{readMode === 'scroll'}}">
+
+        <view class="col-header">
+          <view class="lang-badge right-badge">{{pair ? (pair.rightLanguage || '译文') : ''}}</view>
+          <text class="col-progress">{{rightDisplayUnit}} / {{rightTotalUnits || '-'}}</text>
+        </view>
+
+        <view wx:if="{{rightStreamType === 'image'}}">
+          <view wx:for="{{rightLoadedUnits}}" wx:key="index"
+            class="page-image-wrap bi-right-unit"
+            id="bi-right-unit-{{index}}"
+            data-side="right"
+            data-index="{{index + rightStartUnitNum}}"
+            bindtap="onTapUnit"
+            style="transform: scale({{imageScale}}); transform-origin: top center;">
+            <block wx:if="{{item}}">
+              <image src="{{item}}" mode="widthFix" class="page-image" lazy-load />
+              <view class="unit-anchor-bar" wx:if="{{alignmentsMapRight[index + rightStartUnitNum] && alignmentsMapRight[index + rightStartUnitNum][0].id === activeAlignmentId}}">
+                <view class="anchor-line right-line"></view>
+                <text class="anchor-text">已对齐</text>
+              </view>
+            </block>
+            <view wx:else class="skeleton-page">
+              <view class="skeleton-line"></view><view class="skeleton-line"></view><view class="skeleton-line"></view>
+            </view>
+          </view>
+        </view>
+
+        <view wx:elif="{{rightStreamType === 'html'}}">
+          <view wx:for="{{rightLoadedChapters}}" wx:key="chapterIndex"
+            class="chapter-wrap bi-right-unit"
+            id="bi-right-unit-{{index}}"
+            data-side="right"
+            data-index="{{item.chapterIndex}}"
+            bindtap="onTapUnit">
+            <view class="chapter-title-bar" wx:if="{{item.title}}">
+              <text class="chapter-title-text" style="font-size: {{fontSizeValue + 6}}rpx;">{{item.title}}</text>
+            </view>
+            <view class="chapter-body rich-text-{{theme}} font-size-{{fontSize}} line-height-{{lineHeight}}">
+              <rich-text nodes="{{item.html}}" space="nbsp"></rich-text>
+            </view>
+            <view class="unit-anchor-bar" wx:if="{{alignmentsMapRight[item.chapterIndex] && alignmentsMapRight[item.chapterIndex][0].id === activeAlignmentId}}">
+              <view class="anchor-line right-line"></view>
+              <text class="anchor-text">已对齐</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="load-more" wx:if="{{rightCurrentUnit < rightTotalUnits - 1}}">
+          <text>{{loading ? '加载中...' : '加载更多'}}</text>
+        </view>
+        <view class="load-end" wx:if="{{rightCurrentUnit >= rightTotalUnits - 1}}">
+          <text>右侧已加载完</text>
+        </view>
+      </scroll-view>
+
+      <swiper wx:if="{{readMode === 'swipe' && false}}" class="bi-swiper" current="{{0}}"
+        style="background-color: {{bgColor}};"></swiper>
+    </view>
+
+    <view class="bi-bottombar" wx:if="{{showUI}}" catchtap="">
+      <view class="unit-info-row">
+        <text class="ui-side">左 {{leftDisplayUnit}}/{{leftTotalUnits || '-'}}</text>
+        <text class="ui-sep">·</text>
+        <text class="ui-side">右 {{rightDisplayUnit}}/{{rightTotalUnits || '-'}}</text>
+        <text class="ui-sep">·</text>
+        <text class="ui-align">{{alignmentStrategy === 1 ? '章节对齐' : 'AI对齐'}}</text>
+      </view>
+      <view class="tool-row">
+        <view class="t-btn" bindtap="toggleSync">
+          <view class="t-icon">{{syncEnabled ? '⇄' : '↮'}}</view>
+          <text>{{syncEnabled ? '同步开' : '同步关'}}</text>
+        </view>
+        <view class="t-btn" bindtap="showSyncSettings">
+          <view class="t-icon">{{syncMode === 'scroll' ? '↓↓' : '👆'}}</view>
+          <text>同步方式</text>
+        </view>
+        <view class="t-btn" bindtap="showSettingsPanel">
+          <view class="t-icon">⚙</view>
+          <text>设置</text>
+        </view>
+        <view class="t-btn" bindtap="switchMode" data-mode="{{readMode === 'scroll' ? 'swipe' : 'scroll'}}">
+          <view class="t-icon">{{readMode === 'scroll' ? '⇆' : '↓'}}</view>
+          <text>{{readMode === 'scroll' ? '翻页' : '滚动'}}</text>
+        </view>
+        <view class="t-btn" bindtap="showThemePicker">
+          <view class="t-icon">🎨</view>
+          <text>主题</text>
+        </view>
+        <view class="t-btn" bindtap="openToc" data-side="left">
+          <view class="t-icon">📋</view>
+          <text>左目录</text>
+        </view>
+        <view class="t-btn" bindtap="openToc" data-side="right">
+          <view class="t-icon">📑</view>
+          <text>右目录</text>
+        </view>
+        <view class="t-btn" bindtap="openAIPanel">
+          <view class="t-icon">{{aiAlignmentStatus === 1 ? '⏳' : '🤖'}}</view>
+          <text>AI对齐</text>
+        </view>
+        <view class="t-btn" bindtap="openAlignmentsView">
+          <view class="t-icon">🔗</view>
+          <text>对齐表</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="toc-mask" wx:if="{{showToc}}" bindtap="closeToc"></view>
+    <view class="toc-panel {{showToc ? 'show' : ''}}">
+      <view class="toc-header">
+        <text class="toc-title">{{tocSide === 'left' ? (pair ? pair.leftBookTitle : '') : (pair ? pair.rightBookTitle : '')}} - 目录</text>
+        <view class="toc-close" bindtap="closeToc">✕</view>
+      </view>
+      <scroll-view scroll-y class="toc-list">
+        <block wx:if="{{(tocSide === 'left' ? leftFormat : rightFormat) === 'epub'}}">
+          <view class="toc-item" wx:for="{{tocSide === 'left' ? leftToc : rightToc}}" wx:key="index"
+            bindtap="jumpFromToc" data-chapter="{{item.chapterIndex}}">
+            <text class="toc-text">{{item.title}}</text>
+            <text class="toc-page">第{{(item.chapterIndex || 0) + 1}}章</text>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="toc-item" wx:for="{{tocSide === 'left' ? leftToc : rightToc}}" wx:key="index"
+            bindtap="jumpFromToc" data-unit="{{item.page}}">
+            <text class="toc-text">{{item.title}}</text>
+            <text class="toc-page">{{item.page}}页</text>
+          </view>
+        </block>
+        <view class="empty-state" wx:if="{{(tocSide === 'left' ? leftToc : rightToc).length === 0}}">
+          <text class="empty-text">暂无目录</text>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="theme-mask" wx:if="{{showSettings || showTheme || showSyncModal}}" bindtap="hideSettingsPanel"></view>
+
+    <view class="settings-panel {{showSettings ? 'show' : ''}}" catchtap="">
+      <view class="panel-title">阅读设置</view>
+      <view class="panel-section">
+        <view class="sec-title">字号大小</view>
+        <view class="font-row">
+          <view wx:for="{{['xs','sm','md','lg','xl']}}" wx:key="*this"
+            class="font-preset {{fontSize === item ? 'selected' : ''}}"
+            bindtap="changeFontSize" data-key="{{item}}">
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="panel-section">
+        <view class="sec-title">行间距</view>
+        <view class="lh-row">
+          <view wx:for="{{['tight','normal','loose','very-loose']}}" wx:key="*this"
+            class="lh-preset {{lineHeight === item ? 'selected' : ''}}"
+            bindtap="changeLineHeight" data-key="{{item}}">
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="panel-section">
+        <view class="sec-title">同步滚动</view>
+        <view class="toggle-row" bindtap="toggleSync">
+          <text class="toggle-label">开启同步</text>
+          <view class="switch {{syncEnabled ? 'on' : ''}}"><view class="switch-dot"></view></view>
+        </view>
+        <view class="toggle-row" bindtap="toggleKeepScreenOn">
+          <text class="toggle-label">屏幕常亮</text>
+          <view class="switch {{keepScreenOn ? 'on' : ''}}"><view class="switch-dot"></view></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="theme-panel {{showTheme ? 'show' : ''}}" catchtap="">
+      <view class="panel-title">阅读主题</view>
+      <view class="theme-options">
+        <view wx:for="{{['white','green','sepia','dark']}}" wx:key="*this"
+          class="theme-option {{theme === item ? 'selected' : ''}}"
+          bindtap="changeTheme" data-theme="{{item}}">
+          <view class="theme-circle theme-{{item}}"></view>
+          <text class="theme-name">{{item === 'white' ? '白色' : item === 'green' ? '护眼绿' : item === 'sepia' ? '羊皮纸' : '夜空黑'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="settings-panel {{showSyncModal ? 'show' : ''}}" catchtap="">
+      <view class="panel-title">同步方式</view>
+      <view class="panel-section">
+        <view wx:for="{{[{k:'click',n:'点击同步',d:'点击页面段落时跳到对应位置'} , {k:'scroll',n:'滚动同步',d:'滚动时自动同步到对应位置'}]}}" wx:key="k"
+          class="sync-mode-item {{syncMode === item.k ? 'selected' : ''}}"
+          bindtap="changeSyncMode" data-mode="{{item.k}}">
+          <view class="mode-radio"><view wx:if="{{syncMode === item.k}}" class="radio-dot"></view></view>
+          <view class="mode-info">
+            <text class="mode-name">{{item.n}}</text>
+            <text class="mode-desc">{{item.d}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="ai-panel {{showAIPanel ? 'show' : ''}}" catchtap="">
+      <view class="ai-header">
+        <text class="ai-title">AI段落对齐</text>
+        <view class="ai-close" bindtap="hideAIPanel">✕</view>
+      </view>
+      <view class="ai-body">
+        <view class="ai-status-row">
+          <text class="ai-status-label">状态</text>
+          <text class="ai-status-value status-{{aiAlignmentStatus}}">
+            {{aiAlignmentStatus === 0 ? '未开始' : aiAlignmentStatus === 1 ? '进行中' : aiAlignmentStatus === 2 ? '已完成' : '失败'}}
+          </text>
+        </view>
+        <view class="ai-progress" wx:if="{{aiAlignmentStatus === 1 || aiAlignmentStatus === 2}}">
+          <view class="ai-progress-bar"><view class="ai-progress-fill" style="width: {{aiAlignmentProgress}}%"></view></view>
+          <text class="ai-progress-text">{{aiAlignmentProgress}}%</text>
+        </view>
+        <view class="ai-info">
+          <view class="ai-info-item"><text class="info-k">对齐策略</text><text class="info-v">{{alignmentStrategy === 1 ? '章节号对齐' : 'AI智能对齐'}}</text></view>
+          <view class="ai-info-item"><text class="info-k">对齐对数</text><text class="info-v">{{alignments.length}}</text></view>
+        </view>
+        <view class="ai-tip">AI 会分析两本书的内容，基于语义和文本特征自动匹配对应的段落。若章节结构完全一致，推荐使用"章节号对齐"。</view>
+      </view>
+      <view class="ai-actions">
+        <button wx:if="{{aiAlignmentStatus !== 1}}" class="ai-btn" bindtap="triggerAIAlignment">
+          {{alignments.length > 0 ? '重新对齐' : '启动AI对齐'}}
+        </button>
+        <button wx:else class="ai-btn disabled" disabled>AI分析进行中...</button>
+      </view>
+    </view>
+
+    <view class="alignments-panel {{showAlignments ? 'show' : ''}}" catchtap="">
+      <view class="ai-header">
+        <text class="ai-title">对齐对照表 ({{alignments.length}})</text>
+        <view class="ai-close" bindtap="hideAlignments">✕</view>
+      </view>
+      <scroll-view scroll-y class="alignments-list">
+        <view class="align-row header">
+          <text class="al-side">左侧</text>
+          <text class="al-arrow">⇄</text>
+          <text class="al-side">右侧</text>
+        </view>
+        <view class="align-row" wx:for="{{alignments}}" wx:key="id">
+          <view class="al-cell left">
+            <text class="al-unit">{{leftStreamType === 'html' ? '第' + (item.leftUnitIndex + 1) + '章' : '第' + item.leftUnitIndex + '页'}}</text>
+            <text class="al-method m{{item.alignmentMethod}}">{{item.alignmentMethod === 1 ? '章节' : item.alignmentMethod === 2 ? 'AI' : '手动'}}</text>
+          </view>
+          <text class="al-arrow">⇄</text>
+          <view class="al-cell right">
+            <text class="al-unit">{{rightStreamType === 'html' ? '第' + (item.rightUnitIndex + 1) + '章' : '第' + item.rightUnitIndex + '页'}}</text>
+            <text wx:if="{{item.confidence}}" class="al-confidence">{{(item.confidence * 100).toFixed(0)}}%</text>
+          </view>
+        </view>
+        <view class="empty-state" wx:if="{{alignments.length === 0}}">
+          <text class="empty-text">暂无对齐数据，请先创建关联或启动AI对齐</text>
+        </view>
+      </scroll-view>
+    </view>
+  </block>
+</view>

@@ -23,7 +23,9 @@
     "pages/trash/trash",
     "pages/reading-history/reading-history",
     "pages/reading-report/reading-report",
-    "pages/reading-history-report/reading-history-report"
+    "pages/reading-history-report/reading-history-report",
+    "pages/bilingual-pair/bilingual-pair",
+    "pages/bilingual-reader/bilingual-reader"
   ],
   "window": {
     "backgroundTextStyle": "dark",

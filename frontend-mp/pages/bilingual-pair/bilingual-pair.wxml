@@ -1,0 +1,159 @@
+<view class="pair-page">
+  <view wx:if="{{allPairs.length > 0}}" class="existing-section">
+    <view class="section-header">
+      <text class="section-title">已有双语关联 ({{allPairs.length}})</text>
+    </view>
+    <scroll-view scroll-x class="pair-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="pair-card" wx:for="{{allPairs}}" wx:key="id" bindtap="openExistingPair" data-pair="{{item}}">
+        <view class="pair-card-header">
+          <text class="pair-card-name">{{item.name}}</text>
+          <view class="pair-delete-btn" catchtap="deletePair" data-pair="{{item}}">✕</view>
+        </view>
+        <view class="pair-books-row">
+          <view class="pb pb-left">
+            <text class="pb-lang">{{item.leftLanguage || '左'}}</text>
+            <text class="pb-title">{{item.leftBookTitle}}</text>
+          </view>
+          <text class="pb-arrow">⇄</text>
+          <view class="pb pb-right">
+            <text class="pb-lang">{{item.rightLanguage || '右'}}</text>
+            <text class="pb-title">{{item.rightBookTitle}}</text>
+          </view>
+        </view>
+        <view class="pair-badge-row">
+          <view class="pair-badge strategy-{{item.alignmentStrategy}}">
+            {{item.alignmentStrategy === 1 ? '章节对齐' : 'AI对齐'}}
+          </view>
+          <view wx:if="{{item.aiAlignmentStatus == 1}}" class="pair-badge ai-progress">
+            AI中 {{item.aiAlignmentProgress}}%
+          </view>
+          <view wx:elif="{{item.aiAlignmentStatus == 2}}" class="pair-badge ai-done">
+            AI已完成
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="form-card">
+    <view class="form-title">选择书籍</view>
+    <view class="book-slot-row">
+      <view class="book-slot left" bindtap="onTapBookSlot" data-side="left">
+        <view wx:if="{{leftBook}}" class="slot-content">
+          <view class="slot-cover left-cover">
+            <text>{{leftBook.title[0]}}</text>
+          </view>
+          <view class="slot-info">
+            <text class="slot-title">{{leftBook.title}}</text>
+            <text class="slot-format">{{(leftBook.bookFormat || leftBook.format).toUpperCase()}}</text>
+          </view>
+          <picker mode="selector" range="{{languageOptions}}" range-key="name"
+            bindchange="onLeftLanguageChange" catchtap="">
+            <view class="lang-tag">{{leftLanguage ? (languageOptions[0].name, languageOptions.find(l => l.key === leftLanguage)?.name || leftLanguage) : '选语言'}}</view>
+          </picker>
+        </view>
+        <view wx:else class="slot-placeholder">
+          <view class="plus-icon">+</view>
+          <text>选择左栏</text>
+          <text class="ph-sub">原著</text>
+        </view>
+      </view>
+
+      <view class="swap-btn" bindtap="swapBooks">
+        <text>⇅</text>
+      </view>
+
+      <view class="book-slot right" bindtap="onTapBookSlot" data-side="right">
+        <view wx:if="{{rightBook}}" class="slot-content">
+          <view class="slot-cover right-cover">
+            <text>{{rightBook.title[0]}}</text>
+          </view>
+          <view class="slot-info">
+            <text class="slot-title">{{rightBook.title}}</text>
+            <text class="slot-format">{{(rightBook.bookFormat || rightBook.format).toUpperCase()}}</text>
+          </view>
+          <picker mode="selector" range="{{languageOptions}}" range-key="name"
+            bindchange="onRightLanguageChange" catchtap="">
+            <view class="lang-tag">{{rightLanguage ? (languageOptions.find(l => l.key === rightLanguage)?.name || rightLanguage) : '选语言'}}</view>
+          </picker>
+        </view>
+        <view wx:else class="slot-placeholder">
+          <view class="plus-icon">+</view>
+          <text>选择右栏</text>
+          <text class="ph-sub">译本</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="form-card">
+    <view class="form-title">关联名称</view>
+    <input class="name-input" placeholder="给这个双语对照起个名字..."
+      value="{{pairName}}" bindinput="onPairNameInput" maxlength="100" />
+  </view>
+
+  <view class="form-card">
+    <view class="form-title">对齐策略</view>
+    <view class="strategy-list">
+      <view wx:for="{{alignmentOptions}}" wx:key="key"
+        class="strategy-item {{alignmentStrategy === item.key ? 'selected' : ''}}"
+        bindtap="selectAlignment" data-key="{{item.key}}">
+        <view class="strategy-radio">
+          <view wx:if="{{alignmentStrategy === item.key}}" class="radio-dot"></view>
+        </view>
+        <view class="strategy-content">
+          <text class="strategy-name">{{item.name}}</text>
+          <text class="strategy-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="tip-card">
+    <view class="tip-title">💡 使用技巧</view>
+    <view class="tip-list">
+      <view class="tip-item">· 左右分栏：左栏原著 + 右栏译本，对照阅读</view>
+      <view class="tip-item">· 章节号对齐：按章节/页码一一对应，结构一致首选</view>
+      <view class="tip-item">· AI段落对齐：智能匹配语义段落，译本差异大时使用</view>
+      <view class="tip-item">· 同步滚动：点击左侧段落，右侧自动跳到对应内容</view>
+      <view class="tip-item">· 语言学习：对比学习词汇、句式、表达差异</view>
+    </view>
+  </view>
+
+  <view class="submit-area">
+    <button class="submit-btn" bindtap="submitPair" loading="{{loading}}" disabled="{{loading}}">
+      创建双语对照
+    </button>
+  </view>
+
+  <view wx:if="{{showBookPicker}}" class="picker-mask" bindtap="closeBookPicker"></view>
+  <view wx:if="{{showBookPicker}}" class="picker-panel">
+    <view class="picker-header">
+      <text class="picker-title">选择{{pickerSide === 'left' ? '左栏' : '右栏'}}书籍</text>
+      <view class="picker-close" bindtap="closeBookPicker">✕</view>
+    </view>
+    <view class="picker-search">
+      <input class="search-input" placeholder="搜索书名/作者..." value="{{keyword}}" bindinput="onKeywordInput" />
+    </view>
+    <scroll-view scroll-y class="picker-list">
+      <view class="picker-empty" wx:if="{{books.length === 0}}">
+        <text>书架空空如也，快去上传书籍吧</text>
+      </view>
+      <view wx:for="{{books}}" wx:key="id"
+        wx:if="{{!keyword || (item.title + (item.author || '')).indexOf(keyword) >= 0}}"
+        class="picker-item {{(pickerSide === 'left' && selectedRightId === item.id) || (pickerSide === 'right' && selectedLeftId === item.id) ? 'disabled' : ''}}"
+        bindtap="selectBook" data-book="{{item}}">
+        <view class="pi-cover" style="background: linear-gradient(135deg, {{['#667eea','#f093fb','#4facfe','#43e97b','#fa709a','#fee140','#30cfd0','#a8edea'][item.id % 8]}}, {{['#764ba2','#f5576c','#00f2fe','#38f9d7','#feca57','#f093fb','#330867','#fed6e3'][item.id % 8]}})">
+          <text>{{item.title[0]}}</text>
+        </view>
+        <view class="pi-info">
+          <text class="pi-title">{{item.title}}</text>
+          <text class="pi-author">{{item.author || '未知作者'}} · {{(item.bookFormat || item.format).toUpperCase()}}</text>
+        </view>
+        <view wx:if="{{item.id === (pickerSide === 'left' ? selectedLeftId : selectedRightId)}}" class="pi-checked">
+          ✓
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
