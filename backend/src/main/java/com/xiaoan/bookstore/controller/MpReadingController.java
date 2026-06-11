@@ -57,6 +57,14 @@ public class MpReadingController {
         return Result.success(readingService.continueReadingList(userId, limit));
     }
 
+    @GetMapping("/history")
+    public Result<?> readingHistory(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Long userId = TenantContext.getTenantId();
+        return Result.success(readingService.readingHistoryPage(userId, page, size));
+    }
+
     @GetMapping("/timeline")
     public Result<List<Map<String, Object>>> timeline(
             @RequestParam(defaultValue = "month") String period) {

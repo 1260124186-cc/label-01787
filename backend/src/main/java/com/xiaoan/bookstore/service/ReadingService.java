@@ -12,12 +12,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xiaoan.bookstore.dto.ReadingHistoryVO;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -155,6 +160,63 @@ public class ReadingService {
             limit = 5;
         }
         return readingRecordMapper.continueReadingList(userId, limit);
+    }
+
+    public Page<ReadingHistoryVO> readingHistoryPage(Long userId, int page, int size) {
+        if (page <= 0) page = 1;
+        if (size <= 0 || size > 100) size = 20;
+
+        int offset = (page - 1) * size;
+        List<Map<String, Object>> records = readingRecordMapper.readingHistoryPage(userId, offset, size);
+        Integer total = readingRecordMapper.countReadingHistoryBooks(userId);
+
+        List<ReadingHistoryVO> voList = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        for (Map<String, Object> record : records) {
+            ReadingHistoryVO vo = new ReadingHistoryVO();
+            vo.setBookId(((Number) record.get("bookId")).longValue());
+            vo.setBookTitle((String) record.get("bookTitle"));
+            vo.setBookAuthor((String) record.get("bookAuthor"));
+            vo.setBookFormat((String) record.get("bookFormat"));
+            vo.setCoverThumbnail((String) record.get("coverThumbnail"));
+            vo.setPageCount(record.get("pageCount") != null ? ((Number) record.get("pageCount")).intValue() : 0);
+            vo.setChapterCount(record.get("chapterCount") != null ? ((Number) record.get("chapterCount")).intValue() : 0);
+            vo.setLastPage(record.get("lastPage") != null ? ((Number) record.get("lastPage")).intValue() : 0);
+            vo.setLastChapter(record.get("lastChapter") != null ? ((Number) record.get("lastChapter")).intValue() : 0);
+            vo.setSessionDuration(record.get("sessionDuration") != null ? ((Number) record.get("sessionDuration")).intValue() : 0);
+            vo.setTotalDuration(record.get("totalDuration") != null ? ((Number) record.get("totalDuration")).longValue() : 0L);
+            vo.setReadCount(record.get("readCount") != null ? ((Number) record.get("readCount")).intValue() : 0);
+
+            Object lastReadTimeObj = record.get("lastReadTime");
+            if (lastReadTimeObj != null) {
+                if (lastReadTimeObj instanceof LocalDateTime) {
+                    vo.setLastReadTime(((LocalDateTime) lastReadTimeObj).format(formatter));
+                } else {
+                    vo.setLastReadTime(String.valueOf(lastReadTimeObj));
+                }
+            }
+
+            String format = vo.getBookFormat() == null ? "pdf" : vo.getBookFormat();
+            double progress = 0;
+            if ("epub".equals(format)) {
+                int totalChapters = Math.max(1, vo.getChapterCount());
+                int lastChapter = vo.getLastChapter() == null ? 0 : vo.getLastChapter();
+                progress = Math.min(100.0, Math.round((double) lastChapter / totalChapters * 1000) / 10.0);
+            } else {
+                int totalPages = Math.max(1, vo.getPageCount());
+                int lastPage = vo.getLastPage() == null ? 0 : vo.getLastPage();
+                progress = Math.min(100.0, Math.round((double) lastPage / totalPages * 1000) / 10.0);
+            }
+            vo.setProgress(progress);
+
+            voList.add(vo);
+        }
+
+        Page<ReadingHistoryVO> result = new Page<>(page, size);
+        result.setRecords(voList);
+        result.setTotal(total != null ? total.longValue() : 0L);
+        return result;
     }
 
     public List<Map<String, Object>> readingTimeline(Long userId, String period) {

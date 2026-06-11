@@ -20,7 +20,8 @@
     "pages/my-excerpts/my-excerpts",
     "pages/book-detail/book-detail",
     "pages/book-edit/book-edit",
-    "pages/trash/trash"
+    "pages/trash/trash",
+    "pages/reading-history/reading-history"
   ],
   "window": {
     "backgroundTextStyle": "dark",

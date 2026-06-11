@@ -134,6 +134,10 @@ Page({
     wx.navigateTo({ url: `/pages/reader/reader?id=${id}&page=${page}&chapter=${chapter}&format=${format}` })
   },
 
+  goReadingHistory() {
+    wx.navigateTo({ url: '/pages/reading-history/reading-history' })
+  },
+
   onSearchInput(e) {
     const keyword = e.detail.value
     this.setData({ searchKeyword: keyword })

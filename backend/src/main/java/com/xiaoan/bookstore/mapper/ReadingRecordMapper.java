@@ -125,4 +125,35 @@ public interface ReadingRecordMapper extends BaseMapper<ReadingRecord> {
 
     @Select("SELECT COALESCE(SUM(duration), 0) FROM reading_record WHERE user_id = #{userId} AND book_id = #{bookId}")
     Long sumDurationByBookId(@Param("userId") Long userId, @Param("bookId") Long bookId);
+
+    @Select("SELECT " +
+            "b.id as bookId, b.title as bookTitle, b.author as bookAuthor, " +
+            "b.book_format as bookFormat, b.cover_thumbnail as coverThumbnail, " +
+            "b.page_count as pageCount, b.chapter_count as chapterCount, " +
+            "b.last_page as lastPage, b.last_chapter as lastChapter, " +
+            "r2.duration as sessionDuration, r2.end_time as lastReadTime, " +
+            "SUM(r.duration) as totalDuration, " +
+            "COUNT(DISTINCT r.id) as readCount " +
+            "FROM reading_record r " +
+            "LEFT JOIN book b ON r.book_id = b.id " +
+            "LEFT JOIN (" +
+            "    SELECT r_inner.book_id, r_inner.duration, r_inner.end_time " +
+            "    FROM reading_record r_inner " +
+            "    WHERE r_inner.user_id = #{userId} AND r_inner.end_time IS NOT NULL " +
+            "    AND r_inner.end_time = (" +
+            "        SELECT MAX(end_time) FROM reading_record " +
+            "        WHERE user_id = #{userId} AND book_id = r_inner.book_id AND end_time IS NOT NULL" +
+            "    )" +
+            ") r2 ON r.book_id = r2.book_id " +
+            "WHERE r.user_id = #{userId} AND r.end_time IS NOT NULL " +
+            "AND b.deleted_at IS NULL AND b.status = 1 " +
+            "GROUP BY r.book_id " +
+            "ORDER BY r2.end_time DESC " +
+            "LIMIT #{offset}, #{size}")
+    List<Map<String, Object>> readingHistoryPage(@Param("userId") Long userId,
+                                                  @Param("offset") int offset,
+                                                  @Param("size") int size);
+
+    @Select("SELECT COUNT(DISTINCT book_id) FROM reading_record WHERE user_id = #{userId} AND end_time IS NOT NULL")
+    Integer countReadingHistoryBooks(@Param("userId") Long userId);
 }

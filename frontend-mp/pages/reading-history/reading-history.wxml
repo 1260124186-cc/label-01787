@@ -1,0 +1,64 @@
+<view class="page-history">
+  <view class="history-list" wx:if="{{historyList.length > 0}}">
+    <view class="history-item" wx:for="{{historyList}}" wx:key="bookId"
+      bindtap="openBook" data-id="{{item.bookId}}" data-page="{{item.lastPage}}" data-chapter="{{item.lastChapter}}" data-format="{{item.bookFormat}}">
+      <view class="history-cover">
+        <image wx:if="{{item.coverThumbnail && item.coverThumbnailUrl && !item.coverLoadFailed}}"
+               class="history-cover-image"
+               src="{{item.coverThumbnailUrl}}"
+               mode="aspectFill"
+               lazy-load="true"
+               binderror="onCoverError"
+               data-index="{{index}}" />
+        <view wx:else class="history-cover-placeholder">
+          <text class="history-cover-title">{{item.bookTitle}}</text>
+        </view>
+        <view class="format-badge format-{{item.bookFormat || 'pdf'}}">{{(item.bookFormat || 'pdf').toUpperCase()}}</view>
+      </view>
+      <view class="history-info">
+        <view class="history-title-row">
+          <text class="history-title">{{item.bookTitle}}</text>
+          <text class="history-progress">{{item.progress}}%</text>
+        </view>
+        <text class="history-author">{{item.bookAuthor || '未知作者'}}</text>
+        <view class="history-stats">
+          <view class="history-stat">
+            <text class="history-stat-label">本次阅读</text>
+            <text class="history-stat-value">{{item.sessionDurationText}}</text>
+          </view>
+          <view class="history-stat">
+            <text class="history-stat-label">累计阅读</text>
+            <text class="history-stat-value">{{item.totalDurationText}}</text>
+          </view>
+          <view class="history-stat">
+            <text class="history-stat-label">阅读次数</text>
+            <text class="history-stat-value">{{item.readCount}}次</text>
+          </view>
+        </view>
+        <view class="history-bottom">
+          <text class="history-page">{{item.bookFormat === 'epub' ? '第' + (item.lastChapter || 0) + '/' + (item.chapterCount || 0) + '章' : '第' + item.lastPage + '/' + item.pageCount + '页'}}</text>
+          <text class="history-time">{{item.lastReadTimeText}}</text>
+        </view>
+        <view class="history-progress-bar">
+          <view class="history-progress-fill" style="width: {{item.progress}}%"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{historyList.length === 0 && !loading}}">
+    <view class="empty-icon-wrap">
+      <view class="icon icon-books"></view>
+    </view>
+    <text class="empty-text">暂无阅读记录</text>
+    <text class="empty-sub">去书架选一本书开始阅读吧</text>
+  </view>
+
+  <view class="loading-tip" wx:if="{{loading && historyList.length > 0}}">
+    <text class="loading-tip-text">加载中...</text>
+  </view>
+
+  <view class="no-more" wx:if="{{!hasMore && historyList.length > 0}}">
+    <text class="no-more-text">— 没有更多了 —</text>
+  </view>
+</view>

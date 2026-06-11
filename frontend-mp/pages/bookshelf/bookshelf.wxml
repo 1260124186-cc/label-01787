@@ -52,7 +52,7 @@
   <view class="continue-section" wx:if="{{continueList.length > 0 && !batchMode}}">
     <view class="section-header">
       <text class="section-title">继续阅读</text>
-      <text class="section-more">更多 ›</text>
+      <text class="section-more" bindtap="goReadingHistory">更多 ›</text>
     </view>
     <scroll-view scroll-x class="continue-scroll" enhanced show-scrollbar="{{false}}">
       <view class="continue-scroll-inner">
