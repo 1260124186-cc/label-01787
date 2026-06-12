@@ -17,6 +17,8 @@ public class User {
     private Integer currentStreakDays;
     private Integer maxStreakDays;
     private LocalDate lastReadDate;
+    private Integer isTeacher;
+    private Integer teacherVerified;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)

@@ -212,5 +212,18 @@ public class Constants {
 
     public static final String POINTS_CATEGORY_SEASON_COMPLETE = "season_complete";
 
+    public static final int CLASSROOM_ROLE_TEACHER = 1;
+    public static final int CLASSROOM_ROLE_STUDENT = 2;
+
+    public static final int ASSIGNMENT_STATUS_DRAFT = 0;
+    public static final int ASSIGNMENT_STATUS_ACTIVE = 1;
+    public static final int ASSIGNMENT_STATUS_CLOSED = 2;
+
+    public static final int SUBMISSION_STATUS_NOT_SUBMITTED = 0;
+    public static final int SUBMISSION_STATUS_SUBMITTED = 1;
+    public static final int SUBMISSION_STATUS_GRADED = 2;
+
+    public static final int NOTIFICATION_TYPE_CLASSROOM = 5;
+
     private Constants() {}
 }

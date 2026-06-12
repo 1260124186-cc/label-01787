@@ -1,0 +1,312 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding: 0 $page-padding;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 160rpx);
+}
+
+.classroomHeader {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-top: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.className {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  @include text-ellipsis;
+}
+
+.classDescription {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+  line-height: $line-height-normal;
+}
+
+.headerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.metaTag {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  background: $color-bg-hover;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.inviteCodeRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  background: rgba($color-primary, 0.06);
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  margin-top: $spacing-sm;
+}
+
+.inviteCodeLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.inviteCodeValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  letter-spacing: 2rpx;
+}
+
+.inviteCodeCopy {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  padding: $spacing-xs $spacing-sm;
+  border: 1rpx solid $color-primary;
+  border-radius: $radius-sm;
+}
+
+.statsButton {
+  @include flex-center;
+  width: 100%;
+  height: $button-height-md;
+  background: $color-bg-hover;
+  color: $color-primary;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-button;
+  margin-top: $spacing-md;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.memberList {
+  margin-bottom: $spacing-lg;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.memberCount {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.memberCard {
+  display: flex;
+  align-items: center;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-sm;
+}
+
+.memberAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  background: $color-bg-hover;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.memberInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberNickname {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.memberDetail {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-xs;
+}
+
+.memberStudentNo {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.memberRealName {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.roleBadge {
+  font-size: $font-size-xs;
+  padding: 2rpx $spacing-sm;
+  border-radius: $radius-xs;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+.roleBadgeTeacher {
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+}
+
+.roleBadgeStudent {
+  background: rgba($color-success, 0.1);
+  color: $color-success;
+}
+
+.assignmentSection {
+  margin-bottom: $spacing-lg;
+}
+
+.assignmentCard {
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-sm;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.assignmentCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.assignmentBookTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+  margin-right: $spacing-sm;
+  @include text-ellipsis;
+}
+
+.assignmentStatusBadge {
+  font-size: $font-size-xs;
+  padding: 2rpx $spacing-sm;
+  border-radius: $radius-xs;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+.statusActive {
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+}
+
+.statusDraft {
+  background: rgba($color-text-tertiary, 0.1);
+  color: $color-text-tertiary;
+}
+
+.statusClosed {
+  background: rgba($color-text-disabled, 0.2);
+  color: $color-text-tertiary;
+}
+
+.assignmentPageRange {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.assignmentDeadline {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+}
+
+.assignmentProgress {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.assignmentProgressText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.assignmentProgressBar {
+  flex: 1;
+  height: 8rpx;
+  background: $color-divider;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.assignmentProgressFill {
+  height: 100%;
+  background: $color-primary;
+  border-radius: $radius-round;
+  transition: width $transition-base;
+}
+
+.emptyText {
+  @include flex-center;
+  padding: $spacing-xl 0;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.fabButton {
+  position: fixed;
+  right: $spacing-lg;
+  bottom: calc(env(safe-area-inset-bottom) + 120rpx);
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: $radius-round;
+  background: $color-primary;
+  box-shadow: $shadow-float;
+  @include flex-center;
+  flex-direction: column;
+  gap: 4rpx;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.fabIcon {
+  font-size: 40rpx;
+  color: $color-text-white;
+  line-height: 1;
+}
+
+.fabLabel {
+  font-size: 18rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
