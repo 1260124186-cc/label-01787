@@ -1,0 +1,230 @@
+@use '@/styles/variables.scss' as *;
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  width: 100%;
+
+  &.compact {
+    padding: $spacing-sm;
+
+    .toolRow {
+      gap: $spacing-xs;
+    }
+  }
+}
+
+.toolRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.toolBtn {
+  @include button-reset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-page;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  min-width: 88rpx;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.active {
+    background: $color-primary;
+    border-color: $color-primary;
+
+    .iconSvg,
+    .toolLabel {
+      color: $color-text-white;
+    }
+  }
+
+  &.hasSubmenu.submenuOpen {
+    border-color: $color-accent;
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+.actionBtn {
+  @include button-reset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-page;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  min-width: 88rpx;
+
+  &:active {
+    transform: scale(0.95);
+    background: $color-bg-hover;
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+.iconSvg {
+  color: $color-text-primary;
+  line-height: 0;
+
+  :global(svg) {
+    display: block;
+  }
+}
+
+.toolLabel {
+  font-size: 22rpx;
+  color: $color-text-secondary;
+  white-space: nowrap;
+}
+
+.divider {
+  width: 1px;
+  height: 56rpx;
+  background: $color-border-light;
+  margin: 0 $spacing-xs;
+}
+
+.submenu {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  border: 1px solid $color-border-light;
+}
+
+.submenuTitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.colorGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  justify-content: center;
+}
+
+.colorDot {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  border: 3px solid $color-border-light;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:active {
+    transform: scale(0.9);
+  }
+
+  &.selected {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 4rpx rgba($color-primary, 0.3);
+  }
+
+  &.highlightDot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: $radius-md;
+  }
+}
+
+.highlightLabel {
+  font-size: 20rpx;
+  color: $color-text-primary;
+  font-weight: $font-weight-bold;
+  opacity: 0.8;
+}
+
+.widthRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.widthBtn {
+  @include button-reset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-card;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  min-width: 72rpx;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.selected {
+    border-color: $color-primary;
+    background: rgba($color-primary, 0.1);
+  }
+}
+
+.widthSample {
+  border-radius: 50%;
+}
+
+.widthLabel {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+}
+
+@media (min-width: 768px) {
+  .toolBtn,
+  .actionBtn {
+    min-width: 100rpx;
+    padding: $spacing-md $spacing-lg;
+  }
+
+  .toolLabel {
+    font-size: 24rpx;
+  }
+
+  .colorDot {
+    width: 72rpx;
+    height: 72rpx;
+  }
+
+  .highlightDot {
+    width: 96rpx;
+    height: 96rpx;
+  }
+}
