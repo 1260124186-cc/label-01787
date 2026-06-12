@@ -56,4 +56,7 @@ public interface SeasonParticipantMapper extends BaseMapper<SeasonParticipant> {
     @Select("SELECT COALESCE(SUM(duration), 0) FROM season_daily_record " +
             "WHERE season_id = #{seasonId} AND user_id = #{userId} AND is_qualified = 1")
     Long sumQualifiedDuration(@Param("seasonId") Long seasonId, @Param("userId") Long userId);
+
+    @Select("SELECT COUNT(DISTINCT user_id) FROM season_participant")
+    Long countTotalParticipants();
 }

@@ -24,6 +24,7 @@ import java.awt.geom.QuadCurve2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -327,10 +328,10 @@ public class InkExportService {
 
         if (points.size() == 1) {
             double[] p = points.get(0);
-            float x = (float) p[0];
-            float y = pdfHeight - (float) p[1];
+            float cx = (float) p[0];
+            float cy = pdfHeight - (float) p[1];
             float r = lineWidth / 2;
-            contentStream.addCircle(x, y, r);
+            drawCircle(contentStream, cx, cy, r);
             contentStream.fill();
             return;
         }
@@ -355,5 +356,18 @@ public class InkExportService {
         }
 
         contentStream.stroke();
+    }
+
+    private void drawCircle(PDPageContentStream contentStream, float cx, float cy, float r) throws IOException {
+        float k = 0.5522847498f;
+        float ox = r * k;
+        float oy = r * k;
+
+        contentStream.moveTo(cx + r, cy);
+        contentStream.curveTo(cx + r, cy - oy, cx + ox, cy - r, cx, cy - r);
+        contentStream.curveTo(cx - ox, cy - r, cx - r, cy - oy, cx - r, cy);
+        contentStream.curveTo(cx - r, cy + oy, cx - ox, cy + r, cx, cy + r);
+        contentStream.curveTo(cx + ox, cy + r, cx + r, cy + oy, cx + r, cy);
+        contentStream.closePath();
     }
 }

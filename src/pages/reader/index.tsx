@@ -16,7 +16,7 @@ import {
   downloadFile,
   getInkPageStats
 } from '@/services/ink'
-import type { InkStroke, InkBrushConfig, InkTool } from '@/types/ink'
+import type { InkStroke, InkBrushConfig } from '@/types/ink'
 import { DEFAULT_INK_CONFIG, dtoToStroke } from '@/types/ink'
 import InkCanvas, { InkCanvasHandle } from '@/components/InkCanvas'
 import InkToolbar from '@/components/InkToolbar'
@@ -109,35 +109,49 @@ const ReaderPage: React.FC = () => {
         const base64 = `data:image/png;base64,${Taro.arrayBufferToBase64(imageData as any)}`
         setPageImageUrl(base64)
 
-        const img = new Image()
-        img.onload = () => {
-          const info = Taro.getSystemInfoSync()
-          const screenWidth = info.windowWidth
-          const screenHeight = info.windowHeight
-          const isLandscapeNow = screenWidth > screenHeight
-          setIsLandscape(isLandscapeNow)
-
-          let maxWidth: number
-          let maxHeight: number
-
-          if (deviceInfo.isIPad || deviceInfo.isLargeScreen) {
-            maxWidth = Math.min(screenWidth * 0.7, 1000)
-            maxHeight = screenHeight - 200
-          } else {
-            maxWidth = Math.min(screenWidth - 32, 800)
-            maxHeight = screenHeight - 250
-          }
-
-          const scaleX = maxWidth / img.width
-          const scaleY = maxHeight / img.height
-          const scale = Math.min(scaleX, scaleY, 1)
-
-          setPageSize({
-            width: Math.round(img.width * scale),
-            height: Math.round(img.height * scale)
+        const getImageSize = (src: string): Promise<{ width: number; height: number }> => {
+          return new Promise((resolve) => {
+            if (process.env.TARO_ENV === 'h5') {
+              const img = new (window as any).Image()
+              img.onload = () => resolve({ width: img.width, height: img.height })
+              img.onerror = () => resolve({ width: 375, height: 500 })
+              img.src = src
+            } else {
+              Taro.getImageInfo({
+                src,
+                success: (res) => resolve({ width: res.width, height: res.height }),
+                fail: () => resolve({ width: 375, height: 500 })
+              })
+            }
           })
         }
-        img.src = base64
+
+        const { width: imgWidth, height: imgHeight } = await getImageSize(base64)
+        const info = Taro.getSystemInfoSync()
+        const screenWidth = info.windowWidth
+        const screenHeight = info.windowHeight
+        const isLandscapeNow = screenWidth > screenHeight
+        setIsLandscape(isLandscapeNow)
+
+        let maxWidth: number
+        let maxHeight: number
+
+        if (deviceInfo.isIPad || deviceInfo.isLargeScreen) {
+          maxWidth = Math.min(screenWidth * 0.7, 1000)
+          maxHeight = screenHeight - 200
+        } else {
+          maxWidth = Math.min(screenWidth - 32, 800)
+          maxHeight = screenHeight - 250
+        }
+
+        const scaleX = maxWidth / imgWidth
+        const scaleY = maxHeight / imgHeight
+        const scale = Math.min(scaleX, scaleY, 1)
+
+        setPageSize({
+          width: Math.round(imgWidth * scale),
+          height: Math.round(imgHeight * scale)
+        })
       }
     } catch (err) {
       console.error('[Reader] 加载页面图片失败', err)
@@ -551,7 +565,7 @@ const ReaderPage: React.FC = () => {
             </View>
           ) : (
             <View
-              className={styles.pageContainer}
+              className={styles.pdfPageContainer}
               style={{
                 width: `${pageSize.width}px`,
                 height: `${pageSize.height}px`

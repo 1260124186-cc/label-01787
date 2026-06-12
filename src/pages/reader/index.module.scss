@@ -356,7 +356,7 @@
   color: $color-text-tertiary;
 }
 
-.pageContainer {
+.pdfPageContainer {
   position: relative;
   margin: 0 auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -550,7 +550,7 @@
     padding: $spacing-lg;
   }
 
-  .pageContainer {
+  .pdfPageContainer {
     max-height: 80vh;
     overflow-y: auto;
   }
@@ -571,7 +571,7 @@
 }
 
 @media (min-width: 1440px) {
-  .pageContainer {
+  .pdfPageContainer {
     max-width: 1000px;
   }
 

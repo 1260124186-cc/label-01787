@@ -1,6 +1,14 @@
-import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react'
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useImperativeHandle,
+  forwardRef,
+  useMemo
+} from 'react'
 import { View, Canvas } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { getEnv, ENV_TYPE } from '@tarojs/taro'
 import type {
   InkStroke,
   InkPoint,
@@ -34,6 +42,25 @@ interface InkCanvasProps {
   zoom?: number
 }
 
+const MAX_HISTORY = 50
+
+type EnvType = 'h5' | 'weapp'
+
+const detectEnv = (): EnvType => {
+  try {
+    const env = getEnv()
+    if (env === ENV_TYPE.WEAPP) return 'weapp'
+    const info: any = Taro.getSystemInfoSync()
+    if (info.environment === 'wxdevtools' || info.platform === 'devtools') return 'weapp'
+    return 'h5'
+  } catch {
+    return 'h5'
+  }
+}
+
+type AnyCtx = any
+type AnyCanvas = any
+
 const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>((props, ref) => {
   const {
     width,
@@ -47,37 +74,62 @@ const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>((props, ref) => {
     zoom = 1
   } = props
 
-  const canvasRef = useRef<any>(null)
-  const ctxRef = useRef<CanvasRenderingContext2D | any>(null)
-  const [strokes, setStrokes] = useState<InkStroke[]>([])
+  const canvasRef = useRef<AnyCanvas>(null)
+  const ctxRef = useRef<AnyCtx>(null)
+  const [strokeList, setStrokeList] = useState<InkStroke[]>([])
   const [history, setHistory] = useState<InkStroke[][]>([[]])
   const [historyIndex, setHistoryIndex] = useState(0)
-  const [isDrawing, setIsDrawing] = useState(false)
+  const isDrawingRef = useRef(false)
   const currentStrokeRef = useRef<InkStroke | null>(null)
   const lastPointRef = useRef<InkPoint | null>(null)
   const modifiedStrokesRef = useRef<Map<string, InkStroke>>(new Map())
   const deletedStrokeIdsRef = useRef<Set<string>>(new Set())
-  const envRef = useRef<'h5' | 'weapp'>('h5')
+  const envRef = useRef<EnvType>('h5')
   const dprRef = useRef(1)
-  const canvasId = useMemo(() => `ink_canvas_${Math.random().toString(36).substr(2, 9)}`, [])
+  const initializedRef = useRef(false)
+  const wrapperRef = useRef<any>(null)
+
+  const canvasId = useMemo(() => {
+    const rand = Math.random().toString(36).substring(2, 11)
+    return `ink_canvas_${rand}`
+  }, [])
+
+  const brushConfigRef = useRef(brushConfig)
+  const readonlyRef = useRef(readonly)
+  const onStrokeStartRef = useRef(onStrokeStart)
+  const onStrokeEndRef = useRef(onStrokeEnd)
+  const onStrokesChangeRef = useRef(onStrokesChange)
+  const strokeListRef = useRef<InkStroke[]>([])
+  const historyRef = useRef<InkStroke[][]>([[]])
+  const historyIndexRef = useRef(0)
+
+  useEffect(() => { brushConfigRef.current = brushConfig }, [brushConfig])
+  useEffect(() => { readonlyRef.current = readonly }, [readonly])
+  useEffect(() => { onStrokeStartRef.current = onStrokeStart }, [onStrokeStart])
+  useEffect(() => { onStrokeEndRef.current = onStrokeEnd }, [onStrokeEnd])
+  useEffect(() => { onStrokesChangeRef.current = onStrokesChange }, [onStrokesChange])
+  useEffect(() => { strokeListRef.current = strokeList }, [strokeList])
+  useEffect(() => { historyRef.current = history }, [history])
+  useEffect(() => { historyIndexRef.current = historyIndex }, [historyIndex])
 
   useEffect(() => {
+    envRef.current = detectEnv()
     const info = Taro.getSystemInfoSync()
-    envRef.current = info.platform === 'devtools' || info.platform === 'android' || info.platform === 'ios' ? 'weapp' : 'h5'
-    dprRef.current = info.pixelRatio || 1
+    dprRef.current = info.pixelRatio || 2
   }, [])
 
   useEffect(() => {
-    if (externalStrokes) {
-      setStrokes(externalStrokes)
+    if (externalStrokes && externalStrokes.length > 0 && !initializedRef.current) {
+      setStrokeList(externalStrokes)
       setHistory([externalStrokes])
       setHistoryIndex(0)
       modifiedStrokesRef.current.clear()
       deletedStrokeIdsRef.current.clear()
+      initializedRef.current = true
     }
   }, [externalStrokes])
 
-  const getCanvasContext = useCallback((): Promise<CanvasRenderingContext2D | any> => {
+  const getCanvasContext = useCallback((): Promise<AnyCtx> => {
     return new Promise((resolve) => {
       if (ctxRef.current) {
         resolve(ctxRef.current)
@@ -87,149 +139,124 @@ const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>((props, ref) => {
       if (envRef.current === 'h5') {
         setTimeout(() => {
           const canvas = canvasRef.current
-          if (canvas) {
+          if (canvas && canvas.getContext) {
             const ctx = canvas.getContext('2d')
             if (ctx) {
+              const dpr = dprRef.current
+              if (dpr > 1 && !canvas.__dprScaled) {
+                canvas.width = width * dpr
+                canvas.height = height * dpr
+                ctx.scale(dpr, dpr)
+                canvas.__dprScaled = true
+              }
               ctxRef.current = ctx
               resolve(ctx)
-              return
             }
           }
-          resolve(null)
-        }, 50)
+        }, 16)
       } else {
         const query = Taro.createSelectorQuery()
-        query.select(`#${canvasId}`)
+        query.select('#' + canvasId)
           .fields({ node: true, size: true })
-          .exec((res) => {
-            if (res && res[0]) {
-              const canvas = res[0].node
-              const ctx = canvas.getContext('2d')
+          .exec((res: any[]) => {
+            if (res && res[0] && res[0].node) {
+              const canvasNode = res[0].node
+              const ctx = canvasNode.getContext('2d')
               const dpr = dprRef.current
-              canvas.width = width * dpr
-              canvas.height = height * dpr
+              canvasNode.width = res[0].width * dpr
+              canvasNode.height = res[0].height * dpr
               ctx.scale(dpr, dpr)
               ctxRef.current = ctx
+              canvasRef.current = canvasNode
               resolve(ctx)
             } else {
-              resolve(null)
+              resolve(null as any)
             }
           })
       }
     })
   }, [canvasId, width, height])
 
-  const clearCanvas = useCallback((ctx: CanvasRenderingContext2D | any) => {
+  const clearCanvasArea = useCallback((ctx: AnyCtx) => {
     if (!ctx) return
-    if (envRef.current === 'h5') {
-      const canvas = canvasRef.current
-      if (canvas) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-      }
-    } else {
-      ctx.clearRect(0, 0, width, height)
-    }
+    ctx.clearRect(0, 0, width, height)
   }, [width, height])
 
-  const renderStroke = useCallback((ctx: CanvasRenderingContext2D | any, stroke: InkStroke, scale = 1) => {
-    if (!ctx || !stroke.points || stroke.points.length === 0) return
+  const drawStrokeOnCanvas = useCallback((ctx: AnyCtx, stroke: InkStroke, scale = 1) => {
+    if (!ctx || !stroke.points || stroke.points.length < 2) return
 
-    const isEraser = stroke.strokeType === 'eraser'
     ctx.save()
+    ctx.strokeStyle = stroke.color
+    ctx.lineWidth = stroke.lineWidth * scale
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.globalAlpha = stroke.opacity
 
-    if (isEraser) {
-      ctx.globalCompositeOperation = envRef.current === 'h5' ? 'destination-out' : 'source-over'
+    if (stroke.strokeType === 'highlighter') {
+      ctx.globalAlpha = (stroke.opacity ?? 1) * 0.5
+    }
+
+    if (stroke.strokeType === 'eraser') {
+      if (envRef.current === 'h5') {
+        ctx.globalCompositeOperation = 'destination-out'
+      } else {
+        ctx.globalCompositeOperation = 'source-over'
+      }
       ctx.strokeStyle = '#FFFFFF'
       ctx.lineWidth = stroke.lineWidth * 2 * scale
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
     } else {
       ctx.globalCompositeOperation = 'source-over'
-      ctx.strokeStyle = stroke.color
-      ctx.lineWidth = stroke.lineWidth * scale
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-      ctx.globalAlpha = stroke.opacity ?? 1
-
-      if (stroke.strokeType === 'highlighter') {
-        ctx.globalAlpha = (stroke.opacity ?? 1) * 0.5
-      }
     }
 
+    ctx.beginPath()
     const points = stroke.points
-    if (points.length === 1) {
-      const p = points[0]
-      ctx.beginPath()
-      ctx.arc(p.x * scale, p.y * scale, stroke.lineWidth * scale / 2, 0, Math.PI * 2)
-      ctx.fillStyle = isEraser ? '#FFFFFF' : stroke.color
-      ctx.fill()
-    } else {
-      ctx.beginPath()
-      ctx.moveTo(points[0].x * scale, points[0].y * scale)
+    ctx.moveTo(points[0].x * scale, points[0].y * scale)
 
-      for (let i = 1; i < points.length - 1; i++) {
-        const xc = (points[i].x + points[i + 1].x) / 2 * scale
-        const yc = (points[i].y + points[i + 1].y) / 2 * scale
-        ctx.quadraticCurveTo(points[i].x * scale, points[i].y * scale, xc, yc)
-      }
-
-      if (points.length >= 2) {
-        const last = points[points.length - 1]
-        ctx.lineTo(last.x * scale, last.y * scale)
-      }
-
-      ctx.stroke()
+    for (let i = 1; i < points.length - 1; i++) {
+      const xc = (points[i].x + points[i + 1].x) / 2 * scale
+      const yc = (points[i].y + points[i + 1].y) / 2 * scale
+      ctx.quadraticCurveTo(points[i].x * scale, points[i].y * scale, xc, yc)
     }
 
+    if (points.length >= 2) {
+      const last = points[points.length - 1]
+      ctx.lineTo(last.x * scale, last.y * scale)
+    }
+
+    ctx.stroke()
     ctx.restore()
   }, [])
 
-  const renderAll = useCallback(async () => {
+  const renderAllStrokes = useCallback(async () => {
     const ctx = await getCanvasContext()
     if (!ctx) return
-    clearCanvas(ctx)
-    for (const stroke of strokes) {
-      renderStroke(ctx, stroke)
+
+    clearCanvasArea(ctx)
+
+    for (const stroke of strokeList) {
+      drawStrokeOnCanvas(ctx, stroke, 1)
     }
-  }, [getCanvasContext, clearCanvas, renderStroke, strokes])
+  }, [getCanvasContext, clearCanvasArea, drawStrokeOnCanvas, strokeList])
 
   useEffect(() => {
-    renderAll()
-  }, [renderAll])
-
-  useDidShow(() => {
-    renderAll()
-  })
-
-  const getTouchPoint = (e: any): InkPoint | null => {
-    let touch: any = null
-    if (e.touches && e.touches.length > 0) {
-      touch = e.touches[0]
-    } else if (e.changedTouches && e.changedTouches.length > 0) {
-      touch = e.changedTouches[0]
-    } else if (e.clientX !== undefined) {
-      touch = e
+    if (strokeList.length > 0 || initializedRef.current) {
+      renderAllStrokes()
     }
-    if (!touch) return null
+  }, [strokeList, renderAllStrokes])
 
-    let x: number, y: number
-    const rect = touch.target?.getBoundingClientRect ? touch.target.getBoundingClientRect() : null
+  const getTouchPoint = useCallback((clientX: number, clientY: number, pressure: number = 0.5): InkPoint | null => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
 
-    if (envRef.current === 'h5' && rect) {
-      x = (touch.clientX - rect.left) / zoom
-      y = (touch.clientY - rect.top) / zoom
-    } else if (touch.x !== undefined) {
-      x = touch.x / zoom
-      y = touch.y / zoom
-    } else if (touch.pageX !== undefined) {
-      x = touch.pageX / zoom
-      y = touch.pageY / zoom
+    let rect: { left: number; top: number }
+    if (envRef.current === 'h5' && typeof canvas.getBoundingClientRect === 'function') {
+      rect = canvas.getBoundingClientRect()
     } else {
-      x = touch.clientX / zoom
-      y = touch.clientY / zoom
+      rect = { left: 0, top: 0 }
     }
 
-    const pressure = (touch as any).force || (touch as any).pressure || 0.5
+    const x = (clientX - rect.left) / zoom
+    const y = (clientY - rect.top) / zoom
 
     return {
       x: Math.max(0, Math.min(width, x)),
@@ -237,34 +264,38 @@ const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>((props, ref) => {
       pressure,
       timestamp: Date.now()
     }
-  }
+  }, [width, height, zoom])
 
-  const drawPreviewSegment = async (from: InkPoint, to: InkPoint) => {
+  const drawSegment = useCallback(async (from: InkPoint, to: InkPoint) => {
     const ctx = await getCanvasContext()
     if (!ctx) return
 
-    const tool: InkTool = brushConfig.tool
-    if (tool === 'none') return
+    const currentTool: InkTool = brushConfigRef.current.tool
+    if (currentTool === 'none') return
 
-    const isEraser = tool === 'eraser'
+    const isEraser = currentTool === 'eraser'
     ctx.save()
 
     if (isEraser) {
-      ctx.globalCompositeOperation = envRef.current === 'h5' ? 'destination-out' : 'source-over'
+      if (envRef.current === 'h5') {
+        ctx.globalCompositeOperation = 'destination-out'
+      } else {
+        ctx.globalCompositeOperation = 'source-over'
+      }
       ctx.strokeStyle = '#FFFFFF'
-      ctx.lineWidth = brushConfig.lineWidth * 2
+      ctx.lineWidth = brushConfigRef.current.lineWidth * 2
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
     } else {
       ctx.globalCompositeOperation = 'source-over'
-      ctx.strokeStyle = brushConfig.color
-      ctx.lineWidth = brushConfig.lineWidth
+      ctx.strokeStyle = brushConfigRef.current.color
+      ctx.lineWidth = brushConfigRef.current.lineWidth
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
-      ctx.globalAlpha = brushConfig.opacity ?? 1
+      ctx.globalAlpha = brushConfigRef.current.opacity ?? 1
 
-      if (tool === 'highlighter') {
-        ctx.globalAlpha = (brushConfig.opacity ?? 1) * 0.5
+      if (currentTool === 'highlighter') {
+        ctx.globalAlpha = (brushConfigRef.current.opacity ?? 1) * 0.5
       }
     }
 
@@ -273,253 +304,296 @@ const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>((props, ref) => {
     const xc = (from.x + to.x) / 2
     const yc = (from.y + to.y) / 2
     ctx.quadraticCurveTo(from.x, from.y, xc, yc)
-    ctx.lineTo(to.x, to.y)
     ctx.stroke()
     ctx.restore()
-  }
+  }, [getCanvasContext])
 
-  const handleStart = async (e: any) => {
-    if (readonly || brushConfig.tool === 'none') return
-    e.stopPropagation?.()
-    e.preventDefault?.()
+  const pushHistory = useCallback((newStrokes: InkStroke[]) => {
+    const currentHistory = historyRef.current
+    const currentIdx = historyIndexRef.current
+    const newHistory = currentHistory.slice(0, currentIdx + 1)
+    newHistory.push([...newStrokes])
 
-    const point = getTouchPoint(e)
+    if (newHistory.length > MAX_HISTORY) {
+      newHistory.shift()
+    }
+
+    setHistory(newHistory)
+    setHistoryIndex(newHistory.length - 1)
+  }, [])
+
+  const doStrokeStart = useCallback(async (clientX: number, clientY: number, pressure: number = 0.5) => {
+    if (readonlyRef.current || brushConfigRef.current.tool === 'none') return
+
+    const point = getTouchPoint(clientX, clientY, pressure)
     if (!point) return
 
-    onStrokeStart?.()
-    setIsDrawing(true)
+    isDrawingRef.current = true
+    onStrokeStartRef.current?.()
 
-    const stroke: InkStroke = {
+    const currentTool = brushConfigRef.current.tool
+    const strokeType = currentTool === 'eraser' ? 'eraser' : currentTool
+
+    const newStroke: InkStroke = {
       id: generateStrokeId(),
       strokeId: generateStrokeId(),
-      strokeType: (brushConfig.tool === 'none' ? 'pen' : brushConfig.tool) as any,
-      color: brushConfig.color,
-      lineWidth: brushConfig.lineWidth,
-      opacity: brushConfig.opacity,
-      points: [point]
+      strokeType: strokeType as any,
+      color: brushConfigRef.current.color,
+      lineWidth: brushConfigRef.current.lineWidth,
+      opacity: brushConfigRef.current.opacity,
+      points: [point],
+      boundingBox: { x: point.x, y: point.y, w: 0, h: 0 }
     }
-    currentStrokeRef.current = stroke
+
+    currentStrokeRef.current = newStroke
     lastPointRef.current = point
-  }
 
-  const handleMove = async (e: any) => {
-    if (!isDrawing || !currentStrokeRef.current) return
-    e.stopPropagation?.()
-    e.preventDefault?.()
+    if (currentTool !== 'eraser') {
+      const ctx = await getCanvasContext()
+      if (ctx) {
+        ctx.save()
+        ctx.fillStyle = brushConfigRef.current.color
+        ctx.globalAlpha = brushConfigRef.current.opacity ?? 1
+        if (currentTool === 'highlighter') {
+          ctx.globalAlpha = (brushConfigRef.current.opacity ?? 1) * 0.5
+        }
+        ctx.beginPath()
+        ctx.arc(point.x, point.y, brushConfigRef.current.lineWidth / 2, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+      }
+    }
+  }, [getTouchPoint, getCanvasContext])
 
-    const point = getTouchPoint(e)
+  const doStrokeMove = useCallback(async (clientX: number, clientY: number, pressure: number = 0.5) => {
+    if (!isDrawingRef.current || !currentStrokeRef.current || !lastPointRef.current) return
+
+    const point = getTouchPoint(clientX, clientY, pressure)
     if (!point) return
 
-    const stroke = currentStrokeRef.current
-    stroke.points.push(point)
+    const currentStroke = currentStrokeRef.current
+    currentStroke.points.push(point)
 
-    if (lastPointRef.current) {
-      await drawPreviewSegment(lastPointRef.current, point)
-    }
+    const bbox = computeBoundingBox(currentStroke.points)
+    currentStroke.boundingBox = bbox
+
+    await drawSegment(lastPointRef.current, point)
     lastPointRef.current = point
-  }
+  }, [getTouchPoint, drawSegment])
 
-  const handleEnd = async (e: any) => {
-    if (!isDrawing || !currentStrokeRef.current) return
-    e.stopPropagation?.()
-    e.preventDefault?.()
+  const doStrokeEnd = useCallback(() => {
+    if (!isDrawingRef.current || !currentStrokeRef.current) return
 
-    const stroke = currentStrokeRef.current
-    stroke.boundingBox = computeBoundingBox(stroke.points)
+    isDrawingRef.current = false
+    const finishedStroke = currentStrokeRef.current
 
-    if (stroke.points.length === 0) {
-      currentStrokeRef.current = null
-      lastPointRef.current = null
-      setIsDrawing(false)
-      return
-    }
+    if (finishedStroke.points.length >= 2) {
+      const currentTool = brushConfigRef.current.tool
+      const currentList = strokeListRef.current
 
-    const tool: InkTool = brushConfig.tool
-    if (tool === 'eraser') {
-      const eraserBBox = stroke.boundingBox
-      const newStrokes: InkStroke[] = []
-      const eraserRadius = stroke.lineWidth
-
-      for (const existing of strokes) {
-        if (strokeIntersects(existing, eraserBBox, eraserRadius)) {
-          const erased = eraseFromStroke(existing, stroke.points, eraserRadius)
-          for (const s of erased) {
-            newStrokes.push(s)
-            modifiedStrokesRef.current.set(s.strokeId, s)
-          }
-          if (erased.length === 0 || existing.strokeId !== erased[0]?.strokeId) {
-            deletedStrokeIdsRef.current.add(existing.strokeId)
-          }
-        } else {
-          newStrokes.push(existing)
+      if (currentTool === 'eraser') {
+        const newStrokes = currentList.filter(s => {
+          if (!s.boundingBox || !finishedStroke.boundingBox) return true
+          const b1 = s.boundingBox
+          const b2 = finishedStroke.boundingBox
+          return !(
+            b1.x < b2.x + b2.w &&
+            b1.x + b1.w > b2.x &&
+            b1.y < b2.y + b2.h &&
+            b1.y + b1.h > b2.y
+          )
+        })
+        const erased = currentList.length - newStrokes.length
+        if (erased > 0) {
+          currentList.forEach(s => {
+            if (!newStrokes.find(ns => ns.id === s.id)) {
+              deletedStrokeIdsRef.current.add(s.strokeId)
+              modifiedStrokesRef.current.delete(s.strokeId)
+            }
+          })
         }
+        setStrokeList(newStrokes)
+        pushHistory(newStrokes)
+        onStrokesChangeRef.current?.(newStrokes)
+      } else {
+        modifiedStrokesRef.current.set(finishedStroke.strokeId, finishedStroke)
+        const newStrokes = [...currentList, finishedStroke]
+        setStrokeList(newStrokes)
+        pushHistory(newStrokes)
+        onStrokeEndRef.current?.(finishedStroke)
+        onStrokesChangeRef.current?.(newStrokes)
       }
-
-      setStrokes(newStrokes)
-      pushToHistory(newStrokes)
-      onStrokesChange?.(newStrokes)
-    } else {
-      modifiedStrokesRef.current.set(stroke.strokeId, stroke)
-      const newStrokes = [...strokes, stroke]
-      setStrokes(newStrokes)
-      pushToHistory(newStrokes)
-      onStrokeEnd?.(stroke)
-      onStrokesChange?.(newStrokes)
     }
 
     currentStrokeRef.current = null
     lastPointRef.current = null
-    setIsDrawing(false)
-    await renderAll()
-  }
+  }, [pushHistory])
 
-  const strokeIntersects = (s: InkStroke, bbox: { x: number; y: number; w: number; h: number }, radius: number): boolean => {
-    if (!s.boundingBox) return false
-    const a = s.boundingBox
-    const expanded = {
-      x: bbox.x - radius,
-      y: bbox.y - radius,
-      w: bbox.w + radius * 2,
-      h: bbox.h + radius * 2
-    }
-    return !(
-      a.x > expanded.x + expanded.w ||
-      a.x + a.w < expanded.x ||
-      a.y > expanded.y + expanded.h ||
-      a.y + a.h < expanded.y
-    )
-  }
+  useEffect(() => {
+    if (envRef.current !== 'h5') return
 
-  const eraseFromStroke = (stroke: InkStroke, eraserPath: InkPoint[], radius: number): InkStroke[] => {
-    const points = stroke.points
-    const segments: InkPoint[][] = []
-    let currentSegment: InkPoint[] = []
+    const setupH5Listeners = () => {
+      const el = wrapperRef.current
+      if (!el) return false
 
-    for (const p of points) {
-      let erased = false
-      for (const ep of eraserPath) {
-        const dx = p.x - ep.x
-        const dy = p.y - ep.y
-        if (Math.sqrt(dx * dx + dy * dy) < radius + stroke.lineWidth / 2) {
-          erased = true
-          break
-        }
+      const domEl = el.$node || el
+      if (!domEl || typeof domEl.addEventListener !== 'function') return false
+
+      const onMouseDown = (e: MouseEvent) => {
+        e.preventDefault()
+        doStrokeStart(e.clientX, e.clientY, 0.5)
       }
+      const onMouseMove = (e: MouseEvent) => {
+        if (!isDrawingRef.current) return
+        e.preventDefault()
+        doStrokeMove(e.clientX, e.clientY, 0.5)
+      }
+      const onMouseUp = () => doStrokeEnd()
+      const onMouseLeave = () => doStrokeEnd()
 
-      if (erased) {
-        if (currentSegment.length > 1) {
-          segments.push(currentSegment)
-        }
-        currentSegment = []
-      } else {
-        currentSegment.push(p)
+      domEl.addEventListener('mousedown', onMouseDown)
+      domEl.addEventListener('mousemove', onMouseMove)
+      domEl.addEventListener('mouseup', onMouseUp)
+      domEl.addEventListener('mouseleave', onMouseLeave)
+
+      ;(domEl as any).__inkListeners = { onMouseDown, onMouseMove, onMouseUp, onMouseLeave }
+      return true
+    }
+
+    const timer = setTimeout(() => {
+      setupH5Listeners()
+    }, 50)
+
+    return () => {
+      clearTimeout(timer)
+      const el = wrapperRef.current
+      const domEl = el?.$node || el
+      const listeners = domEl?.__inkListeners
+      if (listeners && domEl?.removeEventListener) {
+        domEl.removeEventListener('mousedown', listeners.onMouseDown)
+        domEl.removeEventListener('mousemove', listeners.onMouseMove)
+        domEl.removeEventListener('mouseup', listeners.onMouseUp)
+        domEl.removeEventListener('mouseleave', listeners.onMouseLeave)
       }
     }
+  }, [doStrokeStart, doStrokeMove, doStrokeEnd])
 
-    if (currentSegment.length > 1) {
-      segments.push(currentSegment)
-    }
+  const handleTouchStart = useCallback((e: any) => {
+    e.preventDefault?.()
+    const touch = e.touches?.[0] || e.changedTouches?.[0]
+    if (!touch) return
+    const pressure = touch.force || touch.pressure || 0.5
+    const cx = touch.clientX ?? touch.x ?? 0
+    const cy = touch.clientY ?? touch.y ?? 0
+    doStrokeStart(cx, cy, pressure)
+  }, [doStrokeStart])
 
-    if (segments.length === 1 && segments[0].length === points.length) {
-      return [stroke]
-    }
+  const handleTouchMove = useCallback((e: any) => {
+    e.preventDefault?.()
+    const touch = e.touches?.[0] || e.changedTouches?.[0]
+    if (!touch) return
+    const pressure = touch.force || touch.pressure || 0.5
+    const cx = touch.clientX ?? touch.x ?? 0
+    const cy = touch.clientY ?? touch.y ?? 0
+    doStrokeMove(cx, cy, pressure)
+  }, [doStrokeMove])
 
-    return segments.map((seg, idx) => ({
-      ...stroke,
-      strokeId: `${stroke.strokeId}_s${idx}`,
-      id: `${stroke.id}_s${idx}`,
-      points: seg,
-      boundingBox: computeBoundingBox(seg)
-    }))
-  }
+  const handleTouchEnd = useCallback((e: any) => {
+    e.preventDefault?.()
+    doStrokeEnd()
+  }, [doStrokeEnd])
 
-  const pushToHistory = (newStrokes: InkStroke[]) => {
-    const newHistory = history.slice(0, historyIndex + 1)
-    newHistory.push(newStrokes)
-    if (newHistory.length > 50) {
-      newHistory.shift()
-    }
-    setHistory(newHistory)
-    setHistoryIndex(newHistory.length - 1)
-  }
+  const undo = useCallback(() => {
+    if (historyIndex <= 0) return
 
-  const undo = () => {
-    if (historyIndex > 0) {
-      const newIndex = historyIndex - 1
-      setHistoryIndex(newIndex)
-      setStrokes(history[newIndex])
-      onStrokesChange?.(history[newIndex])
-    }
-  }
+    const newIndex = historyIndex - 1
+    setHistoryIndex(newIndex)
+    const prevStrokes = history[newIndex] || []
+    setStrokeList(prevStrokes)
+    onStrokesChange?.(prevStrokes)
 
-  const redo = () => {
-    if (historyIndex < history.length - 1) {
-      const newIndex = historyIndex + 1
-      setHistoryIndex(newIndex)
-      setStrokes(history[newIndex])
-      onStrokesChange?.(history[newIndex])
-    }
-  }
-
-  const clear = () => {
-    for (const s of strokes) {
-      deletedStrokeIdsRef.current.add(s.strokeId)
-    }
-    setStrokes([])
-    pushToHistory([])
-    onStrokesChange?.([])
-    renderAll()
-  }
-
-  const getStrokes = (): InkStroke[] => strokes
-
-  const setStrokes = (newStrokes: InkStroke[]) => {
-    setStrokes(newStrokes)
-    pushToHistory(newStrokes)
-    modifiedStrokesRef.current.clear()
-    deletedStrokeIdsRef.current.clear()
-    for (const s of newStrokes) {
+    prevStrokes.forEach(s => {
       modifiedStrokesRef.current.set(s.strokeId, s)
-    }
-  }
+    })
+  }, [historyIndex, history, onStrokesChange])
 
-  const getStrokesModified = (): InkStroke[] => {
-    return Array.from(modifiedStrokesRef.current.values())
-  }
+  const redo = useCallback(() => {
+    if (historyIndex >= history.length - 1) return
 
-  const getDeletedStrokeIds = (): string[] => {
-    return Array.from(deletedStrokeIdsRef.current)
-  }
+    const newIndex = historyIndex + 1
+    setHistoryIndex(newIndex)
+    const nextStrokes = history[newIndex] || []
+    setStrokeList(nextStrokes)
+    onStrokesChange?.(nextStrokes)
 
-  const resetModified = () => {
+    nextStrokes.forEach(s => {
+      modifiedStrokesRef.current.set(s.strokeId, s)
+    })
+  }, [historyIndex, history, onStrokesChange])
+
+  const clear = useCallback(() => {
+    strokeList.forEach(s => {
+      deletedStrokeIdsRef.current.add(s.strokeId)
+    })
+    modifiedStrokesRef.current.clear()
+
+    const newStrokes: InkStroke[] = []
+    setStrokeList(newStrokes)
+    pushHistory(newStrokes)
+    onStrokesChange?.(newStrokes)
+  }, [strokeList, pushHistory, onStrokesChange])
+
+  const getStrokes = useCallback((): InkStroke[] => {
+    return strokeList
+  }, [strokeList])
+
+  const setStrokes = useCallback((newStrokes: InkStroke[]) => {
+    setStrokeList(newStrokes)
+    setHistory([newStrokes])
+    setHistoryIndex(0)
     modifiedStrokesRef.current.clear()
     deletedStrokeIdsRef.current.clear()
-  }
+    initializedRef.current = true
+  }, [])
 
-  const exportCanvas = async (): Promise<string | null> => {
-    return new Promise(async (resolve) => {
-      if (envRef.current === 'h5') {
+  const exportCanvas = useCallback(async (): Promise<string | null> => {
+    const ctx = await getCanvasContext()
+    if (!ctx) return null
+
+    if (envRef.current === 'h5') {
+      const canvas = canvasRef.current
+      return canvas && typeof canvas.toDataURL === 'function'
+        ? canvas.toDataURL('image/png')
+        : null
+    } else {
+      return new Promise((resolve) => {
         const canvas = canvasRef.current
-        if (canvas) {
-          resolve(canvas.toDataURL('image/png'))
+        if (canvas && typeof canvas.toDataURL === 'function') {
+          canvas.toDataURL({
+            type: 'image/png',
+            quality: 1,
+            success: (res: any) => resolve(res.tempFilePath || null),
+            fail: () => resolve(null)
+          })
         } else {
           resolve(null)
         }
-      } else {
-        const ctx = await getCanvasContext()
-        if (!ctx) {
-          resolve(null)
-          return
-        }
-        Taro.canvasToTempFilePath({
-          canvasId,
-          fileType: 'png',
-          success: (res) => resolve(res.tempFilePath),
-          fail: () => resolve(null)
-        } as any)
-      }
-    })
-  }
+      })
+    }
+  }, [getCanvasContext])
+
+  const getStrokesModified = useCallback((): InkStroke[] => {
+    return Array.from(modifiedStrokesRef.current.values())
+  }, [])
+
+  const getDeletedStrokeIds = useCallback((): string[] => {
+    return Array.from(deletedStrokeIdsRef.current.values())
+  }, [])
+
+  const resetModified = useCallback(() => {
+    modifiedStrokesRef.current.clear()
+    deletedStrokeIdsRef.current.clear()
+  }, [])
 
   useImperativeHandle(ref, () => ({
     undo,
@@ -531,36 +605,52 @@ const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>((props, ref) => {
     getStrokesModified,
     getDeletedStrokeIds,
     resetModified
-  }))
+  }), [undo, redo, clear, getStrokes, setStrokes, exportCanvas, getStrokesModified, getDeletedStrokeIds, resetModified])
+
+  const canvasStyle = useMemo(() => ({
+    width: `${width}px`,
+    height: `${height}px`
+  }), [width, height])
+
+  if (width <= 0 || height <= 0) {
+    return <View className={styles.inkCanvasWrapper} />
+  }
+
+  if (envRef.current === 'h5') {
+    return (
+      <View
+        ref={wrapperRef}
+        className={styles.inkCanvasWrapper}
+        style={canvasStyle}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+      >
+        <canvas
+          ref={canvasRef as any}
+          className={styles.inkCanvas}
+          style={canvasStyle}
+        />
+      </View>
+    )
+  }
 
   return (
     <View
-      className={styles.inkCanvasWrap}
-      style={{
-        width: `${width}px`,
-        height: `${height}px`,
-        position: 'relative'
-      }}
+      ref={wrapperRef}
+      className={styles.inkCanvasWrapper}
+      style={canvasStyle}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
     >
       <Canvas
         id={canvasId}
-        ref={canvasRef}
-        type={envRef.current === 'weapp' ? '2d' : undefined}
+        type='2d'
         className={styles.inkCanvas}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-          touchAction: 'none',
-          cursor: readonly ? 'default' : (brushConfig.tool === 'none' ? 'default' : 'crosshair')
-        }}
-        onTouchStart={handleStart}
-        onTouchMove={handleMove}
-        onTouchEnd={handleEnd}
-        onTouchCancel={handleEnd}
-        onMouseDown={handleStart}
-        onMouseMove={handleMove}
-        onMouseUp={handleEnd}
-        onMouseLeave={handleEnd}
+        style={canvasStyle}
       />
     </View>
   )

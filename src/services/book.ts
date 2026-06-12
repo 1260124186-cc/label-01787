@@ -53,3 +53,48 @@ export const getBookList = async (): Promise<BookItem[]> => {
     return []
   }
 }
+
+export const getPageImage = async (bookId: number, pageNum: number): Promise<ArrayBuffer | null> => {
+  try {
+    await ensureLoggedIn()
+    const token = Taro.getStorageSync('token')
+    const url = `${BASE_URL}/books/${bookId}/page/${pageNum}`
+
+    if (process.env.TARO_ENV === 'h5') {
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        return await res.arrayBuffer()
+      }
+    } else {
+      return new Promise((resolve, reject) => {
+        Taro.downloadFile({
+          url,
+          header: {
+            'Authorization': `Bearer ${token}`
+          },
+          success: (res) => {
+            if (res.statusCode === 200) {
+              const fs = Taro.getFileSystemManager()
+              fs.readFile({
+                filePath: res.tempFilePath,
+                success: (data) => resolve(data.data as ArrayBuffer),
+                fail: reject
+              })
+            } else {
+              reject(new Error(`下载失败: ${res.statusCode}`))
+            }
+          },
+          fail: reject
+        })
+      })
+    }
+    return null
+  } catch (err) {
+    console.error('[BookService] getPageImage failed', err)
+    return null
+  }
+}

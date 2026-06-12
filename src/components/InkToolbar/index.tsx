@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import type { InkBrushConfig, InkTool } from '@/types/ink'
-import { INK_COLORS, INK_LINE_WIDTHS, HIGHLIGHTER_COLORS, DEFAULT_INK_CONFIG } from '@/types/ink'
+import { INK_COLORS, INK_LINE_WIDTHS, HIGHLIGHTER_COLORS } from '@/types/ink'
 import styles from './index.module.scss'
 
 export interface InkToolbarProps {

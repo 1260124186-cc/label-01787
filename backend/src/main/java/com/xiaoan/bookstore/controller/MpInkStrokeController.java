@@ -140,15 +140,36 @@ public class MpInkStrokeController {
         return buildDownloadResponse(data, fileName, mediaType);
     }
 
+    @GetMapping("/export/pages")
+    @Log("导出多页带墨迹(GET)")
+    public ResponseEntity<byte[]> exportPagesWithInkGet(
+            @RequestParam Long bookId,
+            @RequestParam String pageNums,
+            @RequestParam(defaultValue = "pdf") String format,
+            @RequestParam(defaultValue = "true") boolean overlay) {
+        List<Integer> pageNumList = parsePageNums(pageNums);
+        return doExportPages(bookId, pageNumList, format, overlay);
+    }
+
     @PostMapping("/export/pages")
-    @Log("导出多页带墨迹")
-    public ResponseEntity<byte[]> exportPagesWithInk(@RequestBody Map<String, Object> body) {
+    @Log("导出多页带墨迹(POST)")
+    public ResponseEntity<byte[]> exportPagesWithInkPost(@RequestBody Map<String, Object> body) {
         Long userId = TenantContext.getTenantId();
         Long bookId = Long.valueOf(body.get("bookId").toString());
-        List<Integer> pageNums = (List<Integer>) body.get("pageNums");
+        Object pageNumsObj = body.get("pageNums");
+        List<Integer> pageNums;
+        if (pageNumsObj instanceof String) {
+            pageNums = parsePageNums((String) pageNumsObj);
+        } else {
+            pageNums = (List<Integer>) pageNumsObj;
+        }
         String format = body.getOrDefault("format", "pdf").toString();
         boolean overlay = "true".equalsIgnoreCase(body.getOrDefault("overlay", "true").toString());
+        return doExportPages(bookId, pageNums, format, overlay);
+    }
 
+    private ResponseEntity<byte[]> doExportPages(Long bookId, List<Integer> pageNums, String format, boolean overlay) {
+        Long userId = TenantContext.getTenantId();
         String filePath = getBookFilePath(userId, bookId);
         byte[] data;
         String fileName;
@@ -175,6 +196,18 @@ public class MpInkStrokeController {
         }
 
         return buildDownloadResponse(data, fileName, mediaType);
+    }
+
+    private List<Integer> parsePageNums(String pageNumsStr) {
+        if (pageNumsStr == null || pageNumsStr.isEmpty()) {
+            return List.of();
+        }
+        String[] parts = pageNumsStr.split(",");
+        return java.util.Arrays.stream(parts)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Integer::parseInt)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @GetMapping("/export/book/{bookId}")
