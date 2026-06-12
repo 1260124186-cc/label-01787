@@ -184,5 +184,33 @@ public class Constants {
     public static final int FAMILY_ROLE_CHILD = 2;
     public static final int FAMILY_MAX_MEMBERS_DEFAULT = 6;
 
+    public static final int SEASON_STATUS_DRAFT = 0;
+    public static final int SEASON_STATUS_SIGNUP = 1;
+    public static final int SEASON_STATUS_ONGOING = 2;
+    public static final int SEASON_STATUS_ENDED = 3;
+    public static final int SEASON_STATUS_CANCELLED = 4;
+
+    public static final int SEASON_TYPE_CHALLENGE = 1;
+    public static final int SEASON_TYPE_MARATHON = 2;
+    public static final int SEASON_TYPE_MONTH = 3;
+
+    public static final int PARTICIPANT_STATUS_QUIT = 0;
+    public static final int PARTICIPANT_STATUS_ACTIVE = 1;
+    public static final int PARTICIPANT_STATUS_COMPLETED = 2;
+    public static final int PARTICIPANT_STATUS_INCOMPLETE = 3;
+    public static final int PARTICIPANT_STATUS_DISQUALIFIED = 4;
+
+    public static final int CHEAT_TYPE_SPEED = 1;
+    public static final int CHEAT_TYPE_STREAK = 2;
+    public static final int CHEAT_TYPE_ANOMALY = 3;
+    public static final int CHEAT_TYPE_DEVICE = 4;
+
+    public static final int CHEAT_STATUS_PENDING = 0;
+    public static final int CHEAT_STATUS_CONFIRMED = 1;
+    public static final int CHEAT_STATUS_FALSE_POSITIVE = 2;
+    public static final int CHEAT_STATUS_HANDLED = 3;
+
+    public static final String POINTS_CATEGORY_SEASON_COMPLETE = "season_complete";
+
     private Constants() {}
 }
